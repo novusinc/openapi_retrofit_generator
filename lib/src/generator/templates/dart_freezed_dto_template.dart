@@ -260,7 +260,9 @@ String _jsonFactories(
         '${_toJsonUndiscriminatedUnion(className, unionVariants)}';
   }
 
-  return '  \n  factory $className.fromJson(Map<String, Object?> json) => _\$${className}FromJson(json);';
+  return '  \n'
+      '  Map<String, dynamic> toJson() => throw UnimplementedError();\n'
+      '  factory $className.fromJson(Map<String, Object?> json) => _\$${className}FromJson(json);';
 }
 
 String _fromJsonUndiscriminatedUnion(String className) =>
