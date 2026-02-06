@@ -38,7 +38,7 @@ class OpenApiConfig {
     this.includeIfNull = false,
     this.generateConverters = false,
     this.generateDefaults = false,
-    this.converterBridgeModelPrefix,
+    this.converterHydratedModelPrefix,
   });
 
   /// Internal constructor of [OpenApiConfig]
@@ -72,7 +72,7 @@ class OpenApiConfig {
     required this.generateConverters,
     required this.generateDefaults,
     this.fallbackUnion,
-    this.converterBridgeModelPrefix,
+    this.converterHydratedModelPrefix,
   });
 
   /// Creates a [OpenApiConfig] from [YamlMap].
@@ -238,8 +238,8 @@ class OpenApiConfig {
     final generateDefaults =
         yamlMap['generate_defaults'] as bool? ?? rootConfig?.generateDefaults;
     
-    final converterBridgeModelPrefix =
-        yamlMap['converter_bridge_model_prefix'] as String? ?? rootConfig?.converterBridgeModelPrefix;
+    final converterHydratedModelPrefix =
+        yamlMap['converter_hydrated_model_prefix'] as String? ?? rootConfig?.converterHydratedModelPrefix;
 
     // Default config
     final dc = OpenApiConfig(name: name, outputDirectory: outputDirectory);
@@ -276,7 +276,7 @@ class OpenApiConfig {
       includeIfNull: includeIfNull ?? dc.includeIfNull,
       generateConverters: generateConverters ?? dc.generateConverters,
       generateDefaults: generateDefaults ?? dc.generateDefaults,
-      converterBridgeModelPrefix: converterBridgeModelPrefix,
+      converterHydratedModelPrefix: converterHydratedModelPrefix,
     );
   }
 
@@ -596,7 +596,7 @@ class OpenApiConfig {
   /// Generate converter classes for Db* prefixed models.
   ///
   /// When true: Generates a converter class alongside each Db* model
-  /// that handles transformation between bridge models and database models.
+  /// that handles transformation between hydrated models and database models.
   /// All fields are automatically included - no manual field mapping required.
   ///
   /// Default: false
@@ -612,12 +612,12 @@ class OpenApiConfig {
   /// Default: false
   final bool generateDefaults;
 
-  /// Import path for bridge models used in converters.
+  /// Import path for hydrated models used in converters.
   ///
   /// Example: 'package:stream_chat/stream_chat.dart'
   ///
   /// Default: null (generates TODO comment)
-  final String? converterBridgeModelPrefix;
+  final String? converterHydratedModelPrefix;
 
   /// Convert [OpenApiConfig] to [GeneratorConfig]
   GeneratorConfig toGeneratorConfig() {
@@ -642,7 +642,7 @@ class OpenApiConfig {
       includeIfNull: includeIfNull,
       generateConverters: generateConverters,
       generateDefaults: generateDefaults,
-      converterBridgeModelPrefix: converterBridgeModelPrefix,
+      converterHydratedModelPrefix: converterHydratedModelPrefix,
     );
   }
 

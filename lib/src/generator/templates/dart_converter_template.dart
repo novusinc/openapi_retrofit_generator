@@ -3,7 +3,7 @@ import 'package:openapi_retrofit_generator/src/parser/openapi_parser_core.dart';
 import 'package:openapi_retrofit_generator/src/utils/base_utils.dart';
 import 'package:openapi_retrofit_generator/src/utils/type_utils.dart';
 
-import 'package:openapi_retrofit_generator/src/generator/utils/bridge_model_parser.dart';
+import 'package:openapi_retrofit_generator/src/generator/utils/hydrated_model_parser.dart';
 
 /// Provides template for generating model converter classes
 /// 
@@ -11,16 +11,16 @@ import 'package:openapi_retrofit_generator/src/generator/utils/bridge_model_pars
 /// automatically including all fields and flagging type mismatches.
 String dartConverterTemplate(
   UniversalComponentClass dataClass, {
-  String? bridgeModelName,
-  String? bridgeModelImport,
-  List<BridgeField> bridgeFields = const [],
+  String? hydratedModelName,
+  String? hydratedModelImport,
+  List<HydratedField> hydratedFields = const [],
 }) {
   final dbClassName = dataClass.name.toPascal;
   final converterClassName = '${dbClassName}Converter';
   
   // Derive API model name from Db prefix (e.g., DbMessage -> Message)
-  final apiModelName = bridgeModelName ?? 
-      (dbClassName.startsWith('Db') ? dbClassName.substring(2) : '${dbClassName}Bridge');
+  final apiModelName = hydratedModelName ?? 
+      (dbClassName.startsWith('Db') ? dbClassName.substring(2) : '${dbClassName}Hydrated');
   
   final fields = dataClass.parameters.toList();
   
@@ -34,14 +34,14 @@ String dartConverterTemplate(
     if (name == null) continue;
     
     // Check if it exists in API model
-    final apiField = bridgeFields.firstWhere(
+    final apiField = hydratedFields.firstWhere(
       (f) => f.name == name,
-      orElse: () => BridgeField(name: '', type: ''),
+      orElse: () => HydratedField(name: '', type: ''),
     );
 
-    if (_isContextField(name) || (bridgeFields.isNotEmpty && apiField.name.isEmpty)) {
+    if (_isContextField(name) || (hydratedFields.isNotEmpty && apiField.name.isEmpty)) {
       contextFields.add(field);
-    } else if (bridgeFields.isNotEmpty) {
+    } else if (hydratedFields.isNotEmpty) {
       // Direct comparison if we have API fields
       if (_typesMatch(field, apiField.type)) {
         directFields.add(field);
@@ -119,19 +119,19 @@ $fromDbBody
 ''';
 }
 
-/// Check if database field type matches bridge model field type
-bool _typesMatch(UniversalType dbField, String bridgeType) {
+/// Check if database field type matches hydrated model field type
+bool _typesMatch(UniversalType dbField, String hydratedType) {
   final dbType = dbField.toSuitableType();
   
   // Normalize types for comparison
   final normalizedDb = dbType.replaceAll('?', '').trim();
-  final normalizedBridge = bridgeType.replaceAll('?', '').trim();
+  final normalizedHydrated = hydratedType.replaceAll('?', '').trim();
   
-  if (normalizedDb == normalizedBridge) return true;
+  if (normalizedDb == normalizedHydrated) return true;
   
   // Handle common aliases/equivalents
-  if (normalizedDb == 'num' && (normalizedBridge == 'double' || normalizedBridge == 'int')) return true;
-  if (normalizedDb == 'dynamic' || normalizedBridge == 'dynamic') return true;
+  if (normalizedDb == 'num' && (normalizedHydrated == 'double' || normalizedHydrated == 'int')) return true;
+  if (normalizedDb == 'dynamic' || normalizedHydrated == 'dynamic') return true;
   
   return false;
 }
@@ -145,7 +145,7 @@ bool _isContextField(String fieldName) {
   return contextFieldNames.contains(fieldName);
 }
 
-/// Check if a field needs transformation (type mismatch between bridge and db)
+/// Check if a field needs transformation (type mismatch between hydrated and db)
 bool _needsTransform(UniversalType field) {
   // Fields that typically need transformation:
   // - userId (User? -> String)

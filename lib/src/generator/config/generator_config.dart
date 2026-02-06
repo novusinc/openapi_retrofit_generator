@@ -24,7 +24,7 @@ class GeneratorConfig {
     this.includeIfNull = false,
     this.generateConverters = false,
     this.generateDefaults = false,
-    this.converterBridgeModelPrefix,
+    this.converterHydratedModelPrefix,
   });
 
   /// API identifier used for naming folders and export files.
@@ -194,7 +194,7 @@ class GeneratorConfig {
   /// Generate converter classes for Db* models.
   ///
   /// When true: Generates a converter class alongside each Db* model
-  /// that handles transformation between bridge models and database models.
+  /// that handles transformation between hydrated models and database models.
   /// All fields are automatically included - no manual field mapping required.
   ///
   /// Default: false
@@ -210,10 +210,10 @@ class GeneratorConfig {
   /// Default: false
   final bool generateDefaults;
 
-  /// Prefix/import path for bridge models used in converters.
+  /// Prefix/import path for hydrated models used in converters.
   ///
   /// Example: 'package:stream_chat/stream_chat.dart'
   ///
   /// Default: null (generates TODO comment)
-  final String? converterBridgeModelPrefix;
+  final String? converterHydratedModelPrefix;
 }

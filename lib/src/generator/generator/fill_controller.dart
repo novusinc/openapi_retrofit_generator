@@ -12,7 +12,7 @@ import 'package:openapi_retrofit_generator/src/generator/templates/dart_root_cli
 import 'package:openapi_retrofit_generator/src/generator/templates/dart_typedef_template.dart';
 import 'package:openapi_retrofit_generator/src/generator/templates/dart_converter_template.dart';
 import 'package:openapi_retrofit_generator/src/generator/templates/dart_defaults_template.dart';
-import 'package:openapi_retrofit_generator/src/generator/utils/bridge_model_parser.dart';
+import 'package:openapi_retrofit_generator/src/generator/utils/hydrated_model_parser.dart';
 import 'package:openapi_retrofit_generator/src/parser/model/normalized_identifier.dart';
 import 'package:openapi_retrofit_generator/src/parser/openapi_parser_core.dart';
 import 'package:openapi_retrofit_generator/src/utils/base_utils.dart';
@@ -53,27 +53,27 @@ final class FillController {
     if (!dataClass.name.startsWith('Db')) return null;
     
     final dbClassName = dataClass.name.toPascal;
-    final bridgeModelName = dbClassName.substring(2); // Remove 'Db'
-    final bridgeModelFileName = bridgeModelName.toSnake;
+    final hydratedModelName = dbClassName.substring(2); // Remove 'Db'
+    final hydratedModelFileName = hydratedModelName.toSnake;
     
-    // Path to the bridge model file
-    final bridgeModelPath = '${config.outputDirectory}/bridge_models/$bridgeModelFileName.dart';
+    // Path to the hydrated model file
+    final hydratedModelPath = '${config.outputDirectory}/hydrated_models/$hydratedModelFileName.dart';
     
-    if (!File(bridgeModelPath).existsSync()) {
-      // If bridge model doesn't exist, we skip converter generation or generate a context-only converter
+    if (!File(hydratedModelPath).existsSync()) {
+      // If hydrated model doesn't exist, we skip converter generation or generate a context-only converter
       // For now, let's skip to avoid analyzer errors
       return null;
     }
     
-    final parser = BridgeModelParser();
-    final bridgeFields = parser.parseFields(bridgeModelPath);
+    final parser = HydratedModelParser();
+    final hydratedFields = parser.parseFields(hydratedModelPath);
     
     return GeneratedFile(
       name: 'converters/${_resolveDtoFileBaseName(dataClass)}_converter.dart',
       content: dartConverterTemplate(
         dataClass,
-        bridgeModelImport: config.converterBridgeModelPrefix,
-        bridgeFields: bridgeFields,
+        hydratedModelImport: config.converterHydratedModelPrefix,
+        hydratedFields: hydratedFields,
       ),
     );
   }
