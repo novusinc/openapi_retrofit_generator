@@ -22,6 +22,9 @@ class GeneratorConfig {
     this.fallbackUnion,
     this.mergeOutputs = false,
     this.includeIfNull = false,
+    this.generateConverters = false,
+    this.generateDefaults = false,
+    this.converterBridgeModelPrefix,
   });
 
   /// API identifier used for naming folders and export files.
@@ -187,4 +190,30 @@ class GeneratorConfig {
   ///
   /// Default: false
   final bool includeIfNull;
+
+  /// Generate converter classes for Db* models.
+  ///
+  /// When true: Generates a converter class alongside each Db* model
+  /// that handles transformation between bridge models and database models.
+  /// All fields are automatically included - no manual field mapping required.
+  ///
+  /// Default: false
+  final bool generateConverters;
+
+  /// Generate default value constants for Db* models.
+  ///
+  /// When true: Generates a defaults file with static constants for each field
+  /// that has a default value defined in the OpenAPI schema.
+  ///
+  /// Files are generated in the `defaults/` folder as `<model>_defaults.dart`
+  ///
+  /// Default: false
+  final bool generateDefaults;
+
+  /// Prefix/import path for bridge models used in converters.
+  ///
+  /// Example: 'package:stream_chat/stream_chat.dart'
+  ///
+  /// Default: null (generates TODO comment)
+  final String? converterBridgeModelPrefix;
 }

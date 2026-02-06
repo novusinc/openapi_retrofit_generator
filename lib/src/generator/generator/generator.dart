@@ -57,6 +57,22 @@ class Generator {
     final restClientFiles = restClients
         .map(fillController.fillRestClientContent)
         .toList();
+    
+    // Generate converter files for Db* models if enabled
+    final converterFiles = config.generateConverters
+        ? dataClasses
+            .map(fillController.fillConverterContent)
+            .nonNulls
+            .toList()
+        : <GeneratedFile>[];
+
+    // Generate defaults files for Db* models if enabled
+    final defaultsFiles = config.generateConverters
+        ? dataClasses
+            .map(fillController.fillDefaultsContent)
+            .nonNulls
+            .toList()
+        : <GeneratedFile>[];
 
     final rootClientFile = config.rootClient && restClients.isNotEmpty
         ? fillController.fillRootClient(restClients)
@@ -73,6 +89,8 @@ class Generator {
     final files = [
       ...restClientFiles,
       ...dataClassesFiles,
+      ...converterFiles,
+      ...defaultsFiles,
       if (rootClientFile != null) rootClientFile,
       if (exportFile != null) exportFile,
     ];

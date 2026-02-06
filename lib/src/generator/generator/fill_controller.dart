@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:openapi_retrofit_generator/src/generator/config/generator_config.dart';
 import 'package:openapi_retrofit_generator/src/generator/model/generated_file.dart';
 import 'package:openapi_retrofit_generator/src/generator/model/json_serializer.dart';
@@ -9,6 +10,9 @@ import 'package:openapi_retrofit_generator/src/generator/templates/dart_json_ser
 import 'package:openapi_retrofit_generator/src/generator/templates/dart_retrofit_client_template.dart';
 import 'package:openapi_retrofit_generator/src/generator/templates/dart_root_client_template.dart';
 import 'package:openapi_retrofit_generator/src/generator/templates/dart_typedef_template.dart';
+import 'package:openapi_retrofit_generator/src/generator/templates/dart_converter_template.dart';
+import 'package:openapi_retrofit_generator/src/generator/templates/dart_defaults_template.dart';
+import 'package:openapi_retrofit_generator/src/generator/utils/bridge_model_parser.dart';
 import 'package:openapi_retrofit_generator/src/parser/model/normalized_identifier.dart';
 import 'package:openapi_retrofit_generator/src/parser/openapi_parser_core.dart';
 import 'package:openapi_retrofit_generator/src/utils/base_utils.dart';
@@ -40,6 +44,54 @@ final class FillController {
       fallbackUnion: config.fallbackUnion,
     ),
   );
+
+  /// Return [GeneratedFile] for converter if applicable, or null
+  GeneratedFile? fillConverterContent(UniversalDataClass dataClass) {
+    // Only generate converters for Db* prefixed classes (database models)
+    if (!config.generateConverters) return null;
+    if (dataClass is! UniversalComponentClass) return null;
+    if (!dataClass.name.startsWith('Db')) return null;
+    
+    final dbClassName = dataClass.name.toPascal;
+    final bridgeModelName = dbClassName.substring(2); // Remove 'Db'
+    final bridgeModelFileName = bridgeModelName.toSnake;
+    
+    // Path to the bridge model file
+    final bridgeModelPath = '${config.outputDirectory}/bridge_models/$bridgeModelFileName.dart';
+    
+    if (!File(bridgeModelPath).existsSync()) {
+      // If bridge model doesn't exist, we skip converter generation or generate a context-only converter
+      // For now, let's skip to avoid analyzer errors
+      return null;
+    }
+    
+    final parser = BridgeModelParser();
+    final bridgeFields = parser.parseFields(bridgeModelPath);
+    
+    return GeneratedFile(
+      name: 'converters/${_resolveDtoFileBaseName(dataClass)}_converter.dart',
+      content: dartConverterTemplate(
+        dataClass,
+        bridgeModelImport: config.converterBridgeModelPrefix,
+        bridgeFields: bridgeFields,
+      ),
+    );
+  }
+
+  /// Return [GeneratedFile] for defaults if applicable, or null
+  GeneratedFile? fillDefaultsContent(UniversalDataClass dataClass) {
+    if (!config.generateDefaults) return null;
+    if (dataClass is! UniversalComponentClass) return null;
+    if (!dataClass.name.startsWith('Db')) return null;
+    
+    // Only generate if there are actually defaults
+    if (!dataClass.parameters.any((p) => p.defaultValue != null)) return null;
+
+    return GeneratedFile(
+      name: 'defaults/${_resolveDtoFileBaseName(dataClass)}_defaults.dart',
+      content: dartDefaultsTemplate(dataClass),
+    );
+  }
 
   String _dtoFileContent(
     UniversalDataClass dataClass, {

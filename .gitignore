@@ -3,6 +3,9 @@
 build/
 .idea
 **/generated_files/**
+.vscode/
+.fvm/
+.fvmrc
 
 test_project/
 test/builder/.dart_tool/

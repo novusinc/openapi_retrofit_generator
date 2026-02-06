@@ -1663,7 +1663,7 @@ class OpenApiParser {
           jsonKey: name,
           defaultValue: isEnumMap
               ? map[_defaultConst]?.toString()
-              : protectDefaultValue(map[_defaultConst], isArray: true),
+              : protectDefaultValue(map[_defaultConst]),
           // Default for the map
           isRequired: isRequired,
           // isRequired for the map property

@@ -36,6 +36,9 @@ class OpenApiConfig {
     this.defaultClient = 'api',
     this.mergeOutputs = false,
     this.includeIfNull = false,
+    this.generateConverters = false,
+    this.generateDefaults = false,
+    this.converterBridgeModelPrefix,
   });
 
   /// Internal constructor of [OpenApiConfig]
@@ -66,7 +69,10 @@ class OpenApiConfig {
     required this.defaultClient,
     required this.mergeOutputs,
     required this.includeIfNull,
+    required this.generateConverters,
+    required this.generateDefaults,
     this.fallbackUnion,
+    this.converterBridgeModelPrefix,
   });
 
   /// Creates a [OpenApiConfig] from [YamlMap].
@@ -226,6 +232,15 @@ class OpenApiConfig {
     final includeIfNull =
         yamlMap['include_if_null'] as bool? ?? rootConfig?.includeIfNull;
 
+    final generateConverters =
+        yamlMap['generate_converters'] as bool? ?? rootConfig?.generateConverters;
+    
+    final generateDefaults =
+        yamlMap['generate_defaults'] as bool? ?? rootConfig?.generateDefaults;
+    
+    final converterBridgeModelPrefix =
+        yamlMap['converter_bridge_model_prefix'] as String? ?? rootConfig?.converterBridgeModelPrefix;
+
     // Default config
     final dc = OpenApiConfig(name: name, outputDirectory: outputDirectory);
 
@@ -259,6 +274,9 @@ class OpenApiConfig {
       includeTags: includedTags ?? dc.includeTags,
       defaultClient: defaultClient ?? dc.defaultClient,
       includeIfNull: includeIfNull ?? dc.includeIfNull,
+      generateConverters: generateConverters ?? dc.generateConverters,
+      generateDefaults: generateDefaults ?? dc.generateDefaults,
+      converterBridgeModelPrefix: converterBridgeModelPrefix,
     );
   }
 
@@ -575,6 +593,32 @@ class OpenApiConfig {
   /// Default: false
   final bool includeIfNull;
 
+  /// Generate converter classes for Db* prefixed models.
+  ///
+  /// When true: Generates a converter class alongside each Db* model
+  /// that handles transformation between bridge models and database models.
+  /// All fields are automatically included - no manual field mapping required.
+  ///
+  /// Default: false
+  final bool generateConverters;
+
+  /// Generate default value constants for Db* prefixed models.
+  ///
+  /// When true: Generates a defaults file with static constants for each field
+  /// that has a default value defined in the OpenAPI schema.
+  ///
+  /// Files are generated in the `defaults/` folder as `<model>_defaults.dart`
+  ///
+  /// Default: false
+  final bool generateDefaults;
+
+  /// Import path for bridge models used in converters.
+  ///
+  /// Example: 'package:stream_chat/stream_chat.dart'
+  ///
+  /// Default: null (generates TODO comment)
+  final String? converterBridgeModelPrefix;
+
   /// Convert [OpenApiConfig] to [GeneratorConfig]
   GeneratorConfig toGeneratorConfig() {
     return GeneratorConfig(
@@ -596,6 +640,9 @@ class OpenApiConfig {
       fallbackUnion: fallbackUnion,
       mergeOutputs: mergeOutputs,
       includeIfNull: includeIfNull,
+      generateConverters: generateConverters,
+      generateDefaults: generateDefaults,
+      converterBridgeModelPrefix: converterBridgeModelPrefix,
     );
   }
 

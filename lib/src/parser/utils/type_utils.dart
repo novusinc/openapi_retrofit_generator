@@ -82,8 +82,13 @@ String? protectDefaultValue(
     return null;
   }
 
-  /// Json is not supported
+  /// Handle empty maps/objects as default values
   if (nameStr.startsWith('{') && nameStr.endsWith('}')) {
+    final innerContent = nameStr.substring(1, nameStr.length - 1).trim();
+    if (innerContent.isEmpty) {
+      return '{}';
+    }
+    // Complex JSON objects are not supported
     return null;
   }
 
