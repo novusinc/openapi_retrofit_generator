@@ -56,8 +56,8 @@ final class FillController {
     final hydratedModelName = dbClassName.substring(2); // Remove 'Db'
     final hydratedModelFileName = hydratedModelName.toSnake;
     
-    // Path to the hydrated model file
-    final hydratedModelPath = '${config.outputDirectory}/hydrated_models/$hydratedModelFileName.dart';
+    // Path to the hydrated model file (relative to output directory)
+    final hydratedModelPath = '${config.outputDirectory}/${config.converterHydratedModelsDirectory}/$hydratedModelFileName.dart';
     
     if (!File(hydratedModelPath).existsSync()) {
       // If hydrated model doesn't exist, we skip converter generation or generate a context-only converter

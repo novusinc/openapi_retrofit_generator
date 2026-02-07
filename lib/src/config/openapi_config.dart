@@ -39,6 +39,7 @@ class OpenApiConfig {
     this.generateConverters = false,
     this.generateDefaults = false,
     this.converterHydratedModelPrefix,
+    this.converterHydratedModelsDirectory = 'hydrated_models',
   });
 
   /// Internal constructor of [OpenApiConfig]
@@ -73,6 +74,7 @@ class OpenApiConfig {
     required this.generateDefaults,
     this.fallbackUnion,
     this.converterHydratedModelPrefix,
+    this.converterHydratedModelsDirectory = 'hydrated_models',
   });
 
   /// Creates a [OpenApiConfig] from [YamlMap].
@@ -240,6 +242,9 @@ class OpenApiConfig {
     
     final converterHydratedModelPrefix =
         yamlMap['converter_hydrated_model_prefix'] as String? ?? rootConfig?.converterHydratedModelPrefix;
+    
+    final converterHydratedModelsDirectory =
+        yamlMap['converter_hydrated_models_directory'] as String? ?? rootConfig?.converterHydratedModelsDirectory ?? 'hydrated_models';
 
     // Default config
     final dc = OpenApiConfig(name: name, outputDirectory: outputDirectory);
@@ -277,6 +282,7 @@ class OpenApiConfig {
       generateConverters: generateConverters ?? dc.generateConverters,
       generateDefaults: generateDefaults ?? dc.generateDefaults,
       converterHydratedModelPrefix: converterHydratedModelPrefix,
+      converterHydratedModelsDirectory: converterHydratedModelsDirectory ?? dc.converterHydratedModelsDirectory,
     );
   }
 
@@ -619,6 +625,16 @@ class OpenApiConfig {
   /// Default: null (generates TODO comment)
   final String? converterHydratedModelPrefix;
 
+  /// Directory path where hydrated model files are located.
+  ///
+  /// Relative to [outputDirectory]. Generator looks for hydrated models here
+  /// to extract field information for converters.
+  ///
+  /// Example: 'hydrated_models', '../hydrated', 'models/hydrated'
+  ///
+  /// Default: 'hydrated_models'
+  final String converterHydratedModelsDirectory;
+
   /// Convert [OpenApiConfig] to [GeneratorConfig]
   GeneratorConfig toGeneratorConfig() {
     return GeneratorConfig(
@@ -643,6 +659,7 @@ class OpenApiConfig {
       generateConverters: generateConverters,
       generateDefaults: generateDefaults,
       converterHydratedModelPrefix: converterHydratedModelPrefix,
+      converterHydratedModelsDirectory: converterHydratedModelsDirectory,
     );
   }
 

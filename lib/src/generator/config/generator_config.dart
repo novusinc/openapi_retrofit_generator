@@ -25,6 +25,7 @@ class GeneratorConfig {
     this.generateConverters = false,
     this.generateDefaults = false,
     this.converterHydratedModelPrefix,
+    this.converterHydratedModelsDirectory = 'hydrated_models',
   });
 
   /// API identifier used for naming folders and export files.
@@ -216,4 +217,14 @@ class GeneratorConfig {
   ///
   /// Default: null (generates TODO comment)
   final String? converterHydratedModelPrefix;
+
+  /// Directory path where hydrated model files are located.
+  ///
+  /// Relative to [outputDirectory]. Generator looks for hydrated models here
+  /// to extract field information for converters.
+  ///
+  /// Example: 'hydrated_models', '../hydrated', 'models/hydrated'
+  ///
+  /// Default: 'hydrated_models'
+  final String converterHydratedModelsDirectory;
 }

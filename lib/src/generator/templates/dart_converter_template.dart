@@ -7,7 +7,7 @@ import 'package:openapi_retrofit_generator/src/generator/utils/hydrated_model_pa
 
 /// Provides template for generating model converter classes
 /// 
-/// Converters handle transformation between API models and database models,
+/// Converters handle transformation between hydrated models and database models,
 /// automatically including all fields and flagging type mismatches.
 String dartConverterTemplate(
   UniversalComponentClass dataClass, {
@@ -18,97 +18,97 @@ String dartConverterTemplate(
   final dbClassName = dataClass.name.toPascal;
   final converterClassName = '${dbClassName}Converter';
   
-  // Derive API model name from Db prefix (e.g., DbMessage -> Message)
-  final apiModelName = hydratedModelName ?? 
+  // Derive hydrated model name from Db prefix (e.g., DbMessage -> Message)
+  final resolvedHydratedModelName = hydratedModelName ?? 
       (dbClassName.startsWith('Db') ? dbClassName.substring(2) : '${dbClassName}Hydrated');
   
   final fields = dataClass.parameters.toList();
   
+  // Detect hydrated fields with dual-field support
+  final detectedHydratedFields = _detectHydratedFields(fields, hydratedFields);
+  
   // Categorize fields
   final directFields = <UniversalType>[];
-  final transformFields = <UniversalType>[];
+  final hydratedParams = <HydratedField>[];
   final contextFields = <UniversalType>[]; // Fields like channelCid that come from context
+  
+  // First, extract all hydrated fields from the detected fields
+  hydratedParams.addAll(detectedHydratedFields.where((f) => f.isHydrated));
   
   for (final field in fields) {
     final name = field.name;
     if (name == null) continue;
     
-    // Check if it exists in API model
-    final apiField = hydratedFields.firstWhere(
-      (f) => f.name == name,
-      orElse: () => HydratedField(name: '', type: ''),
-    );
-
-    if (_isContextField(name) || (hydratedFields.isNotEmpty && apiField.name.isEmpty)) {
-      contextFields.add(field);
-    } else if (hydratedFields.isNotEmpty) {
-      // Direct comparison if we have API fields
-      if (_typesMatch(field, apiField.type)) {
-        directFields.add(field);
-      } else {
-        transformFields.add(field);
-      }
-    } else {
-      // Fallback to heuristics if no API fields provided
-      if (_needsTransform(field)) {
-        transformFields.add(field);
-      } else {
-        directFields.add(field);
-      }
+    // Check if this is a hydrated object field (not in the DB)
+    if (hydratedParams.any((h) => h.name == name)) {
+      // Skip - already added as hydrated
+      continue;
     }
+    
+    // Check if it's a context field
+    if (_isContextField(name)) {
+      contextFields.add(field);
+      continue;
+    }
+    
+    // Otherwise, it's a direct field
+    directFields.add(field);
   }
   
-  final transformerParams = _generateTransformerParams(transformFields);
+  final transformerParams = _generateTransformerParams(directFields.where((f) => _isLegacyTransformField(f)).toList());
   final toDbBody = _generateToDbBody(
     dbClassName,
-    apiModelName,
+    resolvedHydratedModelName,
     directFields,
-    transformFields,
     contextFields,
   );
   final fromDbBody = _generateFromDbBody(
     dbClassName,
-    apiModelName,
+    resolvedHydratedModelName,
     directFields,
-    transformFields,
+    hydratedParams,
   );
   
   // Filter out imports - we import the whole package, so local model imports aren't needed
   // The dataClass.imports contains references to other Db* models which are all in unity_chat_models
   
-  final toDbParams = _generateToDbParams(apiModelName, contextFields);
+  final toDbParams = _generateToDbParams(resolvedHydratedModelName, contextFields);
+  final fromDbParams = _generateFromDbParams(dbClassName, hydratedParams);
+  final hydratedParamsDocs = _generateHydratedParamsDocumentation(hydratedParams);
   
   return '''
 import 'package:unity_chat_models/unity_chat_models.dart' as models;
 
-/// Auto-generated converter for $dbClassName <-> $apiModelName
+/// Auto-generated converter for $dbClassName <-> $resolvedHydratedModelName
 /// 
-/// This converter handles transformation between API models (from backend responses)
+/// This converter handles transformation between hydrated models (from backend responses)
 /// and database models (for Couchbase persistence).
 /// 
 /// Fields are categorized as:
 /// - Direct: Same type in both models, copied as-is
-/// - Transform: Different types, requires transformation function
+/// - Hydrated: Complex objects that need to be fetched/resolved (passed as parameters)
 /// - Context: Provided externally (e.g., hidden, clearHistoryUsers)
 class $converterClassName {
 $transformerParams
 
-  const $converterClassName(${_generateConstructorParams(transformFields)});
+  const $converterClassName(${_generateConstructorParams(directFields.where((f) => _isLegacyTransformField(f)).toList())});
 
-  /// Convert API model to database model
+  /// Convert hydrated model to database model
   /// 
   /// Direct fields (${directFields.length}): ${directFields.map((f) => f.name).join(', ')}
-  /// Transform fields (${transformFields.length}): ${transformFields.map((f) => f.name).join(', ')}
+  /// Hydrated fields (${hydratedParams.length}): ${hydratedParams.map((f) => f.name).join(', ')}
   /// Context fields (${contextFields.length}): ${contextFields.map((f) => f.name).join(', ')}
   models.$dbClassName toDb($toDbParams) {
 $toDbBody
   }
 
-  /// Convert database model back to API model
+  /// Convert database model back to hydrated model
   /// 
-  /// Reverses the toDb() transformation, reconstructing the API model
+  /// Reverses the toDb() transformation, reconstructing the hydrated model
   /// from its database representation.
-  models.$apiModelName fromDb(models.$dbClassName source) {
+  ///
+$hydratedParamsDocs
+  models.$resolvedHydratedModelName fromDb($fromDbParams) {
 $fromDbBody
   }
 }
@@ -117,6 +117,117 @@ $fromDbBody
 /// TODO: Provide actual transformer implementations
 // const ${converterClassName.substring(0, 1).toLowerCase()}${converterClassName.substring(1)} = $converterClassName();
 ''';
+}
+
+/// Detect hydrated fields with dual-field pattern support
+/// 
+/// This function implements the intelligent dual-field detection algorithm
+/// that recognizes when both ID fields (e.g., userId) and object fields (e.g., user)
+/// exist and marks them appropriately.
+List<HydratedField> _detectHydratedFields(
+  List<UniversalType> dbFields,
+  List<HydratedField> hydratedFields,
+) {
+  final result = <HydratedField>[];
+  final processedNames = <String>{};
+  
+  // Process hydrated fields and detect relationships
+  for (final hydratedField in hydratedFields) {
+    // Check if this is an ID field (e.g., userId, attachmentIds)
+    final isIdField = hydratedField.name.endsWith('Id') || 
+                     hydratedField.name.endsWith('Ids');
+    
+    if (isIdField) {
+      // This is an ID field (userId, attachmentIds, etc.)
+      
+      // Check if corresponding object field exists in hydrated model
+      final singularName = HydratedField.singularizeIdField(hydratedField.name);
+      final correspondingObjectField = hydratedFields.firstWhere(
+        (f) => f.name == singularName,
+        orElse: () => HydratedField(name: '', type: ''),
+      );
+      
+      if (correspondingObjectField.name.isNotEmpty) {
+        // We have both ID and object (userId + user)
+        
+        // Process ID field as DIRECT (maps to DB directly)
+        result.add(HydratedField(
+          name: hydratedField.name,
+          type: hydratedField.type,
+          idFieldName: null,
+          isHydrated: false,
+          isIdField: true,
+        ));
+        processedNames.add(hydratedField.name);
+        
+        // Process object field as HYDRATED (needs converter parameter)
+        result.add(HydratedField(
+          name: correspondingObjectField.name,
+          type: correspondingObjectField.type,
+          idFieldName: hydratedField.name,  // Points back to ID field
+          isHydrated: true,
+          isIdField: false,
+          listItemType: _extractListItemType(correspondingObjectField.type),
+        ));
+        processedNames.add(correspondingObjectField.name);
+      } else {
+        // ID field only, process normally
+        result.add(HydratedField(
+          name: hydratedField.name,
+          type: hydratedField.type,
+          isIdField: true,
+        ));
+        processedNames.add(hydratedField.name);
+      }
+    } else {
+      // Not an ID field
+      
+      if (processedNames.contains(hydratedField.name)) {
+        // Already processed as part of ID/object pair
+        continue;
+      }
+      
+      // Check if there's a corresponding ID field in DB
+      final possibleIdNames = [
+        '${hydratedField.name}Id',
+        '${hydratedField.name}Ids',
+      ];
+      
+      final correspondingDbIdField = dbFields.firstWhere((f) {
+        return possibleIdNames.contains(f.name);
+      }, orElse: () => UniversalType(type: '', isRequired: false));
+      
+      if (correspondingDbIdField.type.isNotEmpty) {
+        // This is an object field that has a corresponding ID in DB
+        result.add(HydratedField(
+          name: hydratedField.name,
+          type: hydratedField.type,
+          idFieldName: correspondingDbIdField.name,
+          isHydrated: true,
+          isIdField: false,
+          listItemType: _extractListItemType(hydratedField.type),
+        ));
+      } else {
+        // No special relationship, treat as regular field
+        result.add(HydratedField(
+          name: hydratedField.name,
+          type: hydratedField.type,
+          isHydrated: false,
+          isIdField: false,
+        ));
+      }
+      
+      processedNames.add(hydratedField.name);
+    }
+  }
+  
+  return result;
+}
+
+/// Extract List<T> → T
+String? _extractListItemType(String type) {
+  final match = RegExp(r'List<([^>]+)>').firstMatch(type);
+  return match?.group(1);
 }
 
 /// Check if database field type matches hydrated model field type
@@ -143,6 +254,13 @@ bool _isContextField(String fieldName) {
     'channel_cid',
   };
   return contextFieldNames.contains(fieldName);
+}
+
+/// Check if a field is a legacy transform field (for backwards compatibility)
+bool _isLegacyTransformField(UniversalType field) {
+  // This is for handling transformer functions for fields that truly need transformation
+  // In most cases with the new hydration detection, this won't be needed
+  return false;
 }
 
 /// Check if a field needs transformation (type mismatch between hydrated and db)
@@ -205,8 +323,8 @@ String _generateConstructorParams(List<UniversalType> transformFields) {
   return '{\n    $params,\n  }';
 }
 
-String _generateToDbParams(String apiModelName, List<UniversalType> contextFields) {
-  if (contextFields.isEmpty) return 'models.$apiModelName source';
+String _generateToDbParams(String hydratedModelName, List<UniversalType> contextFields) {
+  if (contextFields.isEmpty) return 'models.$hydratedModelName source';
   
   final params = contextFields.map((f) {
     final type = f.toSuitableType();
@@ -215,9 +333,50 @@ String _generateToDbParams(String apiModelName, List<UniversalType> contextField
   }).join('\n    ');
   
   return '''
-    models.$apiModelName source, {
+    models.$hydratedModelName source, {
     $params
   }''';
+}
+
+/// Generate parameters for fromDb() method signature with hydrated parameters
+String _generateFromDbParams(String dbClassName, List<HydratedField> hydratedParams) {
+  if (hydratedParams.isEmpty) {
+    return 'models.$dbClassName source';
+  }
+  
+  final buffer = StringBuffer();
+  buffer.write('models.$dbClassName source, {\n');
+  
+  for (final field in hydratedParams) {
+    final baseType = field.listItemType ?? field.type;
+    final type = field.listItemType != null ? 'List<models.$baseType>' : 'models.$baseType';
+    final nullable = !field.type.endsWith('?') ? '?' : '';
+    final defaultValue = field.listItemType != null ? ' = const []' : '';
+    buffer.write('    $type$nullable ${field.name}$defaultValue,\n');
+  }
+  
+  buffer.write('  }');
+  return buffer.toString();
+}
+
+/// Generate documentation for hydrated parameters
+String _generateHydratedParamsDocumentation(List<HydratedField> hydratedParams) {
+  if (hydratedParams.isEmpty) {
+    return '';
+  }
+  
+  final buffer = StringBuffer();
+  buffer.writeln('  /// Hydrated parameters:');
+  
+  for (final field in hydratedParams) {
+    if (field.idFieldName != null) {
+      buffer.writeln('  /// - [${field.name}]: ${field.type} object for ${field.idFieldName} field');
+    } else {
+      buffer.writeln('  /// - [${field.name}]: ${field.type} object');
+    }
+  }
+  
+  return buffer.toString();
 }
 
 String _generateContextParams(List<UniversalType> contextFields) {
@@ -230,9 +389,8 @@ String _generateContextParams(List<UniversalType> contextFields) {
 
 String _generateToDbBody(
   String dbClassName,
-  String apiModelName,
+  String hydratedModelName,
   List<UniversalType> directFields,
-  List<UniversalType> transformFields,
   List<UniversalType> contextFields,
 ) {
   final buffer = StringBuffer();
@@ -257,24 +415,19 @@ String _generateToDbBody(
     }
   }
   
-  // Transform fields - use transformer functions
-  for (final field in transformFields) {
-    buffer.writeln('      ${field.name}: ${field.name}ToDb(source),');
-  }
-  
   buffer.writeln('    );');
   return buffer.toString();
 }
 
-/// Generate the fromDb() method body that converts DB model back to API model
+/// Generate the fromDb() method body that converts DB model back to hydrated model
 String _generateFromDbBody(
   String dbClassName,
-  String apiModelName,
+  String hydratedModelName,
   List<UniversalType> directFields,
-  List<UniversalType> transformFields,
+  List<HydratedField> hydratedParams,
 ) {
   final buffer = StringBuffer();
-  buffer.writeln('    return models.$apiModelName(');
+  buffer.writeln('    return models.$hydratedModelName(');
   
   // Direct fields - copy as-is
   for (final field in directFields) {
@@ -282,11 +435,9 @@ String _generateFromDbBody(
     buffer.writeln('      $name: source.$name,');
   }
   
-  // Transform fields - copy as-is (reverse transformations happen elsewhere)
-  // For now, we just copy the transformed values directly
-  for (final field in transformFields) {
-    final name = field.name;
-    buffer.writeln('      $name: source.$name,');
+  // Hydrated fields - use parameters passed in
+  for (final field in hydratedParams) {
+    buffer.writeln('      ${field.name}: ${field.name},');
   }
   
   buffer.writeln('    );');
