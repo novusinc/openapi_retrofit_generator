@@ -142,13 +142,21 @@ List<HydratedField> _detectHydratedFields(
       
       // Check if corresponding object field exists in hydrated model
       final singularName = HydratedField.singularizeIdField(hydratedField.name);
+      
+      // Look for both singular and plural forms of the object field
+      // E.g., for "userIds", look for both "user" and "users"
+      final possibleObjectFieldNames = [
+        singularName,  // e.g., "user" (singular)
+        '${singularName}s',  // e.g., "users" (plural)
+      ];
+      
       final correspondingObjectField = hydratedFields.firstWhere(
-        (f) => f.name == singularName,
+        (f) => possibleObjectFieldNames.contains(f.name),
         orElse: () => HydratedField(name: '', type: ''),
       );
       
       if (correspondingObjectField.name.isNotEmpty) {
-        // We have both ID and object (userId + user)
+        // We have both ID and object (userId + user, or userIds + users)
         
         // Process ID field as DIRECT (maps to DB directly)
         result.add(HydratedField(
