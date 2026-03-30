@@ -1572,10 +1572,13 @@ class OpenApiParser {
           (map[_itemsConst] as Map<String, dynamic>?) ?? {};
       // Determine item details by recursively calling _findType for the item schema.
       // `root` is false for items, meaning item's nullability is driven by its own schema's `nullable` field.
+      // When the items schema is a $ref, don't pass the property name to avoid
+      // creating a derived type name (e.g., ChannelMembers instead of ChannelMember).
+      final isItemsRef = arrayItemsSchema.containsKey(_refConst);
       final (type: itemDetails, import: itemImport) = _findType(
         arrayItemsSchema,
-        name: name, // Or a modified name specific to items if needed
-        additionalName: additionalName,
+        name: isItemsRef ? null : name, // Don't pass name for $ref items
+        additionalName: isItemsRef ? null : additionalName, // Don't pass additionalName for $ref items
         root: false,
         isRequired:
             true, // This doesn't affect itemDetails.nullable due to root:false
@@ -2010,55 +2013,74 @@ class OpenApiParser {
             )) {
           final discriminator = _parseDiscriminatorInfo(map);
 
-          // Create a base union class for the discriminated types
-          // Avoid duplicating the name when additionalName already ends with name
-          // e.g., additionalName="MessageState" + name="state" should be "MessageState", not "MessageStateState"
-          final baseAdditionalName = additionalName ?? '';
-          final basePropertyName = name ?? '';
-          final effectivePropertyName =
-              baseAdditionalName.toLowerCase().endsWith(basePropertyName.toLowerCase()) &&
-                      basePropertyName.isNotEmpty
-                  ? ''
-                  : basePropertyName;
-          final baseClassName =
-              '$baseAdditionalName $effectivePropertyName'.toPascal;
-          final (newName, description) = protectName(
-            baseClassName,
-            uniqueIfNull: true,
-            description: map[_descriptionConst]?.toString(),
-          );
+          // Check if this discriminated union is just a $ref to an existing schema.
+          // If so, use the existing schema's name directly instead of creating a new inline class.
+          String? referencedSchemaName;
+          if (map.containsKey(_refConst)) {
+            // The union itself is a reference to a top-level schema
+            referencedSchemaName = _formatRef(map).toPascal;
+          } else {
+            // Check if this inline union matches an existing schema by comparing
+            // the discriminator property and mapping values
+            referencedSchemaName = _findMatchingUnionSchema(map, discriminator);
+          }
 
-          // Check if a class with this name already exists (from top-level schema processing)
-          final sealedClassName = newName!.toPascal;
-          final classAlreadyExists = _typeRegistry.isClass(sealedClassName) ||
-              _objectClasses.any((c) => c.name == sealedClassName);
+          String sealedClassName;
+          if (referencedSchemaName != null) {
+            // Trust the match — the named class will be generated from its top-level
+            // schema entry, so referencing it here as a forward reference is safe.
+            sealedClassName = referencedSchemaName;
+          } else {
+            // Create a base union class for the discriminated types
+            // Avoid duplicating the name when additionalName already ends with name
+            // e.g., additionalName="MessageState" + name="state" should be "MessageState", not "MessageStateState"
+            final baseAdditionalName = additionalName ?? '';
+            final basePropertyName = name ?? '';
+            final effectivePropertyName =
+                baseAdditionalName.toLowerCase().endsWith(basePropertyName.toLowerCase()) &&
+                        basePropertyName.isNotEmpty
+                    ? ''
+                    : basePropertyName;
+            final baseClassName =
+                '$baseAdditionalName $effectivePropertyName'.toPascal;
+            final (newName, description) = protectName(
+              baseClassName,
+              uniqueIfNull: true,
+              description: map[_descriptionConst]?.toString(),
+            );
 
-          if (!classAlreadyExists) {
-            // Create a sealed class to represent the discriminated union
-            final sealedParameters = {
-              UniversalType(
-                type: 'String',
-                name: discriminator?.propertyName,
-                isRequired: true,
-                customMetadata: _extractCustomMetadata(map),
-              ),
-            };
-            final resolvedSealedParameters = _resolveParameterNameConflicts(
-              sealedParameters,
-            );
-            _objectClasses.add(
-              UniversalComponentClass(
-                name: sealedClassName,
-                imports: SplayTreeSet<String>(),
-                parameters: resolvedSealedParameters,
-                discriminator: discriminator,
-              ),
-            );
-            // Register in type registry
-            _typeRegistry.registerClass(sealedClassName);
-            // Register inline schema in the anchor registry
-            if (_contextStack.current case final context?) {
-              _anchorRegistry.registerInlineSchema(sealedClassName, context);
+            // Check if a class with this name already exists (from top-level schema processing)
+            sealedClassName = newName!.toPascal;
+            final classAlreadyExists = _typeRegistry.isClass(sealedClassName) ||
+                _objectClasses.any((c) => c.name == sealedClassName);
+
+            if (!classAlreadyExists) {
+              // Create a sealed class to represent the discriminated union
+              final sealedParameters = {
+                UniversalType(
+                  type: 'String',
+                  name: discriminator?.propertyName,
+                  isRequired: true,
+                  customMetadata: _extractCustomMetadata(map),
+                ),
+              };
+              final resolvedSealedParameters = _resolveParameterNameConflicts(
+                sealedParameters,
+              );
+              _objectClasses.add(
+                UniversalComponentClass(
+                  name: sealedClassName,
+                  imports: SplayTreeSet<String>(),
+                  parameters: resolvedSealedParameters,
+                  discriminator: discriminator,
+                ),
+              );
+              // Register in type registry
+              _typeRegistry.registerClass(sealedClassName);
+              // Register inline schema in the anchor registry
+              if (_contextStack.current case final context?) {
+                _anchorRegistry.registerInlineSchema(sealedClassName, context);
+              }
             }
           }
 
@@ -3023,6 +3045,90 @@ class OpenApiParser {
     }
 
     return null;
+  }
+
+  /// Finds a matching schema for a discriminated union by comparing discriminator
+  /// property name and variant references.
+  /// Returns the schema name if a match is found, null otherwise.
+  String? _findMatchingUnionSchema(
+    Map<String, dynamic> unionMap,
+    Discriminator? discriminator,
+  ) {
+    if (discriminator == null) return null;
+
+    // Get the union variants from this inline union
+    final unionVariants = <String>{};
+    final ofList = unionMap[_oneOfConst] ?? unionMap[_anyOfConst];
+    if (ofList is List<dynamic>) {
+      for (final item in ofList) {
+        if (item is Map<String, dynamic> && item.containsKey(_refConst)) {
+          final ref = item[_refConst].toString();
+          unionVariants.add(ref);
+        }
+      }
+    }
+
+    // Search through all schemas to find a matching one
+    final Map<String, dynamic>? schemas;
+    if (_definitionFileContent.containsKey(_componentsConst)) {
+      final components =
+          _definitionFileContent[_componentsConst] as Map<String, dynamic>;
+      schemas = components[_schemasConst] as Map<String, dynamic>?;
+    } else if (_definitionFileContent.containsKey(_definitionsConst)) {
+      schemas = _definitionFileContent[_definitionsConst] as Map<String, dynamic>?;
+    } else {
+      return null;
+    }
+
+    if (schemas == null) return null;
+
+    for (final entry in schemas.entries) {
+      final schemaName = entry.key;
+      final schema = entry.value;
+      if (schema is! Map<String, dynamic>) continue;
+
+      // Skip self-match: if the schema being searched IS the inline union map
+      // (same object in memory), it would create a circular typedef reference.
+      if (identical(schema, unionMap)) continue;
+
+      // Check if this schema has a discriminator
+      final schemaDiscriminator = schema[_discriminatorConst];
+      if (schemaDiscriminator is! Map<String, dynamic>) continue;
+
+      final schemaPropName = schemaDiscriminator[_propertyNameConst]?.toString();
+      if (schemaPropName != discriminator.propertyName) continue;
+
+      // Check if the discriminator mappings match
+      final schemaMapping = schemaDiscriminator[_mappingConst];
+      if (schemaMapping is Map<String, dynamic>) {
+        final schemaVariants = schemaMapping.values.map((v) => v.toString()).toSet();
+        if (_setsEqual(schemaVariants, unionVariants)) {
+          return schemaName.toPascal;
+        }
+      }
+
+      // Also check the oneOf/anyOf variants directly
+      final schemaOfList = schema[_oneOfConst] ?? schema[_anyOfConst];
+      if (schemaOfList is List<dynamic>) {
+        final schemaVariantRefs = <String>{};
+        for (final item in schemaOfList) {
+          if (item is Map<String, dynamic> && item.containsKey(_refConst)) {
+            schemaVariantRefs.add(item[_refConst].toString());
+          }
+        }
+        if (_setsEqual(schemaVariantRefs, unionVariants)) {
+          return schemaName.toPascal;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /// Helper to compare two sets for equality
+  bool _setsEqual<T>(Set<T> a, Set<T> b) {
+    if (a.length != b.length) return false;
+    return a.containsAll(b);
   }
 
   (
