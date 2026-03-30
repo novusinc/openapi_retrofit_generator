@@ -4,12 +4,18 @@ import 'package:openapi_retrofit_generator/src/parser/openapi_parser_core.dart';
 import 'package:openapi_retrofit_generator/src/utils/base_utils.dart';
 import 'package:openapi_retrofit_generator/src/utils/type_utils.dart';
 
+// NOTE: generateMergeMethod is intentionally NOT supported for json_serializable
+// because json_serializable does not generate copyWith methods. The merge() method
+// requires copyWith to function. Use Freezed or dart_mappable serializers
+// if you need merge functionality.
+
 /// Provides template for generating dart DTO using JSON serializable
 String dartJsonSerializableDtoTemplate(
   UniversalComponentClass dataClass, {
   required bool markFileAsGenerated,
   required bool includeIfNull,
   String? fallbackUnion,
+  bool generateMergeMethod = true, // Parameter accepted for API consistency but ignored
 }) {
   final originalClassName = dataClass.name.toPascal;
 
@@ -30,7 +36,7 @@ String dartJsonSerializableDtoTemplate(
     );
   }
 
-  final base64Types = _getBase64FieldTypes(dataClass.parameters);
+  final base64Types = _getBase64FieldTypes(dataClass.parameters, discriminator: dataClass.discriminator);
   final needsBase64Converter =
       base64Types.hasScalar ||
       base64Types.hasNullable ||
@@ -39,7 +45,7 @@ String dartJsonSerializableDtoTemplate(
   final base64ConverterClass = needsBase64Converter
       ? '\n${_base64ConverterClass(hasScalar: base64Types.hasScalar, hasNullable: base64Types.hasNullable, hasList: base64Types.hasList, hasListNullable: base64Types.hasListNullable)}'
       : '';
-  final dartCoreImports = _getDartCoreImports(dataClass.parameters);
+  final dartCoreImports = _getDartCoreImports(dataClass.parameters, discriminator: dataClass.discriminator);
 
   return '''
 import 'package:json_annotation/json_annotation.dart';
@@ -654,12 +660,13 @@ String _deserializerExtensionName(String className) =>
     : '${className}UnionDeserializer';
 
 ({bool hasScalar, bool hasNullable, bool hasList, bool hasListNullable})
-_getBase64FieldTypes(Set<UniversalType> parameters) {
+_getBase64FieldTypes(Set<UniversalType> parameters, {Discriminator? discriminator}) {
   bool hasScalar = false;
   bool hasNullable = false;
   bool hasList = false;
   bool hasListNullable = false;
 
+  // Check top-level parameters
   for (final param in parameters) {
     if ((param.format == 'binary' || param.format == 'byte') ||
         param.type == 'Uint8List') {
@@ -684,6 +691,35 @@ _getBase64FieldTypes(Set<UniversalType> parameters) {
     }
   }
 
+  // Also check discriminator variant parameters for union types
+  if (discriminator != null) {
+    for (final variantParams in discriminator.refProperties.values) {
+      for (final param in variantParams) {
+        if ((param.format == 'binary' || param.format == 'byte') ||
+            param.type == 'Uint8List') {
+          final isNullable = !param.isRequired && param.defaultValue == null;
+          final isList =
+              param.wrappingCollections.isNotEmpty &&
+              param.wrappingCollections.first.collectionPrefix.startsWith('List<');
+
+          if (isList) {
+            if (isNullable) {
+              hasListNullable = true;
+            } else {
+              hasList = true;
+            }
+          } else {
+            if (isNullable) {
+              hasNullable = true;
+            } else {
+              hasScalar = true;
+            }
+          }
+        }
+      }
+    }
+  }
+
   return (
     hasScalar: hasScalar,
     hasNullable: hasNullable,
@@ -692,10 +728,10 @@ _getBase64FieldTypes(Set<UniversalType> parameters) {
   );
 }
 
-String _getDartCoreImports(Set<UniversalType> parameters) {
+String _getDartCoreImports(Set<UniversalType> parameters, {Discriminator? discriminator}) {
   final imports = <String>[];
 
-  final base64Types = _getBase64FieldTypes(parameters);
+  final base64Types = _getBase64FieldTypes(parameters, discriminator: discriminator);
   final hasAnyBase64 =
       base64Types.hasScalar ||
       base64Types.hasNullable ||

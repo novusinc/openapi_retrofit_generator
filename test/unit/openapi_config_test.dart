@@ -35,6 +35,7 @@ void main() {
         expect(config.includeTags, isEmpty);
         expect(config.defaultClient, 'api');
         expect(config.includeIfNull, isFalse);
+        expect(config.generateMergeMethod, isTrue);
       });
     });
 
@@ -650,6 +651,70 @@ void main() {
 
       final generatorConfig = swpConfig.toGeneratorConfig();
       expect(generatorConfig.includeIfNull, isTrue);
+    });
+  });
+
+  group('generateMergeMethod configuration', () {
+    test('should parse generateMergeMethod from YAML when set to true', () {
+      final yamlMap = YamlMap.wrap({
+        'schema_path': 'api/openapi.yaml',
+        'output_directory': 'lib/api',
+        'generate_merge_method': true,
+      });
+
+      final config = OpenApiConfig.fromYaml(yamlMap);
+      expect(config.generateMergeMethod, isTrue);
+    });
+
+    test('should parse generateMergeMethod from YAML when set to false', () {
+      final yamlMap = YamlMap.wrap({
+        'schema_path': 'api/openapi.yaml',
+        'output_directory': 'lib/api',
+        'generate_merge_method': false,
+      });
+
+      final config = OpenApiConfig.fromYaml(yamlMap);
+      expect(config.generateMergeMethod, isFalse);
+    });
+
+    test('should inherit generateMergeMethod from root config', () {
+      const rootConfig = OpenApiConfig(
+        outputDirectory: 'lib/shared',
+        generateMergeMethod: false,
+      );
+
+      final yamlMap = YamlMap.wrap({
+        'schema_path': 'api/user.yaml',
+        'name': 'user_api',
+      });
+
+      final config = OpenApiConfig.fromYaml(yamlMap, rootConfig: rootConfig);
+      expect(config.generateMergeMethod, isFalse);
+    });
+
+    test('should override root config generateMergeMethod with local value', () {
+      const rootConfig = OpenApiConfig(
+        outputDirectory: 'lib/shared',
+        generateMergeMethod: false,
+      );
+
+      final yamlMap = YamlMap.wrap({
+        'schema_path': 'api/user.yaml',
+        'generate_merge_method': true,
+      });
+
+      final config = OpenApiConfig.fromYaml(yamlMap, rootConfig: rootConfig);
+      expect(config.generateMergeMethod, isTrue);
+    });
+
+    test('should pass generateMergeMethod to GeneratorConfig', () {
+      const swpConfig = OpenApiConfig(
+        outputDirectory: 'lib/api',
+        generateMergeMethod: true,
+      );
+
+      final generatorConfig = swpConfig.toGeneratorConfig();
+      expect(generatorConfig.generateMergeMethod, isTrue);
     });
   });
 

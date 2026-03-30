@@ -1,3 +1,5 @@
+import 'package:openapi_retrofit_generator/src/config/custom_metadata_config.dart';
+
 /// The configuration that the OpenApiParser uses
 class ParserConfig {
   /// Creates a [ParserConfig].
@@ -13,6 +15,7 @@ class ParserConfig {
     this.excludeTags = const <String>[],
     this.includeTags = const <String>[],
     this.defaultClient = 'api',
+    this.customMetadata = const CustomMetadataConfig(),
   });
 
   /// Specification file content as [String]
@@ -63,4 +66,10 @@ class ParserConfig {
   ///
   /// defaults to 'api' which results in a client named `ApiClient` (with postfix) or `Api` (without postfix).
   final String defaultClient;
+
+  /// Configuration for custom metadata field processing.
+  ///
+  /// When enabled, the parser will extract custom metadata fields from OpenAPI
+  /// property definitions and store them for use by code generators.
+  final CustomMetadataConfig customMetadata;
 }

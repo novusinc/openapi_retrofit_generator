@@ -10,6 +10,7 @@ String dartDartMappableDtoTemplate(
   UniversalComponentClass dataClass, {
   required bool markFileAsGenerated,
   String? fallbackUnion,
+  bool generateMergeMethod = true,
 }) {
   // Use fallback union only if explicitly provided
   // Auto-fallback is disabled to avoid breaking existing tests
@@ -75,7 +76,7 @@ part '$classNameSnake.mapper.dart';
 
 ${descriptionComment(dataClass.description)}@MappableClass(${_getMappableClassAnnotation(dataClass, className, effectiveFallbackUnion)})
 ${_classModifier(isUnion: isUnion, isUndiscriminatedUnion: false)}class $className ${parent != null ? "extends $parent " : ""}with ${className}Mappable {
-${_generateClassBody(dataClass, className, isUnion, isSimpleDataClass, effectiveFallbackUnion)}
+${_generateClassBody(dataClass, className, isUnion, isSimpleDataClass, effectiveFallbackUnion, generateMergeMethod)}
 }
 
 $additionalClasses$base64ConverterClass''';
@@ -297,18 +298,25 @@ String _generateClassBody(
   bool isUnion,
   bool isSimpleDataClass, [
   String? fallbackUnion,
+  bool generateMergeMethod = true,
 ]) {
   if (!isUnion) {
     // Regular class generation
+    // Generate merge method using dart_mappable's copyWith
+    final mergeMethod = generateMergeMethod
+        ? _generateMergeMethod(className, dataClass.parameters)
+        : '';
+
     return '''
 ${indentation(2)}const $className(${getParameters(dataClass)});
 
 ${getFields(dataClass, isSimpleDataClass: isSimpleDataClass)}
 ${indentation(2)}static $className fromJson(Map<String, dynamic> json) => ${className}Mapper.fromJson(json);
-''';
+$mergeMethod''';
   }
 
   // Discriminated unions - dart_mappable handles deserialization via discriminatorKey/discriminatorValue
+  // Note: merge method is not generated for union types (sealed classes)
   return '''
 ${indentation(2)}const $className();
 
@@ -553,6 +561,27 @@ String _getDartCoreImports(Set<UniversalType> parameters) {
   }
 
   return imports.isEmpty ? '' : '${imports.join('\n')}\n';
+}
+
+/// Generates a merge() method that creates a new instance by copying all fields
+/// from another instance using dart_mappable's copyWith.
+/// This is only generated for regular classes (not unions).
+String _generateMergeMethod(String className, Set<UniversalType> parameters) {
+  // Build copyWith parameters: fieldName: other.fieldName
+  final copyWithParams = parameters.map((param) {
+    final name = param.name;
+    return '      $name: other.$name,';
+  }).join('\n');
+
+  return '''
+
+${indentation(2)}/// Returns a new [$className] that is a combination of this instance and the
+${indentation(2)}/// given [other] instance. All fields from [other] are copied to the new instance.
+${indentation(2)}$className merge($className other) {
+${indentation(4)}return copyWith(
+$copyWithParams
+${indentation(4)});
+${indentation(2)}}''';
 }
 
 String _base64ConverterClass() {

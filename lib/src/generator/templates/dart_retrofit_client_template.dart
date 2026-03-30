@@ -16,6 +16,7 @@ String dartRetrofitClientTemplate({
   bool dioOptionsParameterByDefault = false,
   bool originalHttpResponse = false,
   bool mergeClients = false,
+  bool generatePathConstants = false,
   String? fileName,
 }) {
   final dioImport = "import 'package:dio/dio.dart' hide Headers;";
@@ -39,6 +40,14 @@ part '${fileName ?? name.toSnake}.g.dart';
 abstract class $name {
   factory $name(Dio dio, {String? baseUrl}) = _$name;
 ''');
+
+  if (generatePathConstants) {
+    for (final request in restClient.requests) {
+      final constantName = '${request.name}Path';
+      sb.writeln("  static const String $constantName = '${request.route}';");
+    }
+  }
+
   for (final request in restClient.requests) {
     sb.write(
       _toClientRequest(
@@ -48,6 +57,7 @@ abstract class $name {
         originalHttpResponse: originalHttpResponse,
         extrasParameterByDefault: extrasParameterByDefault,
         dioOptionsParameterByDefault: dioOptionsParameterByDefault,
+        generatePathConstants: generatePathConstants,
       ),
     );
   }
@@ -62,6 +72,7 @@ String _toClientRequest(
   required bool originalHttpResponse,
   required bool extrasParameterByDefault,
   required bool dioOptionsParameterByDefault,
+  bool generatePathConstants = false,
 }) {
   var responseType = request.returnType == null
       ? 'void'
@@ -89,9 +100,13 @@ String _toClientRequest(
       ? '\n  @DioResponseType(ResponseType.bytes)'
       : '';
 
+  final routeArg = generatePathConstants
+      ? '${request.name}Path'
+      : "'${request.route}'";
+
   final sb = StringBuffer('''
 
-  ${descriptionComment(request.description, tabForFirstLine: false, tab: '  ', end: '  ')}${request.isDeprecated ? "@Deprecated('This method is marked as deprecated')\n  " : ''}${_contentTypeHeader(request, defaultContentType)}@${request.requestType.name.toUpperCase()}('${request.route}')$dioResponseTypeAnnotation
+  ${descriptionComment(request.description, tabForFirstLine: false, tab: '  ', end: '  ')}${request.isDeprecated ? "@Deprecated('This method is marked as deprecated')\n  " : ''}${_contentTypeHeader(request, defaultContentType)}@${request.requestType.name.toUpperCase()}($routeArg)$dioResponseTypeAnnotation
   Future<$finalResponseType> ${request.name}(''');
   if (request.parameters.isNotEmpty ||
       extrasParameterByDefault ||

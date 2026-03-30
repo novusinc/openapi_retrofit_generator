@@ -27,6 +27,7 @@ final class UniversalType {
     this.uniqueItems,
     this.deprecated = false,
     this.referencedNullable = false,
+    this.customMetadata = const {},
   });
 
   /// Object type
@@ -80,6 +81,10 @@ final class UniversalType {
   /// Whether this property references a nullable schema
   final bool referencedNullable;
 
+  /// Custom metadata extracted from OpenAPI property definition
+  /// Maps field names to their values (e.g., {'auto_generated': true, 'immutable': true})
+  final Map<String, dynamic> customMetadata;
+
   /// Copy of [UniversalType] with new values
   UniversalType copyWith({
     String? type,
@@ -102,6 +107,7 @@ final class UniversalType {
     bool? uniqueItems,
     bool? deprecated,
     bool? referencedNullable,
+    Map<String, dynamic>? customMetadata,
   }) {
     return UniversalType(
       type: type ?? this.type,
@@ -124,6 +130,7 @@ final class UniversalType {
       uniqueItems: uniqueItems ?? this.uniqueItems,
       deprecated: deprecated ?? this.deprecated,
       referencedNullable: referencedNullable ?? this.referencedNullable,
+      customMetadata: customMetadata ?? this.customMetadata,
     );
   }
 

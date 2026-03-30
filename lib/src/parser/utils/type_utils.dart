@@ -166,6 +166,7 @@ Set<UniversalEnumItem> protectEnumItemsNames(
 
   var index = 0;
   for (final name in names) {
+    final camelName = name.toCamel;
     final (newName, renameDescription) = switch (name) {
       '' => (
         uniqueEnumItemName(),
@@ -175,11 +176,23 @@ Set<UniversalEnumItem> protectEnumItemsNames(
           when _startWithNumberRegExp.hasMatch(name) &&
               _enumNameRegExp.hasMatch(numberEnumItemName(name).toCamel) =>
         (numberEnumItemName(name), null),
+      // Enum values with separator characters (dots, slashes, etc.) that
+      // can be converted to valid camelCase Dart identifiers.
+      // E.g., "health.check" → "healthCheck", "ai_indicator.update" → "aiIndicatorUpdate"
+      _ when !_enumNameRegExp.hasMatch(name) &&
+              camelName.isNotEmpty &&
+              _enumNameRegExp.hasMatch(camelName) =>
+        reservedFieldNames.contains(camelName)
+            ? (
+                '$_valueConst $camelName',
+                'The name has been replaced because it contains a keyword. Original name: `$name`.',
+              )
+            : (name, null),
       _ when !_enumNameRegExp.hasMatch(name) => (
         uniqueEnumItemName(),
         'Incorrect name has been replaced. Original name: `$name`.',
       ),
-      _ when reservedFieldNames.contains(name.toCamel) => (
+      _ when reservedFieldNames.contains(camelName) => (
         '$_valueConst ${leadingDashToMinus(name)}',
         'The name has been replaced because it contains a keyword. Original name: `$name`.',
       ),

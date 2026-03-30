@@ -49,7 +49,11 @@ class Generator {
   /// Generates content of files based on OpenApi definition file
   /// and return list of [GeneratedFile]
   List<GeneratedFile> generateContent() {
-    final fillController = FillController(config: config, info: info);
+    final fillController = FillController(
+      config: config,
+      info: info,
+      dataClasses: dataClasses,
+    );
 
     final dataClassesFiles = dataClasses
         .map(fillController.fillDtoContent)
@@ -62,6 +66,14 @@ class Generator {
     final converterFiles = config.generateConverters
         ? dataClasses
             .map(fillController.fillConverterContent)
+            .nonNulls
+            .toList()
+        : <GeneratedFile>[];
+
+    // Generate union dispatcher converters for Db* union roots if enabled
+    final unionConverterFiles = config.generateConverters
+        ? dataClasses
+            .map(fillController.fillUnionConverterContent)
             .nonNulls
             .toList()
         : <GeneratedFile>[];
@@ -90,6 +102,7 @@ class Generator {
       ...restClientFiles,
       ...dataClassesFiles,
       ...converterFiles,
+      ...unionConverterFiles,
       ...defaultsFiles,
       if (rootClientFile != null) rootClientFile,
       if (exportFile != null) exportFile,

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:openapi_retrofit_generator/src/config/custom_metadata_config.dart';
 import 'package:openapi_retrofit_generator/src/generator/config/generator_config.dart';
 import 'package:openapi_retrofit_generator/src/generator/model/generated_file.dart';
 import 'package:openapi_retrofit_generator/src/generator/model/json_serializer.dart';
@@ -20,16 +21,63 @@ import 'package:openapi_retrofit_generator/src/utils/base_utils.dart';
 /// Handles generating files
 final class FillController {
   /// Constructor that accepts configuration parameters with default values to create files
-  const FillController({
+  FillController({
     required this.config,
     this.info = const OpenApiInfo(schemaVersion: OAS.v3_1),
-  });
+    List<UniversalDataClass> dataClasses = const [],
+  })  : _unionVariantMap = _buildUnionVariantMap(dataClasses),
+        _dataClassMap = {
+          for (final dc in dataClasses)
+            if (dc is UniversalComponentClass) dc.name.toLowerCase(): dc,
+        };
 
   /// Api info
   final OpenApiInfo info;
 
   /// Config
   final GeneratorConfig config;
+
+  /// Maps standalone schema ref names to their parent union info
+  /// e.g., 'Agent' → UnionVariantInfo(parentClassName: 'Ai', factoryName: 'agent')
+  final Map<String, UnionVariantInfo> _unionVariantMap;
+
+  /// Case-insensitive lookup map from class name → UniversalComponentClass
+  final Map<String, UniversalComponentClass> _dataClassMap;
+
+  /// Build a mapping from standalone variant ref names to their parent union class.
+  ///
+  /// Iterates over all data classes with discriminators (sealed/union types) and
+  /// extracts the variant-to-parent relationship from the discriminator mapping.
+  static Map<String, UnionVariantInfo> _buildUnionVariantMap(
+    List<UniversalDataClass> dataClasses,
+  ) {
+    final map = <String, UnionVariantInfo>{};
+    for (final dc in dataClasses) {
+      if (dc is! UniversalComponentClass) continue;
+      final discriminator = dc.discriminator;
+      if (discriminator == null) continue;
+
+      final parentClassName = dc.name.toPascal;
+      for (final entry in discriminator.discriminatorValueToRefMapping.entries) {
+        final discriminatorValue = entry.key; // e.g., 'agent'
+        final refName = entry.value.toPascal; // e.g., 'Agent'
+        final factoryName = discriminatorValue.toCamel; // e.g., 'agent'
+        // Use lowercase key for case-insensitive lookup
+        // (e.g., DbaiChannelMember → strip "Db" → "aiChannelMember"
+        //  needs to match ref "AiChannelMember")
+        map[refName.toLowerCase()] = UnionVariantInfo(
+          parentClassName: parentClassName,
+          factoryName: factoryName,
+          discriminatorPropertyName: discriminator.propertyName,
+        );
+      }
+    }
+    return map;
+  }
+
+  /// Case-insensitive lookup into the union variant map
+  UnionVariantInfo? _lookupUnionVariant(String name) =>
+      _unionVariantMap[name.toLowerCase()];
 
   /// Return [GeneratedFile] generated from given [UniversalDataClass]
   GeneratedFile fillDtoContent(UniversalDataClass dataClass) => GeneratedFile(
@@ -42,6 +90,8 @@ final class FillController {
       generateValidator: config.generateValidator,
       includeIfNull: config.includeIfNull,
       fallbackUnion: config.fallbackUnion,
+      customMetadata: config.customMetadata,
+      generateMergeMethod: config.generateMergeMethod,
     ),
   );
 
@@ -51,6 +101,14 @@ final class FillController {
     if (!config.generateConverters) return null;
     if (dataClass is! UniversalComponentClass) return null;
     if (!dataClass.name.startsWith('Db')) return null;
+    
+    // Skip converter generation for union types (discriminated oneOf)
+    // Union types should use their specific variant converters instead
+    // Check for both the root union and its variants
+    if (dataClass.discriminator != null || dataClass.discriminatorValue != null || dataClass.undiscriminatedUnionVariants != null) {
+      // This is a union type (root or variant), skip converter generation
+      return null;
+    }
     
     final dbClassName = dataClass.name.toPascal;
     final hydratedModelName = dbClassName.substring(2); // Remove 'Db'
@@ -65,15 +123,44 @@ final class FillController {
       return null;
     }
     
+    // Check if the hydrated model is a sealed/union type by reading the file
+    // This catches cases where discriminator info is not yet populated in the dataClass
+    try {
+      final hydratedModelContent = File(hydratedModelPath).readAsStringSync();
+      // Check for sealed class with uppercase first letter (e.g., 'sealed class Ai')
+      final capitalizedName = hydratedModelName[0].toUpperCase() + hydratedModelName.substring(1);
+      if (hydratedModelContent.contains('sealed class $capitalizedName')) {
+        // This is a union/sealed type, skip converter generation
+        // Use specific converters for each variant instead
+        return null;
+      }
+    } catch (e) {
+      // If we can't read the file, continue with generation
+    }
+    
     final parser = HydratedModelParser();
     final hydratedFields = parser.parseFields(hydratedModelPath);
     
+    // Calculate the models base path (e.g., packages/unity_chat_models/lib/src)
+    // by removing the filename and subdirectory from the hydrated model path
+    final modelsBasePath = File(hydratedModelPath).parent.parent.path;
+    
+    // Look up if the hydrated model is a variant of a union/sealed class
+    final unionVariantInfo = _lookupUnionVariant(hydratedModelName);
+
+    // Look up if the DB model is a variant of a DB union/sealed class
+    final dbUnionVariantInfo = _lookupUnionVariant(dbClassName);
+
     return GeneratedFile(
       name: 'converters/${_resolveDtoFileBaseName(dataClass)}_converter.dart',
       content: dartConverterTemplate(
         dataClass,
         hydratedModelImport: config.converterHydratedModelPrefix,
         hydratedFields: hydratedFields,
+        modelsBasePath: modelsBasePath,
+        modelSearchDirectories: config.modelSearchDirectories,
+        unionVariantInfo: unionVariantInfo,
+        dbUnionVariantInfo: dbUnionVariantInfo,
       ),
     );
   }
@@ -101,6 +188,8 @@ final class FillController {
     required bool generateValidator,
     required bool includeIfNull,
     String? fallbackUnion,
+    required CustomMetadataConfig customMetadata,
+    required bool generateMergeMethod,
   }) {
     if (dataClass is UniversalEnumClass) {
       return dartEnumDtoTemplate(
@@ -119,17 +208,21 @@ final class FillController {
           generateValidator: generateValidator,
           includeIfNull: includeIfNull,
           fallbackUnion: fallbackUnion,
+          customMetadata: customMetadata,
+          generateMergeMethod: generateMergeMethod,
         ),
         JsonSerializer.jsonSerializable => dartJsonSerializableDtoTemplate(
           dataClass,
           markFileAsGenerated: markFilesAsGenerated,
           includeIfNull: includeIfNull,
           fallbackUnion: fallbackUnion,
+          generateMergeMethod: generateMergeMethod,
         ),
         JsonSerializer.dartMappable => dartDartMappableDtoTemplate(
           dataClass,
           markFileAsGenerated: markFilesAsGenerated,
           fallbackUnion: fallbackUnion,
+          generateMergeMethod: generateMergeMethod,
         ),
       };
     }
@@ -138,6 +231,109 @@ final class FillController {
 
   String _resolveDtoFileBaseName(UniversalDataClass dataClass) {
     return dataClass.name.toSnake;
+  }
+
+  /// Return [GeneratedFile] for the union dispatcher converter, or null.
+  ///
+  /// Generates a class that dispatches `toDb()` / `fromDb()` calls to the
+  /// appropriate individual variant converter using exhaustive switch expressions.
+  ///
+  /// Only generated for `Db*` prefixed classes that are union roots
+  /// (i.e., have a non-null `discriminator`) and whose corresponding hydrated
+  /// union class is also present in the spec.
+  GeneratedFile? fillUnionConverterContent(UniversalDataClass dataClass) {
+    if (!config.generateConverters) return null;
+    if (dataClass is! UniversalComponentClass) return null;
+    if (!dataClass.name.startsWith('Db')) return null;
+    if (dataClass.discriminator == null) return null;
+
+    final dbUnionClassName = dataClass.name.toPascal;
+
+    // Derive hydrated class name: 'DbFile' → 'File', 'Dbai' → 'Ai'
+    final hydratedUnionClassName = dbUnionClassName.substring(2).toPascal;
+
+    // Ensure the hydrated union class exists and is itself a discriminated union
+    final hydratedUnionClass = _dataClassMap[hydratedUnionClassName.toLowerCase()];
+    if (hydratedUnionClass == null || hydratedUnionClass.discriminator == null) {
+      return null;
+    }
+
+    final variants = <UnionVariantConverterInfo>[];
+
+    for (final entry in dataClass.discriminator!.discriminatorValueToRefMapping.entries) {
+      final discriminatorValue = entry.key; // e.g., 'audio', 'url_preview'
+      final dbRefName = entry.value.toPascal; // e.g., 'DbAudioFile'
+
+      // Factory name is the camelCase discriminator value (matches Freezed factory)
+      final factoryName = discriminatorValue.toCamel; // e.g., 'audio', 'urlPreview'
+
+      // Freezed variant class = parent + factory suffix in PascalCase
+      final dbVariantFreezedClass =
+          '$dbUnionClassName${factoryName.toPascal}'; // e.g., 'DbFileAudio'
+      final hydratedVariantFreezedClass =
+          '$hydratedUnionClassName${factoryName.toPascal}'; // e.g., 'FileAudio'
+
+      // Converter class name follows the schema name, e.g., 'DbAudioFileConverter'
+      final converterClassName = '${dbRefName}Converter';
+
+      // Static field name on the dispatcher, e.g., '_audio', '_urlPreview'
+      final staticFieldName = '_$factoryName';
+
+      // Detect any extra hydrated params the variant converter's fromDb() needs.
+      // The hydrated model filename mirrors the individual converter pattern:
+      // strip the 'Db' prefix from the DB ref name (e.g., 'DbCustomAi' → 'CustomAi' → 'custom_ai').
+      // This matches what fillConverterContent uses and avoids looking for Freezed
+      // variant class names (e.g., 'AiCustom' → 'ai_custom.dart') which don't exist.
+      final hydratedModelNameForLookup = dbRefName.substring(2); // e.g., 'CustomAi'
+      final dbVariantClass = _dataClassMap[dbRefName.toLowerCase()];
+      final fromDbParams = dbVariantClass != null
+          ? _computeVariantHydratedParams(dbVariantClass, hydratedModelNameForLookup)
+          : const <HydratedField>[];
+
+      variants.add(UnionVariantConverterInfo(
+        factoryName: factoryName,
+        staticFieldName: staticFieldName,
+        converterClassName: converterClassName,
+        dbVariantFreezedClass: dbVariantFreezedClass,
+        hydratedVariantFreezedClass: hydratedVariantFreezedClass,
+        fromDbParams: fromDbParams,
+      ));
+    }
+
+    if (variants.isEmpty) return null;
+
+    return GeneratedFile(
+      name: 'converters/${dataClass.name.toSnake}_converter.dart',
+      content: dartUnionConverterTemplate(
+        dbUnionClassName: dbUnionClassName,
+        hydratedUnionClassName: hydratedUnionClassName,
+        variants: variants,
+      ),
+    );
+  }
+
+  /// Compute the extra hydrated parameters that a variant converter's `fromDb()`
+  /// requires, by running the same field-detection used in [fillConverterContent].
+  ///
+  /// [hydratedModelName] is the plain model name (e.g. `'CustomAi'`) derived by
+  /// stripping the `Db` prefix from the DB variant ref name.  This mirrors the
+  /// lookup strategy in [fillConverterContent] and avoids looking for Freezed
+  /// variant class names (e.g. `AiCustom`) which have no corresponding file.
+  List<HydratedField> _computeVariantHydratedParams(
+    UniversalComponentClass dbVariantClass,
+    String hydratedModelName,
+  ) {
+    final hydratedModelFileName = hydratedModelName.toSnake;
+    final hydratedModelPath =
+        '${config.outputDirectory}/${config.converterHydratedModelsDirectory}/$hydratedModelFileName.dart';
+
+    if (!File(hydratedModelPath).existsSync()) return const [];
+
+    final hydratedFields = HydratedModelParser().parseFields(hydratedModelPath);
+    return detectVariantHydratedParams(
+      dbVariantClass.parameters.toList(),
+      hydratedFields,
+    );
   }
 
   /// Return [GeneratedFile] generated from given [UniversalRestClient]
@@ -159,6 +355,7 @@ final class FillController {
         extrasParameterByDefault: config.extrasParameterByDefault,
         dioOptionsParameterByDefault: config.dioOptionsParameterByDefault,
         originalHttpResponse: config.originalHttpResponse,
+        generatePathConstants: config.generatePathConstants,
         fileName: fileName,
       ),
     );

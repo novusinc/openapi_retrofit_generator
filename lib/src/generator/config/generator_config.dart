@@ -1,3 +1,4 @@
+import 'package:openapi_retrofit_generator/src/config/custom_metadata_config.dart';
 import 'package:openapi_retrofit_generator/src/generator/model/json_serializer.dart';
 
 /// The configuration that the Generator uses
@@ -26,6 +27,10 @@ class GeneratorConfig {
     this.generateDefaults = false,
     this.converterHydratedModelPrefix,
     this.converterHydratedModelsDirectory = 'hydrated_models',
+    this.modelSearchDirectories = const ['models', 'bridge_models'],
+    this.customMetadata = const CustomMetadataConfig(),
+    this.generateMergeMethod = true,
+    this.generatePathConstants = false,
   });
 
   /// API identifier used for naming folders and export files.
@@ -227,4 +232,66 @@ class GeneratorConfig {
   ///
   /// Default: 'hydrated_models'
   final String converterHydratedModelsDirectory;
+
+  /// Subdirectories within models base path to search for type definitions (enums, classes).
+  ///
+  /// When detecting enums or checking type definitions, the generator searches
+  /// in these subdirectories under the models base path.
+  ///
+  /// Example: If modelsBasePath is 'packages/my_models/lib/src' and
+  /// modelSearchDirectories is ['models', 'bridge_models'], it will search:
+  /// - packages/my_models/lib/src/models/
+  /// - packages/my_models/lib/src/bridge_models/
+  ///
+  /// Default: ['models', 'bridge_models']
+  final List<String> modelSearchDirectories;
+
+  /// Configuration for custom metadata field processing.
+  ///
+  /// When enabled, the generator will look for custom metadata fields in OpenAPI
+  /// property definitions and generate corresponding annotations in the output code.
+  ///
+  /// Default: CustomMetadataConfig() (disabled with no fields)
+  final CustomMetadataConfig customMetadata;
+
+  /// Generate a `merge()` method for DTO classes.
+  ///
+  /// When true: Adds a `merge()` method to generated DTO classes that creates
+  /// a new instance by copying all fields from another instance using `copyWith()`.
+  ///
+  /// **Serializer-specific behavior:**
+  /// - [JsonSerializer.freezed]: We generate the `merge()` method in the class
+  ///   body using Freezed's `copyWith()`.
+  /// - [JsonSerializer.dartMappable]: We generate the `merge()` method using
+  ///   dart_mappable's `copyWith()`.
+  /// - [JsonSerializer.jsonSerializable]: Not supported because json_serializable
+  ///   does not generate `copyWith` methods.
+  ///
+  /// The merge method allows combining two instances:
+  /// ```dart
+  /// final merged = original.merge(other);
+  /// // Returns a new instance with all fields from 'other' copied to 'original'
+  /// ```
+  ///
+  /// Default: true
+  final bool generateMergeMethod;
+
+  /// Generate `static const` path constants for each endpoint on the client class.
+  ///
+  /// When true, each endpoint path is exposed as a named constant on the
+  /// abstract class so callers can reference the paths without hardcoding them.
+  ///
+  /// Generated code example:
+  /// ```dart
+  /// abstract class UserApiClient {
+  ///   static const String getUserPath = '/users/{user_id}';
+  ///   static const String createUserPath = '/users';
+  ///
+  ///   @GET(getUserPath)
+  ///   Future<User> getUser({@Path('user_id') required String userId});
+  /// }
+  /// ```
+  ///
+  /// Default: false
+  final bool generatePathConstants;
 }

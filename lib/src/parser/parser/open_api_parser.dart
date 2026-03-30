@@ -102,6 +102,36 @@ class OpenApiParser {
   static const _versionConst = 'version';
   static const _xNullableConst = 'x-nullable';
 
+  /// Extract custom metadata from a property map based on configuration
+  Map<String, dynamic> _extractCustomMetadata(Map<String, dynamic> map) {
+    if (!config.customMetadata.isActive) {
+      return const {};
+    }
+
+    final metadata = <String, dynamic>{};
+
+    for (final field in config.customMetadata.fields) {
+      // Check for field name with and without x- prefix
+      dynamic value = map[field.name];
+      
+      // If not found and field name doesn't start with x-, also try with x- prefix
+      if (value == null && !field.name.startsWith('x-')) {
+        value = map['x-${field.name}'];
+      }
+      
+      // If not found and field name starts with x-, also try without x- prefix
+      if (value == null && field.name.startsWith('x-')) {
+        value = map[field.name.substring(2)]; // Remove 'x-' prefix
+      }
+
+      if (value != null) {
+        metadata[field.name] = value;
+      }
+    }
+
+    return metadata;
+  }
+
   UniversalEnumClass _getUniqueEnumClass({
     required final String name,
     required final Set<UniversalEnumItem> items,
@@ -883,7 +913,8 @@ class OpenApiParser {
         // OpenAPI 2.0 nullable value
         isNullable =
             isNullable ?? propertyValue[_xNullableConst].toString().toBool();
-        final hasDefaultKey = propertyValue.containsKey(_defaultConst);
+        final hasDefaultKey = propertyValue.containsKey(_defaultConst) &&
+            propertyValue[_defaultConst] != null;
 
         isNullable =
             isNullable ??
@@ -901,8 +932,14 @@ class OpenApiParser {
             };
 
         final isRequired = requiredParameters.contains(propertyName);
+        // Avoid duplicating the name when additionalName already ends with propertyName
+        // e.g., additionalName="MessageOutgoingState" + propertyName="state" should be "MessageOutgoingState", not "MessageOutgoingStateState"
+        final parentName = additionalName ?? '';
+        final propNamePascal = propertyName.toPascal;
         final nestedAdditionalName = additionalName != null
-            ? '${additionalName.toPascal}${propertyName.toPascal}'
+            ? parentName.toLowerCase().endsWith(propertyName.toLowerCase())
+                ? additionalName.toPascal
+                : '${additionalName.toPascal}$propNamePascal'
             : null;
         final typeWithImport = _findType(
           propertyValue,
@@ -1603,6 +1640,7 @@ class OpenApiParser {
             // If items are themselves collections
           ],
           deprecated: map[_deprecatedConst].toString().toBool() ?? false,
+          customMetadata: _extractCustomMetadata(map),
         ),
         import: itemImport,
       );
@@ -1676,6 +1714,7 @@ class OpenApiParser {
             // If values are themselves collections
           ],
           deprecated: map[_deprecatedConst].toString().toBool() ?? false,
+          customMetadata: _extractCustomMetadata(map),
         ),
         import: valueImport,
       );
@@ -1781,6 +1820,7 @@ class OpenApiParser {
               ),
           nullable: isEnumNullable,
           deprecated: map[_deprecatedConst].toString().toBool() ?? false,
+          customMetadata: _extractCustomMetadata(map),
         ),
         import: enumClass.name,
       );
@@ -1889,6 +1929,7 @@ class OpenApiParser {
           },
           isRequired: isRequired,
           deprecated: map[_deprecatedConst].toString().toBool() ?? false,
+          customMetadata: _extractCustomMetadata(map),
         ),
         import: type,
       );
@@ -1905,7 +1946,21 @@ class OpenApiParser {
           map[_anyOfConst] ??
           map[_oneOfConst] ??
           (map[_typeConst] as List<dynamic>)
-              .map((e) => <String, dynamic>{_typeConst: e.toString()})
+              .map((e) {
+                final itemMap = <String, dynamic>{_typeConst: e.toString()};
+                // Preserve important schema keys from parent map for each type item
+                // This is critical for datetime format detection (e.g., format: date-time)
+                if (map.containsKey(_formatConst)) {
+                  itemMap[_formatConst] = map[_formatConst];
+                }
+                if (map.containsKey(_descriptionConst)) {
+                  itemMap[_descriptionConst] = map[_descriptionConst];
+                }
+                if (map.containsKey(_defaultConst)) {
+                  itemMap[_defaultConst] = map[_defaultConst];
+                }
+                return itemMap;
+              })
               .toList();
 
       UniversalType makeNullable(UniversalType type) {
@@ -1956,48 +2011,65 @@ class OpenApiParser {
           final discriminator = _parseDiscriminatorInfo(map);
 
           // Create a base union class for the discriminated types
+          // Avoid duplicating the name when additionalName already ends with name
+          // e.g., additionalName="MessageState" + name="state" should be "MessageState", not "MessageStateState"
+          final baseAdditionalName = additionalName ?? '';
+          final basePropertyName = name ?? '';
+          final effectivePropertyName =
+              baseAdditionalName.toLowerCase().endsWith(basePropertyName.toLowerCase()) &&
+                      basePropertyName.isNotEmpty
+                  ? ''
+                  : basePropertyName;
           final baseClassName =
-              '${additionalName ?? ''} ${name ?? ''}'.toPascal;
+              '$baseAdditionalName $effectivePropertyName'.toPascal;
           final (newName, description) = protectName(
             baseClassName,
             uniqueIfNull: true,
             description: map[_descriptionConst]?.toString(),
           );
 
-          // Create a sealed class to represent the discriminated union
+          // Check if a class with this name already exists (from top-level schema processing)
           final sealedClassName = newName!.toPascal;
-          final sealedParameters = {
-            UniversalType(
-              type: 'String',
-              name: discriminator?.propertyName,
-              isRequired: true,
-            ),
-          };
-          final resolvedSealedParameters = _resolveParameterNameConflicts(
-            sealedParameters,
-          );
-          _objectClasses.add(
-            UniversalComponentClass(
-              name: sealedClassName,
-              imports: SplayTreeSet<String>(),
-              parameters: resolvedSealedParameters,
-              discriminator: discriminator,
-            ),
-          );
-          // Register in type registry
-          _typeRegistry.registerClass(sealedClassName);
-          // Register inline schema in the anchor registry
-          if (_contextStack.current case final context?) {
-            _anchorRegistry.registerInlineSchema(sealedClassName, context);
+          final classAlreadyExists = _typeRegistry.isClass(sealedClassName) ||
+              _objectClasses.any((c) => c.name == sealedClassName);
+
+          if (!classAlreadyExists) {
+            // Create a sealed class to represent the discriminated union
+            final sealedParameters = {
+              UniversalType(
+                type: 'String',
+                name: discriminator?.propertyName,
+                isRequired: true,
+                customMetadata: _extractCustomMetadata(map),
+              ),
+            };
+            final resolvedSealedParameters = _resolveParameterNameConflicts(
+              sealedParameters,
+            );
+            _objectClasses.add(
+              UniversalComponentClass(
+                name: sealedClassName,
+                imports: SplayTreeSet<String>(),
+                parameters: resolvedSealedParameters,
+                discriminator: discriminator,
+              ),
+            );
+            // Register in type registry
+            _typeRegistry.registerClass(sealedClassName);
+            // Register inline schema in the anchor registry
+            if (_contextStack.current case final context?) {
+              _anchorRegistry.registerInlineSchema(sealedClassName, context);
+            }
           }
 
           ofType = UniversalType(
-            type: newName.toPascal,
+            type: sealedClassName,
             isRequired: isRequired,
             nullable: map[_nullableConst].toString().toBool() ?? false,
             // Nullability for ofType will be determined later by nullItems check
+            customMetadata: _extractCustomMetadata(map),
           );
-          ofImport = newName.toPascal;
+          ofImport = sealedClassName;
         }
         // If there is only one item, we directly return the type inside the xOf
         else if (ofList.length == 1) {
@@ -2106,8 +2178,16 @@ class OpenApiParser {
               }
 
               if (refs.isNotEmpty || parameters.isNotEmpty) {
+                // Avoid duplicating the name when additionalName already ends with name
+                final baseAdditionalName = additionalName ?? '';
+                final basePropertyName = name ?? '';
+                final effectivePropertyName =
+                    baseAdditionalName.toLowerCase().endsWith(basePropertyName.toLowerCase()) &&
+                            basePropertyName.isNotEmpty
+                        ? ''
+                        : basePropertyName;
                 final baseClassName =
-                    '${additionalName ?? ''} ${name ?? ''}'.toPascal;
+                    '$baseAdditionalName $effectivePropertyName'.toPascal;
                 final (newName, description) = protectName(
                   baseClassName,
                   uniqueIfNull: true,
@@ -2157,8 +2237,16 @@ class OpenApiParser {
                   map.containsKey(_oneOfConst) || map.containsKey(_anyOfConst);
 
               if (isUnion) {
+                // Avoid duplicating the name when additionalName already ends with name
+                final baseAdditionalName = additionalName ?? '';
+                final basePropertyName = name ?? '';
+                final effectivePropertyName =
+                    baseAdditionalName.toLowerCase().endsWith(basePropertyName.toLowerCase()) &&
+                            basePropertyName.isNotEmpty
+                        ? ''
+                        : basePropertyName;
                 final baseClassName =
-                    '${additionalName ?? ''} ${name ?? ''}'.toPascal;
+                    '$baseAdditionalName $effectivePropertyName'.toPascal;
                 final (newName, description) = protectName(
                   baseClassName,
                   uniqueIfNull: true,
@@ -2175,30 +2263,36 @@ class OpenApiParser {
 
                 if (utoipaResult != null) {
                   final (utoipaDiscriminator, utoipaImports) = utoipaResult;
-                  // Successfully detected utoipa discriminator pattern
-                  final sealedParameters = {
-                    UniversalType(
-                      type: 'String',
-                      name: utoipaDiscriminator.propertyName,
-                      isRequired: true,
-                    ),
-                  };
-                  final resolvedSealedParameters =
-                      _resolveParameterNameConflicts(sealedParameters);
-                  _objectClasses.add(
-                    UniversalComponentClass(
-                      name: unionName,
-                      imports: utoipaImports,
-                      parameters: resolvedSealedParameters,
-                      discriminator: utoipaDiscriminator,
-                      description: description,
-                    ),
-                  );
-                  // Register in type registry
-                  _typeRegistry.registerClass(unionName);
-                  // Register inline schema in the anchor registry
-                  if (_contextStack.current case final context?) {
-                    _anchorRegistry.registerInlineSchema(unionName, context);
+                  // Check if a class with this name already exists
+                  final classAlreadyExists = _typeRegistry.isClass(unionName) ||
+                      _objectClasses.any((c) => c.name == unionName);
+
+                  if (!classAlreadyExists) {
+                    // Successfully detected utoipa discriminator pattern
+                    final sealedParameters = {
+                      UniversalType(
+                        type: 'String',
+                        name: utoipaDiscriminator.propertyName,
+                        isRequired: true,
+                      ),
+                    };
+                    final resolvedSealedParameters =
+                        _resolveParameterNameConflicts(sealedParameters);
+                    _objectClasses.add(
+                      UniversalComponentClass(
+                        name: unionName,
+                        imports: utoipaImports,
+                        parameters: resolvedSealedParameters,
+                        discriminator: utoipaDiscriminator,
+                        description: description,
+                      ),
+                    );
+                    // Register in type registry
+                    _typeRegistry.registerClass(unionName);
+                    // Register inline schema in the anchor registry
+                    if (_contextStack.current case final context?) {
+                      _anchorRegistry.registerInlineSchema(unionName, context);
+                    }
                   }
 
                   ofType = UniversalType(
@@ -2225,33 +2319,39 @@ class OpenApiParser {
                     if (inferredResult != null) {
                       final (inferredDiscriminator, inferredImports) =
                           inferredResult;
-                      // Successfully inferred discriminator - create discriminated union
-                      final sealedParameters = {
-                        UniversalType(
-                          type: 'String',
-                          name: inferredDiscriminator.propertyName,
-                          isRequired: true,
-                        ),
-                      };
-                      final resolvedSealedParameters =
-                          _resolveParameterNameConflicts(sealedParameters);
-                      _objectClasses.add(
-                        UniversalComponentClass(
-                          name: unionName,
-                          imports: inferredImports,
-                          parameters: resolvedSealedParameters,
-                          discriminator: inferredDiscriminator,
-                          description: description,
-                        ),
-                      );
-                      // Register in type registry
-                      _typeRegistry.registerClass(unionName);
-                      // Register inline schema in the anchor registry
-                      if (_contextStack.current case final context?) {
-                        _anchorRegistry.registerInlineSchema(
-                          unionName,
-                          context,
+                      // Check if a class with this name already exists
+                      final classAlreadyExists = _typeRegistry.isClass(unionName) ||
+                          _objectClasses.any((c) => c.name == unionName);
+
+                      if (!classAlreadyExists) {
+                        // Successfully inferred discriminator - create discriminated union
+                        final sealedParameters = {
+                          UniversalType(
+                            type: 'String',
+                            name: inferredDiscriminator.propertyName,
+                            isRequired: true,
+                          ),
+                        };
+                        final resolvedSealedParameters =
+                            _resolveParameterNameConflicts(sealedParameters);
+                        _objectClasses.add(
+                          UniversalComponentClass(
+                            name: unionName,
+                            imports: inferredImports,
+                            parameters: resolvedSealedParameters,
+                            discriminator: inferredDiscriminator,
+                            description: description,
+                          ),
                         );
+                        // Register in type registry
+                        _typeRegistry.registerClass(unionName);
+                        // Register inline schema in the anchor registry
+                        if (_contextStack.current case final context?) {
+                          _anchorRegistry.registerInlineSchema(
+                            unionName,
+                            context,
+                          );
+                        }
                       }
 
                       ofType = UniversalType(
@@ -2269,24 +2369,30 @@ class OpenApiParser {
                         unionName,
                       );
 
-                      // Create a union component class marker without discriminator
-                      _objectClasses.add(
-                        UniversalComponentClass(
-                          name: unionName,
-                          imports: imports,
-                          parameters: const {},
-                          description: description,
-                          undiscriminatedUnionVariants: variantRefToProps,
-                        ),
-                      );
-                      // Register in type registry
-                      _typeRegistry.registerClass(unionName);
-                      // Register inline schema in the anchor registry
-                      if (_contextStack.current case final context?) {
-                        _anchorRegistry.registerInlineSchema(
-                          unionName,
-                          context,
+                      // Check if a class with this name already exists
+                      final classAlreadyExists = _typeRegistry.isClass(unionName) ||
+                          _objectClasses.any((c) => c.name == unionName);
+
+                      if (!classAlreadyExists) {
+                        // Create a union component class marker without discriminator
+                        _objectClasses.add(
+                          UniversalComponentClass(
+                            name: unionName,
+                            imports: imports,
+                            parameters: const {},
+                            description: description,
+                            undiscriminatedUnionVariants: variantRefToProps,
+                          ),
                         );
+                        // Register in type registry
+                        _typeRegistry.registerClass(unionName);
+                        // Register inline schema in the anchor registry
+                        if (_contextStack.current case final context?) {
+                          _anchorRegistry.registerInlineSchema(
+                            unionName,
+                            context,
+                          );
+                        }
                       }
 
                       ofType = UniversalType(
@@ -2542,6 +2648,7 @@ class OpenApiParser {
           },
           deprecated: deprecated,
           referencedNullable: referencedNullable,
+          customMetadata: _extractCustomMetadata(map),
         ),
         import: import,
       );
@@ -2827,6 +2934,7 @@ class OpenApiParser {
               jsonKey: propertyName,
               isRequired: isRequired,
               description: propertyValue[_descriptionConst]?.toString(),
+              customMetadata: _extractCustomMetadata(propertyValue),
             ),
           );
           continue;
