@@ -414,11 +414,19 @@ List<HydratedField> _detectHydratedFields(
 
           // Check if types are different (not just nullable variations)
           if (!_typesMatch(dbFieldWithSameName, hydratedType)) {
-            // Special case: if DB type is dynamic, we should serialize full objects
-            // instead of extracting IDs. This handles cases like List<dynamic> options
-            // where we want to store the full serialized List<PollOption> objects.
+            // Special case: if DB type is dynamic or Map<String, dynamic>,
+            // we should serialize full objects instead of extracting IDs.
+            // This handles cases like:
+            //   - List<dynamic> options → store full serialized List<PollOption>
+            //   - Map<String, dynamic> state → store serialized MessageState
             final dbBaseType = dbType.replaceAll('?', '').replaceAll('List<', '').replaceAll('>', '').trim();
-            if (dbBaseType == 'dynamic') {
+            // Detect when DB stores serialized data (dynamic or Map) that the
+            // hydrated model represents as typed objects. Covers:
+            //   dynamic, List<dynamic>, Map<String, dynamic>,
+            //   Map<String, dynamic>?, List<Map<String, dynamic>>, etc.
+            final isSerialized = dbBaseType == 'dynamic' ||
+                dbType.contains('Map<String, dynamic>');
+            if (isSerialized) {
               result.add(HydratedField(
                 name: hydratedField.name,
                 type: hydratedField.type,
@@ -599,7 +607,10 @@ String _generateFromDbParams(
   buffer.write('models.$dbClassName source, {\n');
 
   // Hydrated object parameters (complex objects that need to be resolved)
+  // Skip serializeFullObject fields — they are deserialized inline from the DB
+  // document via .fromJson() and don't need an external lookup parameter.
   for (final field in hydratedParams) {
+    if (field.serializeFullObject) continue;
     final baseType = field.listItemType ?? field.type;
     final type = field.listItemType != null ? 'List<models.$baseType>' : 'models.$baseType';
     final defaultValue = field.listItemType != null ? ' = const []' : '';
@@ -666,7 +677,9 @@ String _generateHydratedParamsDocumentation(
   buffer.writeln('  /// Hydrated parameters:');
 
   for (final field in hydratedParams) {
-    if (field.idFieldName != null) {
+    if (field.serializeFullObject) {
+      buffer.writeln('  /// - ${field.name}: ${field.type} (deserialized inline from DB via .fromJson())');
+    } else if (field.idFieldName != null) {
       buffer.writeln('  /// - [${field.name}]: ${field.type} object for ${field.idFieldName} field');
     } else {
       buffer.writeln('  /// - [${field.name}]: ${field.type} object');
@@ -1069,9 +1082,27 @@ String _generateFromDbBody(
     buffer.writeln('      $name: source.$name,');
   }
 
-  // Hydrated fields - use parameters passed in
+  // Hydrated fields - use parameters passed in, or deserialize inline
   for (final field in hydratedParams) {
-    buffer.writeln('      ${field.name}: ${field.name},');
+    if (field.serializeFullObject) {
+      // Self-deserializing field: DB stores Map/List<Map> and hydrated model
+      // has a typed object. Reconstruct via .fromJson() directly from source.
+      final baseType = (field.listItemType ?? field.type).replaceAll('?', '');
+      final isNullable = field.type.endsWith('?');
+      if (field.listItemType != null) {
+        // List<Map<String, dynamic>> → List<TypedObject>
+        final nullOp = isNullable ? '?' : '';
+        buffer.writeln('      ${field.name}: source.${field.name}$nullOp.map((e) => models.$baseType.fromJson(e)).toList(),');
+      } else if (isNullable) {
+        // Map<String, dynamic>? → TypedObject?
+        buffer.writeln('      ${field.name}: source.${field.name} != null ? models.$baseType.fromJson(source.${field.name}!) : null,');
+      } else {
+        // Map<String, dynamic> → TypedObject
+        buffer.writeln('      ${field.name}: models.$baseType.fromJson(source.${field.name}),');
+      }
+    } else {
+      buffer.writeln('      ${field.name}: ${field.name},');
+    }
   }
 
   // Default value fields - fields not in DB model but with default values

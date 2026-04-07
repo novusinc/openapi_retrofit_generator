@@ -1649,11 +1649,17 @@ class OpenApiParser {
       );
     }
     // Map
+    // Handles both schema-form (additionalProperties: {type: string}) and
+    // boolean-form (additionalProperties: true) per OpenAPI spec.
+    // Boolean true means "any additional properties allowed" → Map<String, dynamic>.
     else if (map.containsKey(_additionalPropertiesConst) &&
         map[_typeConst].toString() == _objectConst &&
-        (map[_additionalPropertiesConst] is Map<String, dynamic>)) {
-      final mapValueSchema =
-          map[_additionalPropertiesConst] as Map<String, dynamic>;
+        (map[_additionalPropertiesConst] is Map<String, dynamic> ||
+            map[_additionalPropertiesConst] == true)) {
+      final isBooleanForm = map[_additionalPropertiesConst] == true;
+      final mapValueSchema = isBooleanForm
+          ? const <String, dynamic>{_typeConst: _objectConst}
+          : map[_additionalPropertiesConst] as Map<String, dynamic>;
       // Determine value details by recursively calling _findType for the value schema.
       final (type: valueDetails, import: valueImport) = _findType(
         mapValueSchema,

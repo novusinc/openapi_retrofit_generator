@@ -69,6 +69,35 @@ final _startWithNumberRegExp = RegExp(r'^-?\d+');
 String? protectDefaultEnum(Object? name) =>
     protectDefaultValue(name, isEnum: true);
 
+/// Converts a JSON-parsed value to a Dart literal string for use in
+/// `@Default(...)` annotations. Supports maps, lists, strings, numbers, bools.
+String _jsonValueToDartLiteral(Object? value, {bool dart = true}) {
+  if (value == null) return 'null';
+  if (value is Map) return _mapToDartLiteral(value, dart: dart);
+  if (value is List) {
+    final items = value.map((e) => _jsonValueToDartLiteral(e, dart: dart));
+    return '[${items.join(', ')}]';
+  }
+  if (value is String) {
+    final quote = dart ? "'" : '"';
+    final escaped = value.replaceAll(quote, dart ? r"\'" : r'\"');
+    return '$quote$escaped$quote';
+  }
+  // num, bool — use toString directly
+  return value.toString();
+}
+
+/// Converts a parsed JSON Map to a Dart map literal string.
+String _mapToDartLiteral(Map<dynamic, dynamic> map, {bool dart = true}) {
+  if (map.isEmpty) return '{}';
+  final entries = map.entries.map((e) {
+    final key = _jsonValueToDartLiteral(e.key, dart: dart);
+    final val = _jsonValueToDartLiteral(e.value, dart: dart);
+    return '$key: $val';
+  });
+  return '{${entries.join(', ')}}';
+}
+
 /// Protect default value from incorrect symbols, keywords, etc.
 String? protectDefaultValue(
   Object? name, {
@@ -82,14 +111,15 @@ String? protectDefaultValue(
     return null;
   }
 
-  /// Handle empty maps/objects as default values
+  /// Handle map/object default values
+  if (name is Map) {
+    return _mapToDartLiteral(name, dart: dart);
+  }
   if (nameStr.startsWith('{') && nameStr.endsWith('}')) {
-    final innerContent = nameStr.substring(1, nameStr.length - 1).trim();
-    if (innerContent.isEmpty) {
-      return '{}';
-    }
-    // Complex JSON objects are not supported
-    return null;
+    // Pass through both empty and non-empty map literals.
+    // Non-empty literals arrive here from _mapToDartLiteral on a second pass
+    // through the template's _defaultValue, so they are already valid Dart.
+    return nameStr;
   }
 
   if (nameStr.startsWith('[') && nameStr.endsWith(']')) {
