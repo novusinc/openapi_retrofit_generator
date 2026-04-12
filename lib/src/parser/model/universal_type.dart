@@ -17,6 +17,10 @@ final class UniversalType {
     this.nullable = false,
     this.wrappingCollections = const [],
     this.enumType,
+    // When a map schema defines `propertyNames` referencing an enum, this
+    // holds the enum type name so the generated Dart type uses
+    // `Map<EnumKey, V>` instead of the default `Map<String, V>`.
+    this.mapKeyType,
     this.min,
     this.max,
     this.minItems,
@@ -59,6 +63,10 @@ final class UniversalType {
   /// If this type is enum
   final String? enumType;
 
+  /// When non-null, the map key type (from OpenAPI `propertyNames`).
+  /// If null, map keys default to `String`.
+  final String? mapKeyType;
+
   /// Array depth, 0 if not a list
   /// if arrayDepth = 2
   /// `List<List<Object>>`
@@ -95,6 +103,7 @@ final class UniversalType {
     String? defaultValue,
     bool? isRequired,
     String? enumType,
+    String? mapKeyType,
     List<UniversalCollections>? wrappingCollections,
     bool? nullable,
     double? min,
@@ -118,6 +127,7 @@ final class UniversalType {
       defaultValue: defaultValue ?? this.defaultValue,
       isRequired: isRequired ?? this.isRequired,
       enumType: enumType ?? this.enumType,
+      mapKeyType: mapKeyType ?? this.mapKeyType,
       wrappingCollections: wrappingCollections ?? this.wrappingCollections,
       nullable: nullable ?? this.nullable,
       min: min ?? this.min,
@@ -156,6 +166,7 @@ final class UniversalType {
       defaultValue == other.defaultValue &&
       isRequired == other.isRequired &&
       enumType == other.enumType &&
+      mapKeyType == other.mapKeyType &&
       const DeepCollectionEquality().equals(
         wrappingCollections,
         other.wrappingCollections,
@@ -181,6 +192,7 @@ final class UniversalType {
       defaultValue.hashCode ^
       isRequired.hashCode ^
       enumType.hashCode ^
+      mapKeyType.hashCode ^
       wrappingCollections.hashCode ^
       nullable.hashCode ^
       min.hashCode ^
@@ -202,6 +214,7 @@ final class UniversalType {
       'defaultValue: $defaultValue, '
       'isRequired: $isRequired, '
       'enumType: $enumType, '
+      'mapKeyType: $mapKeyType, '
       'wrappingCollections: $wrappingCollections, '
       'nullable: $nullable, '
       'min: $min, '

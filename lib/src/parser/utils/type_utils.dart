@@ -71,11 +71,11 @@ String? protectDefaultEnum(Object? name) =>
 
 /// Converts a JSON-parsed value to a Dart literal string for use in
 /// `@Default(...)` annotations. Supports maps, lists, strings, numbers, bools.
-String _jsonValueToDartLiteral(Object? value, {bool dart = true}) {
+String jsonValueToDartLiteral(Object? value, {bool dart = true}) {
   if (value == null) return 'null';
-  if (value is Map) return _mapToDartLiteral(value, dart: dart);
+  if (value is Map) return mapToDartLiteral(value, dart: dart);
   if (value is List) {
-    final items = value.map((e) => _jsonValueToDartLiteral(e, dart: dart));
+    final items = value.map((e) => jsonValueToDartLiteral(e, dart: dart));
     return '[${items.join(', ')}]';
   }
   if (value is String) {
@@ -88,11 +88,11 @@ String _jsonValueToDartLiteral(Object? value, {bool dart = true}) {
 }
 
 /// Converts a parsed JSON Map to a Dart map literal string.
-String _mapToDartLiteral(Map<dynamic, dynamic> map, {bool dart = true}) {
+String mapToDartLiteral(Map<dynamic, dynamic> map, {bool dart = true}) {
   if (map.isEmpty) return '{}';
   final entries = map.entries.map((e) {
-    final key = _jsonValueToDartLiteral(e.key, dart: dart);
-    final val = _jsonValueToDartLiteral(e.value, dart: dart);
+    final key = jsonValueToDartLiteral(e.key, dart: dart);
+    final val = jsonValueToDartLiteral(e.value, dart: dart);
     return '$key: $val';
   });
   return '{${entries.join(', ')}}';
@@ -113,11 +113,11 @@ String? protectDefaultValue(
 
   /// Handle map/object default values
   if (name is Map) {
-    return _mapToDartLiteral(name, dart: dart);
+    return mapToDartLiteral(name, dart: dart);
   }
   if (nameStr.startsWith('{') && nameStr.endsWith('}')) {
     // Pass through both empty and non-empty map literals.
-    // Non-empty literals arrive here from _mapToDartLiteral on a second pass
+    // Non-empty literals arrive here from mapToDartLiteral on a second pass
     // through the template's _defaultValue, so they are already valid Dart.
     return nameStr;
   }

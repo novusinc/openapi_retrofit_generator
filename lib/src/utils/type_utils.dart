@@ -6,9 +6,15 @@ extension UniversalTypeX on UniversalType {
   String toSuitableType({bool multiPart = false}) {
     final sb = StringBuffer();
 
-    // Append all collection prefixes, e.g., "List<"
+    // Append all collection prefixes, e.g., "List<" or "Map<KeyType, ".
+    // When mapKeyType is set (from OpenAPI propertyNames), the first map
+    // collection uses the enum key type instead of the default "String".
     for (final collection in wrappingCollections) {
-      sb.write(collection.collectionPrefix);
+      if (collection.isMap && mapKeyType != null) {
+        sb.write(collection.collectionPrefixWithKeyType(mapKeyType));
+      } else {
+        sb.write(collection.collectionPrefix);
+      }
     }
 
     // Get the base type string (e.g., "int", "String", "MyClass").

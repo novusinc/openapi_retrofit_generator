@@ -282,6 +282,10 @@ class OpenApiParser {
       if (typeWithImport.import != null) {
         imports.add(typeWithImport.import!);
       }
+      // Also import the map key type when propertyNames references an enum.
+      if (typeWithImport.type.mapKeyType != null) {
+        imports.add(typeWithImport.type.mapKeyType!);
+      }
 
       // List<dynamic> is not supported by Retrofit, use dynamic instead
       if (typeWithImport.type.type == _objectConst) {
@@ -348,6 +352,9 @@ class OpenApiParser {
 
           if (typeWithImport.import != null) {
             imports.add(typeWithImport.import!);
+          }
+          if (typeWithImport.type.mapKeyType != null) {
+            imports.add(typeWithImport.type.mapKeyType!);
           }
           final parameterType = HttpParameterType.values.firstWhereOrNull(
             (e) => e.name == (parameter[_inConst].toString()),
@@ -505,6 +512,9 @@ class OpenApiParser {
             if (typeWithImport.import != null) {
               imports.add(typeWithImport.import!);
             }
+            if (typeWithImport.type.mapKeyType != null) {
+              imports.add(typeWithImport.type.mapKeyType!);
+            }
             types.add(
               UniversalRequestType(
                 parameterType: HttpParameterType.part,
@@ -542,6 +552,9 @@ class OpenApiParser {
           final currentType = typeWithImport.type;
           if (typeWithImport.import != null) {
             imports.add(typeWithImport.import!);
+          }
+          if (typeWithImport.type.mapKeyType != null) {
+            imports.add(typeWithImport.type.mapKeyType!);
           }
 
           types.add(
@@ -590,6 +603,10 @@ class OpenApiParser {
       );
       if (typeWithImport.import != null) {
         imports.add(typeWithImport.import!);
+      }
+      // Also import the map key type when propertyNames references an enum.
+      if (typeWithImport.type.mapKeyType != null) {
+        imports.add(typeWithImport.type.mapKeyType!);
       }
 
       final type = typeWithImport.type;
@@ -667,6 +684,9 @@ class OpenApiParser {
 
         if (typeWithImport.import != null) {
           imports.add(typeWithImport.import!);
+        }
+        if (typeWithImport.type.mapKeyType != null) {
+          imports.add(typeWithImport.type.mapKeyType!);
         }
         final parameterType = HttpParameterType.values.firstWhereOrNull(
           (e) => e.name == (parameter[_inConst].toString()),
@@ -991,6 +1011,9 @@ class OpenApiParser {
         if (typeWithImport.import != null) {
           imports.add(typeWithImport.import!);
         }
+        if (typeWithImport.type.mapKeyType != null) {
+          imports.add(typeWithImport.type.mapKeyType!);
+        }
       }
     }
 
@@ -1103,6 +1126,9 @@ class OpenApiParser {
           parameters.add(typeWithImport.type);
           if (typeWithImport.import != null) {
             imports.add(typeWithImport.import!);
+          }
+          if (typeWithImport.type.mapKeyType != null) {
+            imports.add(typeWithImport.type.mapKeyType!);
           }
           final componentClass = UniversalComponentClass(
             name: schemaName,
@@ -1558,6 +1584,58 @@ class OpenApiParser {
     return allUsedSchemas;
   }
 
+  /// Builds a Dart map literal string for a default value whose values (and
+  /// optionally keys) reference enum types.
+  ///
+  /// For example, given a JSON default `{"messaging": ["users", "channels"]}`
+  /// where values are `CouchbaseCollection` enums and keys are
+  /// `CouchbaseScope` enums, this produces:
+  /// ```
+  /// {CouchbaseScope.messaging: [CouchbaseCollection.users, CouchbaseCollection.channels]}
+  /// ```
+  ///
+  /// When [mapKeyType] is null the keys are rendered as plain strings.
+  String _buildEnumMapDefault(
+    Map<dynamic, dynamic> rawDefault,
+    UniversalType valueDetails,
+    String? mapKeyType,
+  ) {
+    final valueEnumType = valueDetails.type;
+    final hasNestedList = valueDetails.wrappingCollections.any(
+      (c) =>
+          c == UniversalCollections.list ||
+          c == UniversalCollections.listNullableItem ||
+          c == UniversalCollections.nullableList ||
+          c == UniversalCollections.nullableListNullableItem,
+    );
+
+    final entries = rawDefault.entries.map((e) {
+      // Format key: use enum reference if mapKeyType is set, else string.
+      final key = mapKeyType != null
+          ? '$mapKeyType.${protectDefaultEnum(e.key)?.toCamel}'
+          : jsonValueToDartLiteral(e.key);
+
+      // Format value: resolve enum references within lists or as scalars.
+      final String val;
+      if (hasNestedList && e.value is List) {
+        final items = (e.value as List)
+            .map(
+              (item) => '$valueEnumType.${protectDefaultEnum(item)?.toCamel}',
+            )
+            .join(', ');
+        val = '[$items]';
+      } else if (e.value is String) {
+        val = '$valueEnumType.${protectDefaultEnum(e.value)?.toCamel}';
+      } else {
+        val = jsonValueToDartLiteral(e.value);
+      }
+
+      return '$key: $val';
+    });
+
+    return '{${entries.join(', ')}}';
+  }
+
   /// Find type of map
   ({UniversalType type, String? import}) _findType(
     Map<String, dynamic> map, {
@@ -1697,30 +1775,57 @@ class OpenApiParser {
         }
       }
 
-      final isEnumMap =
+      // Resolve map key type from `propertyNames` if present.
+      // OpenAPI uses `propertyNames: { $ref: "#/.../SomeEnum" }` to declare
+      // that map keys are constrained to an enum, producing `Map<SomeEnum, V>`
+      // instead of the default `Map<String, V>`.
+      String? mapKeyType;
+      final propertyNames = map['propertyNames'];
+      if (propertyNames is Map<String, dynamic> &&
+          propertyNames.containsKey(_refConst)) {
+        final keyTypeName = _formatRef(propertyNames);
+        if (_isEnumType(keyTypeName)) {
+          mapKeyType = keyTypeName;
+        }
+      }
+
+      // Build the default value. Unlike simple enum fields, map defaults are
+      // complex structures (e.g., {"messaging": ["users", ...]}). We must NOT
+      // set `enumType` on the UniversalType — doing so causes the template to
+      // misinterpret the entire map default as a single enum value. Instead,
+      // we build a proper Dart map literal with enum references resolved.
+      final hasEnumValues =
           valueDetails.enumType != null || _isEnumType(valueDetails.type);
+      final rawDefault = map[_defaultConst];
+      String? defaultValue;
+      if (rawDefault != null) {
+        if (rawDefault is Map && hasEnumValues) {
+          // Build Dart map literal with enum values resolved, e.g.:
+          //   {'messaging': [CouchbaseCollection.users, ...], ...}
+          defaultValue =
+              _buildEnumMapDefault(rawDefault, valueDetails, mapKeyType);
+        } else {
+          defaultValue = protectDefaultValue(rawDefault);
+        }
+      }
 
       return (
         type: UniversalType(
           type: valueDetails.type,
-          // Base type is the value's type
           name: newName?.toCamel,
           description: description,
           format: valueDetails.format,
           jsonKey: name,
-          defaultValue: isEnumMap
-              ? map[_defaultConst]?.toString()
-              : protectDefaultValue(map[_defaultConst]),
-          // Default for the map
+          defaultValue: defaultValue,
           isRequired: isRequired,
-          // isRequired for the map property
           nullable: isMapItselfNullable,
-          // Nullability of the map itself
-          enumType: isEnumMap ? valueDetails.type : null,
+          // Do NOT set enumType here — it's a map type, not a scalar enum.
+          // Setting enumType would cause the template to format the default
+          // as `EnumType.value` instead of a map literal.
+          mapKeyType: mapKeyType,
           wrappingCollections: [
             collectionType,
             ...valueDetails.wrappingCollections,
-            // If values are themselves collections
           ],
           deprecated: map[_deprecatedConst].toString().toBool() ?? false,
           customMetadata: _extractCustomMetadata(map),
