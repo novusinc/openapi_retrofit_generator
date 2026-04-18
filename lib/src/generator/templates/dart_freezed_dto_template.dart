@@ -748,6 +748,10 @@ String _customAnnotations(UniversalType t, CustomMetadataConfig customMetadata) 
 /// meaning any method added to the abstract class body must be re-implemented
 /// in the generated concrete class (which we cannot modify).
 String _generateMergeExtension(String className, Set<UniversalType> parameters) {
+  // Freezed doesn't generate copyWith() for classes with zero fields,
+  // so skip the merge extension entirely for empty classes.
+  if (parameters.isEmpty) return '';
+
   final copyWithParams = parameters.map((param) {
     final name = param.name;
     return '      $name: other.$name,';
