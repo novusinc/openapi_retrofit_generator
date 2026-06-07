@@ -141,7 +141,7 @@ final class FillController {
     final parser = HydratedModelParser();
     final hydratedFields = parser.parseFields(hydratedModelPath);
     
-    // Calculate the models base path (e.g., packages/unity_chat_models/lib/src)
+    // Calculate the models base path (e.g., packages/my_models/lib/src)
     // by removing the filename and subdirectory from the hydrated model path
     final modelsBasePath = File(hydratedModelPath).parent.parent.path;
     
@@ -155,7 +155,7 @@ final class FillController {
       name: 'converters/${_resolveDtoFileBaseName(dataClass)}_converter.dart',
       content: dartConverterTemplate(
         dataClass,
-        hydratedModelImport: config.converterHydratedModelPrefix,
+        hydratedModelImport: config.converterHydratedModelPrefix!,
         hydratedFields: hydratedFields,
         modelsBasePath: modelsBasePath,
         modelSearchDirectories: config.modelSearchDirectories,
@@ -210,6 +210,7 @@ final class FillController {
           fallbackUnion: fallbackUnion,
           customMetadata: customMetadata,
           generateMergeMethod: generateMergeMethod,
+          customMetadataImportPath: config.converterHydratedModelPrefix,
         ),
         JsonSerializer.jsonSerializable => dartJsonSerializableDtoTemplate(
           dataClass,
@@ -308,6 +309,7 @@ final class FillController {
         dbUnionClassName: dbUnionClassName,
         hydratedUnionClassName: hydratedUnionClassName,
         variants: variants,
+        hydratedModelImport: config.converterHydratedModelPrefix!,
       ),
     );
   }

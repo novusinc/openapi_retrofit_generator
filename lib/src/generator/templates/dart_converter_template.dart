@@ -60,7 +60,7 @@ class UnionVariantInfo {
 String dartConverterTemplate(
   UniversalComponentClass dataClass, {
   String? hydratedModelName,
-  String? hydratedModelImport,
+  required String hydratedModelImport,
   List<HydratedField> hydratedFields = const [],
   String? modelsBasePath,
   List<String> modelSearchDirectories = const ['models'],
@@ -214,14 +214,14 @@ String dartConverterTemplate(
   );
 
   // Filter out imports - we import the whole package, so local model imports aren't needed
-  // The dataClass.imports contains references to other Db* models which are all in unity_chat_models
+  // The dataClass.imports contains references to other Db* models from the configured model package.
 
   final toDbParams = _generateToDbParams(toDbParamType, contextFields);
   final fromDbParams = _generateFromDbParams(fromDbParamType, hydratedParams, defaultValueFields);
   final hydratedParamsDocs = _generateHydratedParamsDocumentation(hydratedParams, defaultValueFields);
   
   return '''
-import 'package:unity_chat_models/unity_chat_models.dart' as models;
+import '$hydratedModelImport' as models;
 
 /// Auto-generated converter for $dbClassName <-> $resolvedHydratedModelName
 /// 
@@ -550,7 +550,7 @@ String _generateTransformerParams(List<UniversalType> transformFields) {
   for (final field in transformFields) {
     final fieldName = field.name;
     var dbType = field.toSuitableType();
-    // Prefix Db* types with models. since they're from unity_chat_models
+    // Prefix Db* types with models since they're from the configured model package.
     dbType = _prefixDbTypes(dbType);
     buffer.writeln('  /// Transformer for $fieldName field');
     buffer.writeln('  final $dbType Function(dynamic) ${fieldName}ToDb;');
@@ -965,6 +965,7 @@ String dartUnionConverterTemplate({
   required String dbUnionClassName,
   required String hydratedUnionClassName,
   required List<UnionVariantConverterInfo> variants,
+  required String hydratedModelImport,
 }) {
   final converterClassName = '${dbUnionClassName}Converter';
 
@@ -1026,7 +1027,7 @@ String dartUnionConverterTemplate({
       .join('\n');
 
   return '''
-import 'package:unity_chat_models/unity_chat_models.dart' as models;
+import '$hydratedModelImport' as models;
 $variantImports
 
 /// Auto-generated union dispatcher converter for $dbUnionClassName <-> $hydratedUnionClassName.

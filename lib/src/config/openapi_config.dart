@@ -283,6 +283,15 @@ class OpenApiConfig {
         ? CustomMetadataConfig.fromYaml(customMetadataYaml)
         : (rootConfig?.customMetadata ?? const CustomMetadataConfig());
 
+    if (((generateConverters ?? false) || customMetadata.isActive) &&
+        (converterHydratedModelPrefix == null ||
+            converterHydratedModelPrefix.trim().isEmpty)) {
+      throw const ConfigException(
+        "Config parameter 'converter_hydrated_model_prefix' is required when "
+        "'generate_converters' or 'custom_metadata' is enabled.",
+      );
+    }
+
     // Default config
     final dc = OpenApiConfig(name: name, outputDirectory: outputDirectory);
 
