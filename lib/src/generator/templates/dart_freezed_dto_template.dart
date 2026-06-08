@@ -52,9 +52,9 @@ $variantClasses$base64ConverterClass''';
 
   // Check if we need to import custom metadata annotations
   // For discriminated unions, also check variant parameters
-  bool needsCustomMetadataImport = customMetadata.isActive && 
+  bool needsCustomMetadataImport = customMetadata.isActive &&
       dataClass.parameters.any((p) => p.customMetadata.isNotEmpty);
-  
+
   if (!needsCustomMetadataImport && customMetadata.isActive && discriminator != null) {
     // Check variant parameters for custom metadata
     for (final variantParams in discriminator.refProperties.values) {
@@ -64,7 +64,7 @@ $variantClasses$base64ConverterClass''';
       }
     }
   }
-  
+
   String customMetadataImport = '';
   if (needsCustomMetadataImport) {
     if (customMetadataImportPath == null ||
@@ -111,6 +111,7 @@ part '${dataClass.name.toSnake}.g.dart';
 ${descriptionComment(dataClass.description)}@Freezed(${[if (discriminator != null) "unionKey: '${discriminator.propertyName}'", if (discriminator != null && fallbackUnion != null && fallbackUnion.isNotEmpty) "fallbackUnion: '$fallbackUnion'"].join(', ')})
 ${_classModifier(isUnion: isUnion)}class $className with _\$$className {
 ${_factories(dataClass, className, includeIfNull, fallbackUnion, customMetadata, isUnion: isUnion)}
+${_unionDefaultConstants(dataClass, className)}
 ${_jsonFactories(className, dataClass.undiscriminatedUnionVariants, isUnion: isUnion)}
 ${generateValidator ? dataClass.parameters.map(_validationString).nonNulls.join() : ''}}
 ${generateValidator ? _validateMethod(className, dataClass.parameters) : ''}$mergeExtension$base64ConverterClass''';
@@ -294,6 +295,39 @@ String _factories(
   }
 
   return factories.join('\n');
+}
+
+String _unionDefaultConstants(
+  UniversalComponentClass dataClass,
+  String className,
+) {
+  final discriminator = dataClass.discriminator;
+  if (discriminator == null) return '';
+
+  final constants = <String>[];
+  final discriminatorPropertyName = discriminator.propertyName;
+
+  for (final entry in discriminator.discriminatorValueToRefMapping.entries) {
+    final discriminatorValue = entry.key;
+    final discriminatorRef = entry.value;
+    final allParameters = discriminator.refProperties[discriminatorRef];
+    if (allParameters == null) continue;
+
+    final factoryParameters = allParameters
+        .where((param) => param.jsonKey != discriminatorPropertyName)
+        .toSet();
+    final hasRequiredParameter = factoryParameters.any(
+      (param) => param.isRequired && param.defaultValue == null,
+    );
+    if (hasRequiredParameter) continue;
+
+    final constName = 'type${discriminatorValue.toPascal}';
+    final factoryName = discriminatorValue.toCamel;
+    constants.add('  static const $constName = $className.$factoryName();');
+  }
+
+  if (constants.isEmpty) return '';
+  return '\n${constants.join('\n')}\n';
 }
 
 String _createFactoriesForUndiscriminatedUnion(
