@@ -6,8 +6,8 @@ import 'package:test/test.dart';
 void main() {
   group('Empty root client', () {
     test('dart', () async {
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRootClient([]);
       const expectedContents = '';
@@ -20,8 +20,8 @@ void main() {
       final clients = [
         const UniversalRestClient(name: 'One', imports: {}, requests: []),
       ];
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
         info: OpenApiInfo(apiVersion: '1.0.0', schemaVersion: OAS.v3_1),
       );
       final filledContent = fillController.fillRootClient(clients);
@@ -57,8 +57,8 @@ class RestClient {
       final clients = [
         const UniversalRestClient(name: 'One', imports: {}, requests: []),
       ];
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRootClient(clients);
       const expectedContents = '''
@@ -96,8 +96,8 @@ class RestClient {
         const UniversalRestClient(name: 'Four', imports: {}, requests: []),
         const UniversalRestClient(name: 'Five', imports: {}, requests: []),
       ];
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRootClient(clients);
       const expectedContents = '''
@@ -147,8 +147,8 @@ class RestClient {
       final clients = [
         const UniversalRestClient(name: 'One', imports: {}, requests: []),
       ];
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           putClientsInFolder: true,
@@ -190,8 +190,8 @@ class RestClient {
         const UniversalRestClient(name: 'Four', imports: {}, requests: []),
         const UniversalRestClient(name: 'Five', imports: {}, requests: []),
       ];
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           putClientsInFolder: true,

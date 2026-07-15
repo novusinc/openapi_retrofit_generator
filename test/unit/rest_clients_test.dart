@@ -11,8 +11,8 @@ void main() {
         imports: {},
         requests: [],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRestClientContent(restClient);
       const expectedContents = '''
@@ -38,8 +38,8 @@ abstract class SomeClient {
         imports: {},
         requests: [],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           putClientsInFolder: true,
@@ -69,8 +69,8 @@ abstract class SomeClient {
         imports: {},
         requests: [],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           clientPostfix: 'Api',
@@ -100,8 +100,8 @@ abstract class ClassNameApi {
         imports: {},
         requests: [],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           clientPostfix: '',
@@ -137,8 +137,8 @@ abstract class Some {
         },
         requests: [],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRestClientContent(restClient);
       const expectedContents = '''
@@ -178,8 +178,8 @@ abstract class ClassNameClient {
           ),
         ],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRestClientContent(restClient);
       const expectedContents = '''
@@ -272,8 +272,8 @@ abstract class ClassNameClient {
           ),
         ],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRestClientContent(restClient);
       const expectedContents = '''
@@ -348,8 +348,8 @@ abstract class ClassNameClient {
           ),
         ],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRestClientContent(restClient);
       const expectedContents = '''
@@ -430,8 +430,8 @@ abstract class ClassNameClient {
           ),
         ],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRestClientContent(restClient);
       const expectedContents = '''
@@ -484,8 +484,8 @@ abstract class ClassNameClient {
           ),
         ],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRestClientContent(restClient);
       const expectedContents = '''
@@ -556,8 +556,8 @@ abstract class ClassNameClient {
           ),
         ],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRestClientContent(restClient);
       const expectedContents = '''
@@ -665,8 +665,8 @@ abstract class ClassNameClient {
           ),
         ],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRestClientContent(restClient);
       const expectedContents = '''
@@ -793,8 +793,8 @@ abstract class ClassNameClient {
           ),
         ],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRestClientContent(restClient);
       const expectedContents = '''
@@ -863,8 +863,8 @@ abstract class ClassNameClient {
           ),
         ],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRestClientContent(restClient);
       const expectedContents = '''
@@ -938,8 +938,8 @@ abstract class ClassNameClient {
           ),
         ],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRestClientContent(restClient);
       const expectedContents = '''
@@ -1034,8 +1034,8 @@ abstract class ClassNameClient {
           ),
         ],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRestClientContent(restClient);
       const expectedContents = '''
@@ -1122,8 +1122,8 @@ abstract class ClassNameClient {
           ),
         ],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRestClientContent(restClient);
       const expectedContents = '''
@@ -1220,8 +1220,8 @@ abstract class ClassNameClient {
           ),
         ],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRestClientContent(restClient);
       const expectedContents = '''
@@ -1264,8 +1264,8 @@ abstract class ClassNameClient {
           ),
         ],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           extrasParameterByDefault: true,
@@ -1340,8 +1340,8 @@ abstract class ClassNameClient {
           ),
         ],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           extrasParameterByDefault: true,
@@ -1389,8 +1389,8 @@ abstract class ClassNameClient {
           ),
         ],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRestClientContent(restClient);
       const expectedContents = '''
@@ -1471,8 +1471,8 @@ abstract class ClassNameClient {
           ),
         ],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRestClientContent(restClient);
       const expectedContents = '''
@@ -1569,8 +1569,8 @@ abstract class ClassNameClient {
           ),
         ],
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillRestClientContent(restClient);
       const expectedContents = '''

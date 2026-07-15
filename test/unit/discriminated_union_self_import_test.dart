@@ -247,8 +247,10 @@ void main() {
           ),
         );
 
-        const fillController = FillController(
-          config: GeneratorConfig(
+        // FillController computes lookup maps in its initializer list, so it
+        // cannot be const-constructed.
+        final fillController = FillController(
+          config: const GeneratorConfig(
             name: '',
             outputDirectory: '.',
             jsonSerializer: JsonSerializer.freezed,
