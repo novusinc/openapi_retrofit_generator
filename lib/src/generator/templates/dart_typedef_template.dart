@@ -9,6 +9,7 @@ import 'package:openapi_retrofit_generator/src/utils/type_utils.dart';
 String dartTypeDefTemplate(
   UniversalComponentClass dataClass, {
   JsonSerializer? jsonSerializer,
+  Map<String, String>? classFileOverrides,
 }) {
   final className = dataClass.name.toPascal;
   final type = dataClass.parameters.firstOrNull;
@@ -17,16 +18,25 @@ String dartTypeDefTemplate(
     return '';
   }
 
-  final importFileName = _getImportFileName(import, jsonSerializer);
+  final importFileName = _getImportFileName(
+    import,
+    jsonSerializer,
+    classFileOverrides,
+  );
 
   return '${import != null ? "import '$importFileName.dart';\nexport '$importFileName.dart';\n\n" : ''}'
       '${descriptionComment(dataClass.description)}'
       'typedef $className = ${_renameTypeForSerializer(type.toSuitableType(), jsonSerializer)};\n';
 }
 
-String _getImportFileName(String? import, JsonSerializer? jsonSerializer) {
+String _getImportFileName(
+  String? import,
+  JsonSerializer? jsonSerializer,
+  Map<String, String>? classFileOverrides,
+) {
   if (import == null) return '';
-  return import.toSnake;
+  final base = import.toSnake;
+  return classFileOverrides?[base] ?? base;
 }
 
 String _renameTypeForSerializer(String type, JsonSerializer? jsonSerializer) {

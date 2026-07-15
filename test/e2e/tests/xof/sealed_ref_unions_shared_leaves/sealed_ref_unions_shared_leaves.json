@@ -1,0 +1,150 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Sealed Ref Unions Shared Leaves API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/events": {
+      "get": {
+        "tags": ["events"],
+        "operationId": "getEvent",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StreamEvent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ephemeral": {
+      "get": {
+        "tags": ["events"],
+        "operationId": "getEphemeralEvent",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EphemeralEvent"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "StreamEvent": {
+        "description": "All events; shares its typing and presence leaves with EphemeralEvent.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/MessageEvent"
+          },
+          {
+            "$ref": "#/components/schemas/TypingEvent"
+          },
+          {
+            "$ref": "#/components/schemas/PresenceEvent"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "message": "#/components/schemas/MessageEvent",
+            "typing": "#/components/schemas/TypingEvent",
+            "presence": "#/components/schemas/PresenceEvent"
+          }
+        }
+      },
+      "EphemeralEvent": {
+        "description": "The strict subset of events that are never persisted.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/TypingEvent"
+          },
+          {
+            "$ref": "#/components/schemas/PresenceEvent"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "typing": "#/components/schemas/TypingEvent",
+            "presence": "#/components/schemas/PresenceEvent"
+          }
+        }
+      },
+      "MessageEvent": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "default": "message"
+          },
+          "id": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "created_at", "text"]
+      },
+      "TypingEvent": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "default": "typing"
+          },
+          "id": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "user_id": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "created_at"]
+      },
+      "PresenceEvent": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "default": "presence"
+          },
+          "id": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "online": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": ["id", "created_at"]
+      }
+    }
+  }
+}

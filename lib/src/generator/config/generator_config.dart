@@ -21,6 +21,7 @@ class GeneratorConfig {
     this.originalHttpResponse = false,
     this.generateValidator = false,
     this.fallbackUnion,
+    this.sealedRefUnions = false,
     this.mergeOutputs = false,
     this.includeIfNull = false,
     this.generateConverters = false,
@@ -178,6 +179,22 @@ class GeneratorConfig {
   ///
   /// Default: null (no fallback union)
   final String? fallbackUnion;
+
+  /// Emit discriminated all-`$ref` unions as plain `sealed` supertypes over
+  /// the existing referenced leaf classes (one file per union family) instead
+  /// of cloning variant fields into Freezed union factories.
+  ///
+  /// Only applicable with [jsonSerializer] set to [JsonSerializer.freezed];
+  /// ignored for other serializers. Incompatible with [mergeOutputs].
+  /// See `OpenApiConfig.sealedRefUnions` for the full description.
+  ///
+  /// Default: false
+  final bool sealedRefUnions;
+
+  /// Whether sealed-ref-union emission is actually in effect for this run
+  /// (flag set AND serializer is freezed).
+  bool get effectiveSealedRefUnions =>
+      sealedRefUnions && jsonSerializer == JsonSerializer.freezed;
 
   /// Merge all generated code into a single output file.
   ///

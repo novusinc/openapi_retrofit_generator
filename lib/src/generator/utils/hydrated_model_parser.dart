@@ -74,7 +74,11 @@ class HydratedModelParser {
   ///
   /// Reads the Dart file and extracts field declarations from the model class.
   /// Returns a list of HydratedField objects representing each field.
-  List<HydratedField> parseFields(String modelPath) {
+  ///
+  /// When [className] is given, the parser anchors to that class's factory
+  /// constructor. This matters for union family files, which hold several
+  /// factory constructors — the unanchored parser would take the first one.
+  List<HydratedField> parseFields(String modelPath, {String? className}) {
     try {
       final file = File(modelPath);
       if (!file.existsSync()) {
@@ -82,7 +86,7 @@ class HydratedModelParser {
       }
 
       final content = file.readAsStringSync();
-      return _extractFields(content);
+      return _extractFields(content, className: className);
     } catch (e) {
       // On error, return empty list - converter will use fallback heuristics
       return [];
@@ -90,30 +94,40 @@ class HydratedModelParser {
   }
 
   /// Extract field declarations from Dart class content
-  List<HydratedField> _extractFields(String dartContent) {
-    final fields = <HydratedField>[];
-    
+  List<HydratedField> _extractFields(String dartContent, {String? className}) {
     // For Freezed classes, look for the factory constructor pattern:
     // const factory ClassName({ ... }) = _ClassName;
+    // Anchored to className when provided, falling back to the first factory
+    // so oddly-named single-class files keep working.
+    if (className != null) {
+      final anchoredMatch = RegExp(
+        'const\\s+factory\\s+${RegExp.escape(className)}\\s*\\(\\s*{([\\s\\S]*?)}\\s*\\)\\s*=',
+        multiLine: true,
+      ).firstMatch(dartContent);
+      if (anchoredMatch != null) {
+        return _parseClassBody(anchoredMatch.group(1) ?? '');
+      }
+    }
+
     var classMatch = RegExp(
       r'const\s+factory\s+\w+\s*\(\s*{([\s\S]*?)}\s*\)\s*=',
       multiLine: true,
     ).firstMatch(dartContent);
-    
+
     if (classMatch != null) {
       return _parseClassBody(classMatch.group(1) ?? '');
     }
-    
+
     // Fallback: try regular class definition
     classMatch = RegExp(
       r'(?:final\s+)?class\s+\w+.*?\{([\s\S]*?)\}',
       multiLine: true,
     ).firstMatch(dartContent);
-    
+
     if (classMatch == null) {
       return [];
     }
-    
+
     return _parseClassBody(classMatch.group(1) ?? '');
   }
   

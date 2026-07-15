@@ -1,5 +1,7 @@
+import 'package:openapi_retrofit_generator/src/config/config_exception.dart';
 import 'package:openapi_retrofit_generator/src/generator/config/generator_config.dart';
 import 'package:openapi_retrofit_generator/src/generator/generator/fill_controller.dart';
+import 'package:openapi_retrofit_generator/src/generator/generator/union_family_resolver.dart';
 import 'package:openapi_retrofit_generator/src/generator/model/generated_file.dart';
 import 'package:openapi_retrofit_generator/src/generator/model/generation_statistic.dart';
 import 'package:openapi_retrofit_generator/src/parser/openapi_parser_core.dart';
@@ -49,15 +51,32 @@ class Generator {
   /// Generates content of files based on OpenApi definition file
   /// and return list of [GeneratedFile]
   List<GeneratedFile> generateContent() {
+    if (config.effectiveSealedRefUnions && config.mergeOutputs) {
+      throw const ConfigException(
+        "Config parameters 'sealed_ref_unions' and 'merge_outputs' cannot be "
+        'combined: union family files rely on per-file part directives.',
+      );
+    }
+    final unionFamilies = config.effectiveSealedRefUnions
+        ? resolveUnionFamilies(dataClasses)
+        : UnionFamilyResolution.none;
+
     final fillController = FillController(
       config: config,
       info: info,
       dataClasses: dataClasses,
+      unionFamilies: unionFamilies,
     );
 
-    final dataClassesFiles = dataClasses
-        .map(fillController.fillDtoContent)
-        .toList();
+    // Union family members are merged into one file per family; every other
+    // data class keeps its own file.
+    final dataClassesFiles = [
+      for (final dataClass in dataClasses)
+        if (!unionFamilies.familyMemberNames.contains(dataClass.name))
+          fillController.fillDtoContent(dataClass),
+      for (final family in unionFamilies.families)
+        fillController.fillUnionFamilyContent(family),
+    ];
     final restClientFiles = restClients
         .map(fillController.fillRestClientContent)
         .toList();

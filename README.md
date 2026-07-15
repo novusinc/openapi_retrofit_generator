@@ -304,6 +304,21 @@ openapi_generator:
 
 **📖 [Full Documentation: Custom Metadata Feature](docs/CUSTOM_METADATA.md)**
 
+### Sealed Ref Unions (freezed)
+
+Emit discriminated all-`$ref` unions as plain `sealed` supertypes over the
+existing leaf classes — no cloned variant classes, variant constructors kept as
+redirecting factories, and a raw-JSON `<Union>Unknown` fallback instead of a
+runtime throw on unrecognized discriminator values.
+
+```yaml
+openapi_generator:
+  json_serializer: freezed
+  sealed_ref_unions: true
+```
+
+**📖 [Full Documentation: Sealed Ref Unions](docs/SEALED_REF_UNIONS.md)**
+
 ### Command Line Arguments
 
 Override config file options via command line:
