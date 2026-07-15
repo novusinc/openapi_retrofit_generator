@@ -468,6 +468,18 @@ String _unknownGetterBody(
     'Map<String, dynamic>',
   };
 
+  // Enum detection: the registry of generated enum classes is authoritative.
+  // param.enumType is NOT a reliable wire type — for allOf-wrapped $refs with
+  // a schema default the parser stores the referenced CLASS name there (even
+  // for non-enum refs), while for inline enums it stores the wire type.
+  const scalarWireTypes = {'String', 'int', 'double', 'num', 'bool'};
+  final registryWireType = enumWireTypes[nonNullType];
+  final inlineEnumWireType = param.enumType?.toDartType();
+  final enumCast = registryWireType ??
+      (scalarWireTypes.contains(inlineEnumWireType)
+          ? inlineEnumWireType
+          : null);
+
   final String? decodeNonNull;
   if (nonNullType == 'dynamic') {
     decodeNonNull = rawAccess;
@@ -480,13 +492,11 @@ String _unknownGetterBody(
   } else if (param.wrappingCollections.isNotEmpty ||
       nonNullType == 'Uint8List') {
     decodeNonNull = null;
-  } else if (param.enumType != null || enumWireTypes.containsKey(nonNullType)) {
-    // Enums (inline or $ref) expose fromJson only when unknown_enum_value is
-    // enabled; without it there is no safe raw-JSON decoding.
-    final wireDartType =
-        param.enumType?.toDartType() ?? enumWireTypes[nonNullType]!;
+  } else if (enumCast != null) {
+    // Enums expose fromJson only when unknown_enum_value is enabled; without
+    // it there is no safe raw-JSON decoding.
     decodeNonNull = unknownEnumValue
-        ? '$nonNullType.fromJson($rawAccess as $wireDartType)'
+        ? '$nonNullType.fromJson($rawAccess as $enumCast)'
         : null;
   } else {
     // A referenced component class with its own fromJson.
