@@ -113,12 +113,12 @@ class OpenApiParser {
     for (final field in config.customMetadata.fields) {
       // Check for field name with and without x- prefix
       dynamic value = map[field.name];
-      
+
       // If not found and field name doesn't start with x-, also try with x- prefix
       if (value == null && !field.name.startsWith('x-')) {
         value = map['x-${field.name}'];
       }
-      
+
       // If not found and field name starts with x-, also try without x- prefix
       if (value == null && field.name.startsWith('x-')) {
         value = map[field.name.substring(2)]; // Remove 'x-' prefix
@@ -933,7 +933,8 @@ class OpenApiParser {
         // OpenAPI 2.0 nullable value
         isNullable =
             isNullable ?? propertyValue[_xNullableConst].toString().toBool();
-        final hasDefaultKey = propertyValue.containsKey(_defaultConst) &&
+        final hasDefaultKey =
+            propertyValue.containsKey(_defaultConst) &&
             propertyValue[_defaultConst] != null;
 
         isNullable =
@@ -958,8 +959,8 @@ class OpenApiParser {
         final propNamePascal = propertyName.toPascal;
         final nestedAdditionalName = additionalName != null
             ? parentName.toLowerCase().endsWith(propertyName.toLowerCase())
-                ? additionalName.toPascal
-                : '${additionalName.toPascal}$propNamePascal'
+                  ? additionalName.toPascal
+                  : '${additionalName.toPascal}$propNamePascal'
             : null;
         final typeWithImport = _findType(
           propertyValue,
@@ -1352,8 +1353,9 @@ class OpenApiParser {
         // This is crucial to prevent circular dependencies when a variant
         // references the discriminated union itself (e.g., CustomAI has baseAi?: AI).
         discriminatedOneOfClass.imports.addAll(
-          refedClass.imports
-              .where((it) => it != discriminatedOneOfClass.name.toPascal),
+          refedClass.imports.where(
+            (it) => it != discriminatedOneOfClass.name.toPascal,
+          ),
         );
         // Similarly, only add the variant import if it's not self-referential
         if (refedClass.import != discriminatedOneOfClass.name.toPascal) {
@@ -1656,7 +1658,9 @@ class OpenApiParser {
       final (type: itemDetails, import: itemImport) = _findType(
         arrayItemsSchema,
         name: isItemsRef ? null : name, // Don't pass name for $ref items
-        additionalName: isItemsRef ? null : additionalName, // Don't pass additionalName for $ref items
+        additionalName: isItemsRef
+            ? null
+            : additionalName, // Don't pass additionalName for $ref items
         root: false,
         isRequired:
             true, // This doesn't affect itemDetails.nullable due to root:false
@@ -1802,8 +1806,11 @@ class OpenApiParser {
         if (rawDefault is Map && hasEnumValues) {
           // Build Dart map literal with enum values resolved, e.g.:
           //   {'messaging': [CouchbaseCollection.users, ...], ...}
-          defaultValue =
-              _buildEnumMapDefault(rawDefault, valueDetails, mapKeyType);
+          defaultValue = _buildEnumMapDefault(
+            rawDefault,
+            valueDetails,
+            mapKeyType,
+          );
         } else {
           defaultValue = protectDefaultValue(rawDefault);
         }
@@ -2059,23 +2066,21 @@ class OpenApiParser {
           map[_allOfConst] ??
           map[_anyOfConst] ??
           map[_oneOfConst] ??
-          (map[_typeConst] as List<dynamic>)
-              .map((e) {
-                final itemMap = <String, dynamic>{_typeConst: e.toString()};
-                // Preserve important schema keys from parent map for each type item
-                // This is critical for datetime format detection (e.g., format: date-time)
-                if (map.containsKey(_formatConst)) {
-                  itemMap[_formatConst] = map[_formatConst];
-                }
-                if (map.containsKey(_descriptionConst)) {
-                  itemMap[_descriptionConst] = map[_descriptionConst];
-                }
-                if (map.containsKey(_defaultConst)) {
-                  itemMap[_defaultConst] = map[_defaultConst];
-                }
-                return itemMap;
-              })
-              .toList();
+          (map[_typeConst] as List<dynamic>).map((e) {
+            final itemMap = <String, dynamic>{_typeConst: e.toString()};
+            // Preserve important schema keys from parent map for each type item
+            // This is critical for datetime format detection (e.g., format: date-time)
+            if (map.containsKey(_formatConst)) {
+              itemMap[_formatConst] = map[_formatConst];
+            }
+            if (map.containsKey(_descriptionConst)) {
+              itemMap[_descriptionConst] = map[_descriptionConst];
+            }
+            if (map.containsKey(_defaultConst)) {
+              itemMap[_defaultConst] = map[_defaultConst];
+            }
+            return itemMap;
+          }).toList();
 
       UniversalType makeNullable(UniversalType type) {
         // If the type itself is a collection, make its outermost collection nullable.
@@ -2148,10 +2153,12 @@ class OpenApiParser {
             final baseAdditionalName = additionalName ?? '';
             final basePropertyName = name ?? '';
             final effectivePropertyName =
-                baseAdditionalName.toLowerCase().endsWith(basePropertyName.toLowerCase()) &&
-                        basePropertyName.isNotEmpty
-                    ? ''
-                    : basePropertyName;
+                baseAdditionalName.toLowerCase().endsWith(
+                      basePropertyName.toLowerCase(),
+                    ) &&
+                    basePropertyName.isNotEmpty
+                ? ''
+                : basePropertyName;
             final baseClassName =
                 '$baseAdditionalName $effectivePropertyName'.toPascal;
             final (newName, description) = protectName(
@@ -2162,7 +2169,8 @@ class OpenApiParser {
 
             // Check if a class with this name already exists (from top-level schema processing)
             sealedClassName = newName!.toPascal;
-            final classAlreadyExists = _typeRegistry.isClass(sealedClassName) ||
+            final classAlreadyExists =
+                _typeRegistry.isClass(sealedClassName) ||
                 _objectClasses.any((c) => c.name == sealedClassName);
 
             if (!classAlreadyExists) {
@@ -2315,10 +2323,12 @@ class OpenApiParser {
                 final baseAdditionalName = additionalName ?? '';
                 final basePropertyName = name ?? '';
                 final effectivePropertyName =
-                    baseAdditionalName.toLowerCase().endsWith(basePropertyName.toLowerCase()) &&
-                            basePropertyName.isNotEmpty
-                        ? ''
-                        : basePropertyName;
+                    baseAdditionalName.toLowerCase().endsWith(
+                          basePropertyName.toLowerCase(),
+                        ) &&
+                        basePropertyName.isNotEmpty
+                    ? ''
+                    : basePropertyName;
                 final baseClassName =
                     '$baseAdditionalName $effectivePropertyName'.toPascal;
                 final (newName, description) = protectName(
@@ -2374,10 +2384,12 @@ class OpenApiParser {
                 final baseAdditionalName = additionalName ?? '';
                 final basePropertyName = name ?? '';
                 final effectivePropertyName =
-                    baseAdditionalName.toLowerCase().endsWith(basePropertyName.toLowerCase()) &&
-                            basePropertyName.isNotEmpty
-                        ? ''
-                        : basePropertyName;
+                    baseAdditionalName.toLowerCase().endsWith(
+                          basePropertyName.toLowerCase(),
+                        ) &&
+                        basePropertyName.isNotEmpty
+                    ? ''
+                    : basePropertyName;
                 final baseClassName =
                     '$baseAdditionalName $effectivePropertyName'.toPascal;
                 final (newName, description) = protectName(
@@ -2397,7 +2409,8 @@ class OpenApiParser {
                 if (utoipaResult != null) {
                   final (utoipaDiscriminator, utoipaImports) = utoipaResult;
                   // Check if a class with this name already exists
-                  final classAlreadyExists = _typeRegistry.isClass(unionName) ||
+                  final classAlreadyExists =
+                      _typeRegistry.isClass(unionName) ||
                       _objectClasses.any((c) => c.name == unionName);
 
                   if (!classAlreadyExists) {
@@ -2453,7 +2466,8 @@ class OpenApiParser {
                       final (inferredDiscriminator, inferredImports) =
                           inferredResult;
                       // Check if a class with this name already exists
-                      final classAlreadyExists = _typeRegistry.isClass(unionName) ||
+                      final classAlreadyExists =
+                          _typeRegistry.isClass(unionName) ||
                           _objectClasses.any((c) => c.name == unionName);
 
                       if (!classAlreadyExists) {
@@ -2503,7 +2517,8 @@ class OpenApiParser {
                       );
 
                       // Check if a class with this name already exists
-                      final classAlreadyExists = _typeRegistry.isClass(unionName) ||
+                      final classAlreadyExists =
+                          _typeRegistry.isClass(unionName) ||
                           _objectClasses.any((c) => c.name == unionName);
 
                       if (!classAlreadyExists) {
@@ -3186,7 +3201,8 @@ class OpenApiParser {
           _definitionFileContent[_componentsConst] as Map<String, dynamic>;
       schemas = components[_schemasConst] as Map<String, dynamic>?;
     } else if (_definitionFileContent.containsKey(_definitionsConst)) {
-      schemas = _definitionFileContent[_definitionsConst] as Map<String, dynamic>?;
+      schemas =
+          _definitionFileContent[_definitionsConst] as Map<String, dynamic>?;
     } else {
       return null;
     }
@@ -3206,13 +3222,16 @@ class OpenApiParser {
       final schemaDiscriminator = schema[_discriminatorConst];
       if (schemaDiscriminator is! Map<String, dynamic>) continue;
 
-      final schemaPropName = schemaDiscriminator[_propertyNameConst]?.toString();
+      final schemaPropName = schemaDiscriminator[_propertyNameConst]
+          ?.toString();
       if (schemaPropName != discriminator.propertyName) continue;
 
       // Check if the discriminator mappings match
       final schemaMapping = schemaDiscriminator[_mappingConst];
       if (schemaMapping is Map<String, dynamic>) {
-        final schemaVariants = schemaMapping.values.map((v) => v.toString()).toSet();
+        final schemaVariants = schemaMapping.values
+            .map((v) => v.toString())
+            .toSet();
         if (_setsEqual(schemaVariants, unionVariants)) {
           return schemaName.toPascal;
         }

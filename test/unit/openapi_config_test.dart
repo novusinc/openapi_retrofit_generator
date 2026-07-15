@@ -692,20 +692,23 @@ void main() {
       expect(config.generateMergeMethod, isFalse);
     });
 
-    test('should override root config generateMergeMethod with local value', () {
-      const rootConfig = OpenApiConfig(
-        outputDirectory: 'lib/shared',
-        generateMergeMethod: false,
-      );
+    test(
+      'should override root config generateMergeMethod with local value',
+      () {
+        const rootConfig = OpenApiConfig(
+          outputDirectory: 'lib/shared',
+          generateMergeMethod: false,
+        );
 
-      final yamlMap = YamlMap.wrap({
-        'schema_path': 'api/user.yaml',
-        'generate_merge_method': true,
-      });
+        final yamlMap = YamlMap.wrap({
+          'schema_path': 'api/user.yaml',
+          'generate_merge_method': true,
+        });
 
-      final config = OpenApiConfig.fromYaml(yamlMap, rootConfig: rootConfig);
-      expect(config.generateMergeMethod, isTrue);
-    });
+        final config = OpenApiConfig.fromYaml(yamlMap, rootConfig: rootConfig);
+        expect(config.generateMergeMethod, isTrue);
+      },
+    );
 
     test('should pass generateMergeMethod to GeneratorConfig', () {
       const swpConfig = OpenApiConfig(

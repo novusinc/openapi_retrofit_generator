@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:openapi_retrofit_generator/src/parser/model/normalized_identifier.dart';
 import 'package:openapi_retrofit_generator/src/parser/openapi_parser_core.dart';
-import 'package:openapi_retrofit_generator/src/utils/base_utils.dart';
 import 'package:openapi_retrofit_generator/src/utils/type_utils.dart';
 
 import 'package:openapi_retrofit_generator/src/generator/utils/hydrated_model_parser.dart';
@@ -74,8 +73,11 @@ String dartConverterTemplate(
   final converterClassName = '${dbClassName}Converter';
 
   // Derive hydrated model name from Db prefix (e.g., DbMessage -> Message)
-  final resolvedHydratedModelName = hydratedModelName ??
-      (dbClassName.startsWith('Db') ? dbClassName.substring(2) : '${dbClassName}Hydrated');
+  final resolvedHydratedModelName =
+      hydratedModelName ??
+      (dbClassName.startsWith('Db')
+          ? dbClassName.substring(2)
+          : '${dbClassName}Hydrated');
 
   // Hydrated side union info (e.g., Agent is a variant of Ai)
   //   fromDb returns Ai (parent type) via Ai.agent() factory
@@ -93,19 +95,21 @@ String dartConverterTemplate(
   final dbParentClassName = dbUnionVariantInfo?.parentClassName;
   final dbUnionFactoryName = dbUnionVariantInfo?.factoryName;
   final toDbReturnType = dbParentClassName ?? dbClassName;
-  final fromDbParamType = (dbParentClassName != null && dbUnionFactoryName != null)
+  final fromDbParamType =
+      (dbParentClassName != null && dbUnionFactoryName != null)
       ? '$dbParentClassName${dbUnionFactoryName.toPascal}'
       : dbClassName;
 
   final fields = dataClass.parameters.toList();
-  
+
   // Detect hydrated fields with dual-field support
   final detectedHydratedFields = _detectHydratedFields(fields, hydratedFields);
-  
+
   // Categorize fields
   final directFields = <UniversalType>[];
   final hydratedParams = <HydratedField>[];
-  final contextFields = <UniversalType>[]; // Fields like channelCid that come from context
+  final contextFields =
+      <UniversalType>[]; // Fields like channelCid that come from context
 
   // Fields that exist ONLY in hydrated model (not in DB) with default values
   // These are fields like replyCount that have @Default(...) but no corresponding DB field
@@ -139,27 +143,25 @@ String dartConverterTemplate(
       defaultValueFields.add(hydratedField);
     }
   }
-  
+
   for (final field in fields) {
     final name = field.name;
     if (name == null) continue;
-    
+
     // Check if this is a hydrated object field (not in the DB)
     if (hydratedParams.any((h) => h.name == name)) {
       // Skip - already added as hydrated
       continue;
     }
-    
+
     // Check if this DB field corresponds to a hydrated field
     // (e.g., userId corresponds to hydrated user, attachments corresponds to hydrated attachments)
     bool isCorrespondingToHydrated = false;
-    HydratedField? correspondingHydratedField;
     for (final h in hydratedParams) {
       // Check if this DB field is the ID field for a hydrated parameter
       // e.g., userId is the ID for user, attachments ID field for attachments hydrated param
       if (h.idFieldName == name) {
         isCorrespondingToHydrated = true;
-        correspondingHydratedField = h;
         break;
       }
     }
@@ -168,7 +170,7 @@ String dartConverterTemplate(
       // Check if this field also exists directly in the API model (same name)
       // If yes, it's a direct field (copy from source)
       // If no, we'll handle it in the toDb/fromDb body by extracting from the hydrated object
-      
+
       final existsInApi = hydratedFields.any((f) => f.name == name);
       if (existsInApi) {
         // Field exists in both API and DB models with same name
@@ -178,18 +180,20 @@ String dartConverterTemplate(
       // If it doesn't exist in API, we skip it here and handle it via hydrated object extraction
       continue;
     }
-    
+
     // Check if it's a context field
     if (_isContextField(name)) {
       contextFields.add(field);
       continue;
     }
-    
+
     // Otherwise, it's a direct field
     directFields.add(field);
   }
-  
-  final transformerParams = _generateTransformerParams(directFields.where((f) => _isLegacyTransformField(f)).toList());
+
+  final transformerParams = _generateTransformerParams(
+    directFields.where((f) => _isLegacyTransformField(f)).toList(),
+  );
   final toDbBody = _generateToDbBody(
     dbClassName,
     resolvedHydratedModelName,
@@ -217,9 +221,16 @@ String dartConverterTemplate(
   // The dataClass.imports contains references to other Db* models from the configured model package.
 
   final toDbParams = _generateToDbParams(toDbParamType, contextFields);
-  final fromDbParams = _generateFromDbParams(fromDbParamType, hydratedParams, defaultValueFields);
-  final hydratedParamsDocs = _generateHydratedParamsDocumentation(hydratedParams, defaultValueFields);
-  
+  final fromDbParams = _generateFromDbParams(
+    fromDbParamType,
+    hydratedParams,
+    defaultValueFields,
+  );
+  final hydratedParamsDocs = _generateHydratedParamsDocumentation(
+    hydratedParams,
+    defaultValueFields,
+  );
+
   return '''
 import '$hydratedModelImport' as models;
 
@@ -272,8 +283,8 @@ $fromDbBody
 /// ## Detection Logic
 ///
 /// The algorithm categorizes fields into:
-/// 1. **Hydrated fields** - Complex objects that need to be resolved (e.g., User, List<Reaction>)
-/// 2. **ID fields** - Reference fields stored in DB (e.g., userId, List<String> attachmentIds)
+/// 1. **Hydrated fields** - Complex objects that need to be resolved (e.g., User, `List<Reaction>`)
+/// 2. **ID fields** - Reference fields stored in DB (e.g., userId, `List<String>` attachmentIds)
 /// 3. **Direct fields** - Same type in both models, copied as-is
 ///
 /// ## Default Value Fields (New)
@@ -291,7 +302,7 @@ List<HydratedField> _detectHydratedFields(
 ) {
   final result = <HydratedField>[];
   final processedNames = <String>{};
-  
+
   // First, deduplicate hydratedFields by name (keep first occurrence)
   final deduplicatedHydratedFields = <HydratedField>[];
   final seenNames = <String>{};
@@ -301,112 +312,122 @@ List<HydratedField> _detectHydratedFields(
       seenNames.add(field.name);
     }
   }
-  
+
   // Process hydrated fields and detect relationships
   for (final hydratedField in deduplicatedHydratedFields) {
     // Check if this is an ID field (e.g., userId, attachmentIds)
-    final isIdField = hydratedField.name.endsWith('Id') || 
-                     hydratedField.name.endsWith('Ids');
-    
+    final isIdField =
+        hydratedField.name.endsWith('Id') || hydratedField.name.endsWith('Ids');
+
     if (isIdField) {
       // This is an ID field (userId, attachmentIds, etc.)
-      
+
       // Check if corresponding object field exists in hydrated model
       final singularName = HydratedField.singularizeIdField(hydratedField.name);
-      
+
       // Look for both singular and plural forms of the object field
       // E.g., for "userIds", look for both "user" and "users"
       final possibleObjectFieldNames = [
-        singularName,  // e.g., "user" (singular)
-        '${singularName}s',  // e.g., "users" (plural)
+        singularName, // e.g., "user" (singular)
+        '${singularName}s', // e.g., "users" (plural)
       ];
-      
+
       final correspondingObjectField = hydratedFields.firstWhere(
         (f) => possibleObjectFieldNames.contains(f.name),
         orElse: () => HydratedField(name: '', type: ''),
       );
-      
+
       if (correspondingObjectField.name.isNotEmpty) {
         // We have both ID and object (userId + user, or userIds + users)
-        
+
         // Check if the object field was already processed as hydrated
         if (processedNames.contains(correspondingObjectField.name)) {
           // Object field was already added when processing non-ID fields
           // Just add the ID field as DIRECT (maps to DB directly)
-          result.add(HydratedField(
-            name: hydratedField.name,
-            type: hydratedField.type,
-            idFieldName: null,
-            isHydrated: false,
-            isIdField: true,
-          ));
+          result.add(
+            HydratedField(
+              name: hydratedField.name,
+              type: hydratedField.type,
+              idFieldName: null,
+              isHydrated: false,
+              isIdField: true,
+            ),
+          );
           processedNames.add(hydratedField.name);
         } else {
           // Process ID field as DIRECT (maps to DB directly)
-          result.add(HydratedField(
-            name: hydratedField.name,
-            type: hydratedField.type,
-            idFieldName: null,
-            isHydrated: false,
-            isIdField: true,
-          ));
+          result.add(
+            HydratedField(
+              name: hydratedField.name,
+              type: hydratedField.type,
+              idFieldName: null,
+              isHydrated: false,
+              isIdField: true,
+            ),
+          );
           processedNames.add(hydratedField.name);
-          
+
           // Process object field as HYDRATED (needs converter parameter)
-          result.add(HydratedField(
-            name: correspondingObjectField.name,
-            type: correspondingObjectField.type,
-            idFieldName: hydratedField.name,  // Points back to ID field
-            isHydrated: true,
-            isIdField: false,
-            listItemType: _extractListItemType(correspondingObjectField.type),
-          ));
+          result.add(
+            HydratedField(
+              name: correspondingObjectField.name,
+              type: correspondingObjectField.type,
+              idFieldName: hydratedField.name, // Points back to ID field
+              isHydrated: true,
+              isIdField: false,
+              listItemType: _extractListItemType(correspondingObjectField.type),
+            ),
+          );
           processedNames.add(correspondingObjectField.name);
         }
       } else {
         // ID field only, process normally
-        result.add(HydratedField(
-          name: hydratedField.name,
-          type: hydratedField.type,
-          isIdField: true,
-        ));
+        result.add(
+          HydratedField(
+            name: hydratedField.name,
+            type: hydratedField.type,
+            isIdField: true,
+          ),
+        );
         processedNames.add(hydratedField.name);
       }
     } else {
       // Not an ID field
-      
+
       if (processedNames.contains(hydratedField.name)) {
         // Already processed as part of ID/object pair
         continue;
       }
-      
+
       // Check if there's a corresponding ID field in DB
       final possibleIdNames = [
         '${hydratedField.name}Id',
         '${hydratedField.name}Ids',
       ];
-      
+
       final correspondingDbIdField = dbFields.firstWhere((f) {
         return possibleIdNames.contains(f.name);
       }, orElse: () => UniversalType(type: '', isRequired: false));
-      
+
       if (correspondingDbIdField.type.isNotEmpty) {
         // This is an object field that has a corresponding ID in DB
-        result.add(HydratedField(
-          name: hydratedField.name,
-          type: hydratedField.type,
-          idFieldName: correspondingDbIdField.name,
-          isHydrated: true,
-          isIdField: false,
-          listItemType: _extractListItemType(hydratedField.type),
-        ));
+        result.add(
+          HydratedField(
+            name: hydratedField.name,
+            type: hydratedField.type,
+            idFieldName: correspondingDbIdField.name,
+            isHydrated: true,
+            isIdField: false,
+            listItemType: _extractListItemType(hydratedField.type),
+          ),
+        );
       } else {
         // Pattern 3: Check if same field name exists in DB with different type
         final dbFieldWithSameName = dbFields.firstWhere(
           (f) => f.name == hydratedField.name,
           orElse: () => UniversalType(type: '', isRequired: false),
         );
-        
+
         if (dbFieldWithSameName.type.isNotEmpty) {
           // Same field name but different type - needs hydration
           final dbType = dbFieldWithSameName.toSuitableType();
@@ -419,62 +440,77 @@ List<HydratedField> _detectHydratedFields(
             // This handles cases like:
             //   - List<dynamic> options → store full serialized List<PollOption>
             //   - Map<String, dynamic> state → store serialized MessageState
-            final dbBaseType = dbType.replaceAll('?', '').replaceAll('List<', '').replaceAll('>', '').trim();
+            final dbBaseType = dbType
+                .replaceAll('?', '')
+                .replaceAll('List<', '')
+                .replaceAll('>', '')
+                .trim();
             // Detect when DB stores serialized data (dynamic or Map) that the
             // hydrated model represents as typed objects. Covers:
             //   dynamic, List<dynamic>, Map<String, dynamic>,
             //   Map<String, dynamic>?, List<Map<String, dynamic>>, etc.
-            final isSerialized = dbBaseType == 'dynamic' ||
+            final isSerialized =
+                dbBaseType == 'dynamic' ||
                 dbType.contains('Map<String, dynamic>');
             if (isSerialized) {
-              result.add(HydratedField(
-                name: hydratedField.name,
-                type: hydratedField.type,
-                idFieldName: hydratedField.name,  // DB field name is the same
-                isHydrated: true,  // Still needs processing (for serialization)
-                isIdField: false,
-                serializeFullObject: true,  // Serialize full objects instead of extracting IDs
-                listItemType: _extractListItemType(hydratedField.type),
-              ));
+              result.add(
+                HydratedField(
+                  name: hydratedField.name,
+                  type: hydratedField.type,
+                  idFieldName: hydratedField.name, // DB field name is the same
+                  isHydrated:
+                      true, // Still needs processing (for serialization)
+                  isIdField: false,
+                  serializeFullObject:
+                      true, // Serialize full objects instead of extracting IDs
+                  listItemType: _extractListItemType(hydratedField.type),
+                ),
+              );
             } else {
               // Normal type mismatch - extract IDs (existing behavior)
-              result.add(HydratedField(
-                name: hydratedField.name,
-                type: hydratedField.type,
-                idFieldName: hydratedField.name,  // DB field name is the same
-                isHydrated: true,
-                isIdField: false,
-                listItemType: _extractListItemType(hydratedField.type),
-              ));
+              result.add(
+                HydratedField(
+                  name: hydratedField.name,
+                  type: hydratedField.type,
+                  idFieldName: hydratedField.name, // DB field name is the same
+                  isHydrated: true,
+                  isIdField: false,
+                  listItemType: _extractListItemType(hydratedField.type),
+                ),
+              );
             }
           } else {
             // Types match, treat as regular field
-            result.add(HydratedField(
+            result.add(
+              HydratedField(
+                name: hydratedField.name,
+                type: hydratedField.type,
+                isHydrated: false,
+                isIdField: false,
+              ),
+            );
+          }
+        } else {
+          // No corresponding field in DB, treat as regular field
+          result.add(
+            HydratedField(
               name: hydratedField.name,
               type: hydratedField.type,
               isHydrated: false,
               isIdField: false,
-            ));
-          }
-        } else {
-          // No corresponding field in DB, treat as regular field
-          result.add(HydratedField(
-            name: hydratedField.name,
-            type: hydratedField.type,
-            isHydrated: false,
-            isIdField: false,
-          ));
+            ),
+          );
         }
       }
-      
+
       processedNames.add(hydratedField.name);
     }
   }
-  
+
   return result;
 }
 
-/// Extract List<T> → T
+/// Extract `List<T>` → T
 String? _extractListItemType(String type) {
   final match = RegExp(r'List<([^>]+)>').firstMatch(type);
   return match?.group(1);
@@ -483,26 +519,26 @@ String? _extractListItemType(String type) {
 /// Check if database field type matches hydrated model field type
 bool _typesMatch(UniversalType dbField, String hydratedType) {
   final dbType = dbField.toSuitableType();
-  
+
   // Normalize types for comparison
   final normalizedDb = dbType.replaceAll('?', '').trim();
   final normalizedHydrated = hydratedType.replaceAll('?', '').trim();
-  
+
   if (normalizedDb == normalizedHydrated) return true;
-  
+
   // Handle common aliases/equivalents
-  if (normalizedDb == 'num' && (normalizedHydrated == 'double' || normalizedHydrated == 'int')) return true;
+  if (normalizedDb == 'num' &&
+      (normalizedHydrated == 'double' || normalizedHydrated == 'int')) {
+    return true;
+  }
   if (normalizedDb == 'dynamic' || normalizedHydrated == 'dynamic') return true;
-  
+
   return false;
 }
 
 /// Check if a field is a context field (not from the source model)
 bool _isContextField(String fieldName) {
-  const contextFieldNames = {
-    'channelCid',
-    'channel_cid',
-  };
+  const contextFieldNames = {'channelCid', 'channel_cid'};
   return contextFieldNames.contains(fieldName);
 }
 
@@ -513,39 +549,9 @@ bool _isLegacyTransformField(UniversalType field) {
   return false;
 }
 
-/// Check if a field needs transformation (type mismatch between hydrated and db)
-bool _needsTransform(UniversalType field) {
-  // Fields that typically need transformation:
-  // - userId (User? -> String)
-  // - attachments (List<File> -> List<String>)
-  // - *_id fields that reference other objects
-  // - DateTime <-> String conversions for some fields
-  
-  final name = field.name;
-  
-  // ID reference fields
-  if (name == 'userId' || name == 'user_id') return true;
-  if (name == 'aiId' || name == 'ai_id') return true;
-  if (name == 'pinnedBy' || name == 'pinned_by') return true;
-  
-  // List fields that might contain objects
-  if (name == 'attachments') return true;
-  if (name == 'mentionedUsers' || name == 'mentioned_users') return true;
-  if (name == 'threadParticipants' || name == 'thread_participants') return true;
-  if (name == 'latestReactions' || name == 'latest_reactions') return true;
-  if (name == 'reactions') return true;
-  if (name == 'members') return true;
-  
-  // Complex type fields
-  if (name == 'reactionGroups' || name == 'reaction_groups') return true;
-  if (name == 'sharedLocation' || name == 'shared_location') return true;
-  
-  return false;
-}
-
 String _generateTransformerParams(List<UniversalType> transformFields) {
   if (transformFields.isEmpty) return '';
-  
+
   final buffer = StringBuffer();
   for (final field in transformFields) {
     final fieldName = field.name;
@@ -563,25 +569,35 @@ String _generateTransformerParams(List<UniversalType> transformFields) {
 String _prefixDbTypes(String type) {
   // Pattern to match Db* types that aren't already prefixed
   final dbTypePattern = RegExp(r'\bDb([A-Z][a-zA-Z0-9]*)');
-  return type.replaceAllMapped(dbTypePattern, (match) => 'models.${match.group(0)}');
+  return type.replaceAllMapped(
+    dbTypePattern,
+    (match) => 'models.${match.group(0)}',
+  );
 }
 
 String _generateConstructorParams(List<UniversalType> transformFields) {
   if (transformFields.isEmpty) return '';
-  
-  final params = transformFields.map((f) => 'required this.${f.name}ToDb').join(',\n    ');
+
+  final params = transformFields
+      .map((f) => 'required this.${f.name}ToDb')
+      .join(',\n    ');
   return '{\n    $params,\n  }';
 }
 
-String _generateToDbParams(String hydratedModelName, List<UniversalType> contextFields) {
+String _generateToDbParams(
+  String hydratedModelName,
+  List<UniversalType> contextFields,
+) {
   if (contextFields.isEmpty) return 'models.$hydratedModelName source';
-  
-  final params = contextFields.map((f) {
-    final type = f.toSuitableType();
-    final required = f.isRequired ? 'required ' : '';
-    return '$required$type ${f.name},';
-  }).join('\n    ');
-  
+
+  final params = contextFields
+      .map((f) {
+        final type = f.toSuitableType();
+        final required = f.isRequired ? 'required ' : '';
+        return '$required$type ${f.name},';
+      })
+      .join('\n    ');
+
   return '''
     models.$hydratedModelName source, {
     $params
@@ -612,7 +628,9 @@ String _generateFromDbParams(
   for (final field in hydratedParams) {
     if (field.serializeFullObject) continue;
     final baseType = field.listItemType ?? field.type;
-    final type = field.listItemType != null ? 'List<models.$baseType>' : 'models.$baseType';
+    final type = field.listItemType != null
+        ? 'List<models.$baseType>'
+        : 'models.$baseType';
     final defaultValue = field.listItemType != null ? ' = const []' : '';
     // Add 'required' for non-nullable parameters without defaults
     final isNullable = field.type.endsWith('?') || field.listItemType != null;
@@ -678,9 +696,13 @@ String _generateHydratedParamsDocumentation(
 
   for (final field in hydratedParams) {
     if (field.serializeFullObject) {
-      buffer.writeln('  /// - ${field.name}: ${field.type} (deserialized inline from DB via .fromJson())');
+      buffer.writeln(
+        '  /// - ${field.name}: ${field.type} (deserialized inline from DB via .fromJson())',
+      );
     } else if (field.idFieldName != null) {
-      buffer.writeln('  /// - [${field.name}]: ${field.type} object for ${field.idFieldName} field');
+      buffer.writeln(
+        '  /// - [${field.name}]: ${field.type} object for ${field.idFieldName} field',
+      );
     } else {
       buffer.writeln('  /// - [${field.name}]: ${field.type} object');
     }
@@ -688,48 +710,43 @@ String _generateHydratedParamsDocumentation(
 
   // Document default value parameters (not stored in DB, computed/derived)
   for (final field in defaultValueFields) {
-    buffer.writeln('  /// - [${field.name}]: ${field.type} with default ${field.defaultValue} (not stored in DB)');
+    buffer.writeln(
+      '  /// - [${field.name}]: ${field.type} with default ${field.defaultValue} (not stored in DB)',
+    );
   }
 
   return buffer.toString();
-}
-
-String _generateContextParams(List<UniversalType> contextFields) {
-  return contextFields.map((f) {
-    final type = f.toSuitableType();
-    final required = f.isRequired ? 'required ' : '';
-    return '$required$type ${f.name},';
-  }).join('\n    ');
 }
 
 /// Check if a type is an enum by reading its definition from the models
 bool _isEnumType(String type) {
   // Remove nullable marker
   final cleanType = type.replaceAll('?', '').trim();
-  
+
   // If it's a List or contains brackets, it's not an enum
   if (cleanType.contains('<') || cleanType.contains('[')) {
     return false;
   }
-  
+
   // If no base path is configured, we can't check, so assume it's not an enum
   if (_modelsBasePath == null || _modelsBasePath!.isEmpty) {
     return false;
   }
-  
+
   try {
     // Try to find the enum definition in the models directory
     // Check in the configured search directories
     final snakeCaseName = _camelToSnakeCase(cleanType);
-    
+
     for (final dir in _modelSearchDirectories) {
       final path = '$_modelsBasePath/$dir/$snakeCaseName.dart';
       final file = File(path);
-      
+
       if (file.existsSync()) {
         final content = file.readAsStringSync();
         // Check if this file defines an enum
-        if (content.contains('enum $cleanType') || content.contains('enum $cleanType ')) {
+        if (content.contains('enum $cleanType') ||
+            content.contains('enum $cleanType ')) {
           return true;
         }
       }
@@ -737,13 +754,13 @@ bool _isEnumType(String type) {
   } catch (e) {
     // If we can't read the file or any error occurs, fall back to false
   }
-  
+
   return false;
 }
 
 /// Prefix model type names with models. namespace
 ///
-/// Handles both simple types (User -> models.User) and generic types (List<User> -> List<models.User>)
+/// Handles both simple types (User -> models.User) and generic types (`List<User>` -> `List<models.User>`)
 /// Excludes built-in types like int, bool, String, double, dynamic, etc.
 String _prefixModelTypes(String type) {
   // List of built-in Dart types that should NOT be prefixed
@@ -770,30 +787,29 @@ String _prefixModelTypes(String type) {
   }
 
   // Replace user-defined type names inside generic type parameters
-  return type.replaceAllMapped(
-    RegExp(r'\b([A-Z][a-zA-Z0-9]*)\b'),
-    (match) {
-      final typeName = match.group(1)!;
-      // Don't prefix already prefixed types (models.Something)
-      if (match.start > 0 && type[match.start - 1] == '.') {
-        return typeName;
-      }
-      // Don't prefix built-in types
-      if (isBuiltIn(typeName)) {
-        return typeName;
-      }
-      // Prefix user-defined types
-      return 'models.$typeName';
-    },
-  );
+  return type.replaceAllMapped(RegExp(r'\b([A-Z][a-zA-Z0-9]*)\b'), (match) {
+    final typeName = match.group(1)!;
+    // Don't prefix already prefixed types (models.Something)
+    if (match.start > 0 && type[match.start - 1] == '.') {
+      return typeName;
+    }
+    // Don't prefix built-in types
+    if (isBuiltIn(typeName)) {
+      return typeName;
+    }
+    // Prefix user-defined types
+    return 'models.$typeName';
+  });
 }
 
 /// Convert camelCase to snake_case
 String _camelToSnakeCase(String str) {
-  return str.replaceAllMapped(
-    RegExp(r'[A-Z]'),
-    (match) => '_${match.group(0)!.toLowerCase()}',
-  ).replaceFirst('_', '');
+  return str
+      .replaceAllMapped(
+        RegExp(r'[A-Z]'),
+        (match) => '_${match.group(0)!.toLowerCase()}',
+      )
+      .replaceFirst('_', '');
 }
 
 String _generateToDbBody(
@@ -811,33 +827,40 @@ String _generateToDbBody(
 
   // For DB union variants, use the parent class factory (e.g., models.Dbai.agent())
   // Otherwise, use the standalone class constructor (e.g., models.DbAgent())
-  final constructorCall = (dbParentClassName != null && dbUnionFactoryName != null)
+  final constructorCall =
+      (dbParentClassName != null && dbUnionFactoryName != null)
       ? 'models.$dbParentClassName.$dbUnionFactoryName'
       : 'models.$dbClassName';
 
   buffer.writeln('    return $constructorCall(');
-  
+
   // Context fields first
   for (final field in contextFields) {
     buffer.writeln('      ${field.name}: ${field.name},');
   }
-  
+
   // Direct fields - copy as-is with null handling for defaults
   // Skip discriminator fields for union variants (set automatically by Freezed)
   for (final field in directFields) {
     final name = field.name;
-    if (name == discriminatorPropertyName && discriminatorPropertyName != null) continue;
-    if (name == dbDiscriminatorPropertyName && dbDiscriminatorPropertyName != null) continue;
+    if (name == discriminatorPropertyName &&
+        discriminatorPropertyName != null) {
+      continue;
+    }
+    if (name == dbDiscriminatorPropertyName &&
+        dbDiscriminatorPropertyName != null) {
+      continue;
+    }
     final hasDefault = field.defaultValue != null;
     final isNullable = field.nullable || !field.isRequired;
-    
+
     if (hasDefault && isNullable) {
       buffer.writeln('      $name: source.$name,');
     } else {
       buffer.writeln('      $name: source.$name,');
     }
   }
-  
+
   // Hydrated fields in reverse - try to extract IDs from objects
   // For fields like flaggedBy: User -> flaggedBy: String, access .id property
   // Also for ID-only fields like sharedLocationId that don't exist in API model
@@ -851,7 +874,9 @@ String _generateToDbBody(
 
       if (hydratedField.listItemType != null) {
         // For lists, serialize each object to JSON: List<PollOption> -> List<dynamic>
-        buffer.writeln('      $fieldName: source.$fieldName$nullOp map((e) => e.toJson()).toList(),');
+        buffer.writeln(
+          '      $fieldName: source.$fieldName$nullOp map((e) => e.toJson()).toList(),',
+        );
       } else {
         // For single objects, serialize to JSON
         buffer.writeln('      $fieldName: source.$fieldName$nullOp toJson(),');
@@ -876,17 +901,22 @@ String _generateToDbBody(
         buffer.writeln('      $fieldName: source.$fieldName$nullOp toJson(),');
       } else if (hydratedField.listItemType != null) {
         // For lists, map over to extract IDs: List<User> -> List<String>
-        buffer.writeln('      $fieldName: source.$fieldName$nullOp map((e) => e.id).toList(),');
+        buffer.writeln(
+          '      $fieldName: source.$fieldName$nullOp map((e) => e.id).toList(),',
+        );
       } else {
         // For single objects: User -> String
         buffer.writeln('      $fieldName: source.$fieldName$nullOp id,');
       }
-    } else if (hydratedField.idFieldName != null && hydratedField.idFieldName!.isNotEmpty) {
+    } else if (hydratedField.idFieldName != null &&
+        hydratedField.idFieldName!.isNotEmpty) {
       // This hydrated field has a corresponding ID field in the DB
       // Only extract if the ID field doesn't already exist as a direct field
       // (i.e., it doesn't exist in the API model)
       final idFieldName = hydratedField.idFieldName!;
-      final idFieldAlreadyDirect = directFields.any((f) => f.name == idFieldName);
+      final idFieldAlreadyDirect = directFields.any(
+        (f) => f.name == idFieldName,
+      );
 
       if (!idFieldAlreadyDirect) {
         // The ID field only exists in DB, not in API model
@@ -895,11 +925,13 @@ String _generateToDbBody(
         final sourceFieldNullable = hydratedField.type.endsWith('?');
         final nullOp = sourceFieldNullable ? '?.' : '.';
 
-        buffer.writeln('      $idFieldName: source.$sourceFieldName$nullOp id,');
+        buffer.writeln(
+          '      $idFieldName: source.$sourceFieldName$nullOp id,',
+        );
       }
     }
   }
-  
+
   buffer.writeln('    );');
   return buffer.toString();
 }
@@ -916,9 +948,10 @@ List<HydratedField> detectVariantHydratedParams(
   List<UniversalType> dbFields,
   List<HydratedField> hydratedModelFields,
 ) {
-  return _detectHydratedFields(dbFields, hydratedModelFields)
-      .where((f) => f.isHydrated)
-      .toList();
+  return _detectHydratedFields(
+    dbFields,
+    hydratedModelFields,
+  ).where((f) => f.isHydrated).toList();
 }
 
 /// Holds resolved information for one variant inside a union dispatcher converter.
@@ -981,7 +1014,10 @@ String dartUnionConverterTemplate({
 
   // Static converter field declarations
   final staticFields = variants
-      .map((v) => '  static const ${v.staticFieldName} = ${v.converterClassName}();')
+      .map(
+        (v) =>
+            '  static const ${v.staticFieldName} = ${v.converterClassName}();',
+      )
       .join('\n');
 
   // toDb() switch arms — all variants must be covered for exhaustiveness
@@ -993,17 +1029,21 @@ String dartUnionConverterTemplate({
       .join('\n');
 
   // fromDb() switch arms — forward only the params that variant needs
-  final fromDbArms = variants.map((v) {
-    if (v.fromDbParams.isEmpty) {
-      return '    models.${v.dbVariantFreezedClass} s => ${v.staticFieldName}.fromDb(s),';
-    }
-    final passedArgs = v.fromDbParams.map((p) {
-      // The union-level param is nullable; add ! when the variant requires it
-      final needsAssertion = !p.type.endsWith('?');
-      return '${p.name}: ${p.name}${needsAssertion ? '!' : ''}';
-    }).join(', ');
-    return '    models.${v.dbVariantFreezedClass} s => ${v.staticFieldName}.fromDb(s, $passedArgs),';
-  }).join('\n');
+  final fromDbArms = variants
+      .map((v) {
+        if (v.fromDbParams.isEmpty) {
+          return '    models.${v.dbVariantFreezedClass} s => ${v.staticFieldName}.fromDb(s),';
+        }
+        final passedArgs = v.fromDbParams
+            .map((p) {
+              // The union-level param is nullable; add ! when the variant requires it
+              final needsAssertion = !p.type.endsWith('?');
+              return '${p.name}: ${p.name}${needsAssertion ? '!' : ''}';
+            })
+            .join(', ');
+        return '    models.${v.dbVariantFreezedClass} s => ${v.staticFieldName}.fromDb(s, $passedArgs),';
+      })
+      .join('\n');
 
   // fromDb() method signature
   final String fromDbSignature;
@@ -1012,10 +1052,12 @@ String dartUnionConverterTemplate({
   } else {
     // All union-level params are nullable/optional; callers supply only what
     // they have since different switch arms need different params.
-    final paramStr = unionFromDbParams.map((p) {
-      final baseType = p.type.endsWith('?') ? p.type : '${p.type}?';
-      return '${_prefixModelTypes(baseType)} ${p.name}';
-    }).join(', ');
+    final paramStr = unionFromDbParams
+        .map((p) {
+          final baseType = p.type.endsWith('?') ? p.type : '${p.type}?';
+          return '${_prefixModelTypes(baseType)} ${p.name}';
+        })
+        .join(', ');
     fromDbSignature = 'models.$dbUnionClassName source, {$paramStr}';
   }
 
@@ -1079,7 +1121,10 @@ String _generateFromDbBody(
   for (final field in directFields) {
     final name = field.name;
     if (name == discriminatorPropertyName && parentClassName != null) continue;
-    if (name == dbDiscriminatorPropertyName && dbDiscriminatorPropertyName != null) continue;
+    if (name == dbDiscriminatorPropertyName &&
+        dbDiscriminatorPropertyName != null) {
+      continue;
+    }
     buffer.writeln('      $name: source.$name,');
   }
 
@@ -1093,13 +1138,19 @@ String _generateFromDbBody(
       if (field.listItemType != null) {
         // List<Map<String, dynamic>> → List<TypedObject>
         final nullOp = isNullable ? '?' : '';
-        buffer.writeln('      ${field.name}: source.${field.name}$nullOp.map((e) => models.$baseType.fromJson(e)).toList(),');
+        buffer.writeln(
+          '      ${field.name}: source.${field.name}$nullOp.map((e) => models.$baseType.fromJson(e)).toList(),',
+        );
       } else if (isNullable) {
         // Map<String, dynamic>? → TypedObject?
-        buffer.writeln('      ${field.name}: source.${field.name} != null ? models.$baseType.fromJson(source.${field.name}!) : null,');
+        buffer.writeln(
+          '      ${field.name}: source.${field.name} != null ? models.$baseType.fromJson(source.${field.name}!) : null,',
+        );
       } else {
         // Map<String, dynamic> → TypedObject
-        buffer.writeln('      ${field.name}: models.$baseType.fromJson(source.${field.name}),');
+        buffer.writeln(
+          '      ${field.name}: models.$baseType.fromJson(source.${field.name}),',
+        );
       }
     } else {
       buffer.writeln('      ${field.name}: ${field.name},');

@@ -244,24 +244,31 @@ class OpenApiConfig {
         yamlMap['include_if_null'] as bool? ?? rootConfig?.includeIfNull;
 
     final generateConverters =
-        yamlMap['generate_converters'] as bool? ?? rootConfig?.generateConverters;
-    
+        yamlMap['generate_converters'] as bool? ??
+        rootConfig?.generateConverters;
+
     final generateDefaults =
         yamlMap['generate_defaults'] as bool? ?? rootConfig?.generateDefaults;
-    
+
     final generateMergeMethod =
-        yamlMap['generate_merge_method'] as bool? ?? rootConfig?.generateMergeMethod;
+        yamlMap['generate_merge_method'] as bool? ??
+        rootConfig?.generateMergeMethod;
 
     final generatePathConstants =
-        yamlMap['generate_path_constants'] as bool? ?? rootConfig?.generatePathConstants;
+        yamlMap['generate_path_constants'] as bool? ??
+        rootConfig?.generatePathConstants;
 
     final converterHydratedModelPrefix =
-        yamlMap['converter_hydrated_model_prefix'] as String? ?? rootConfig?.converterHydratedModelPrefix;
-    
+        yamlMap['converter_hydrated_model_prefix'] as String? ??
+        rootConfig?.converterHydratedModelPrefix;
+
     final converterHydratedModelsDirectory =
-        yamlMap['converter_hydrated_models_directory'] as String? ?? rootConfig?.converterHydratedModelsDirectory ?? 'hydrated_models';
-    
-    final rawModelSearchDirectories = yamlMap['model_search_directories'] as YamlList?;
+        yamlMap['converter_hydrated_models_directory'] as String? ??
+        rootConfig?.converterHydratedModelsDirectory ??
+        'hydrated_models';
+
+    final rawModelSearchDirectories =
+        yamlMap['model_search_directories'] as YamlList?;
     List<String>? modelSearchDirectories;
     if (rawModelSearchDirectories != null) {
       modelSearchDirectories = [];
@@ -328,8 +335,9 @@ class OpenApiConfig {
       generateConverters: generateConverters ?? dc.generateConverters,
       generateDefaults: generateDefaults ?? dc.generateDefaults,
       converterHydratedModelPrefix: converterHydratedModelPrefix,
-      converterHydratedModelsDirectory: converterHydratedModelsDirectory ?? dc.converterHydratedModelsDirectory,
-      modelSearchDirectories: modelSearchDirectories ?? dc.modelSearchDirectories,
+      converterHydratedModelsDirectory: converterHydratedModelsDirectory,
+      modelSearchDirectories:
+          modelSearchDirectories ?? dc.modelSearchDirectories,
       customMetadata: customMetadata,
       generateMergeMethod: generateMergeMethod ?? dc.generateMergeMethod,
       generatePathConstants: generatePathConstants ?? dc.generatePathConstants,

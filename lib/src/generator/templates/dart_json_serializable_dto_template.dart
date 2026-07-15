@@ -15,7 +15,8 @@ String dartJsonSerializableDtoTemplate(
   required bool markFileAsGenerated,
   required bool includeIfNull,
   String? fallbackUnion,
-  bool generateMergeMethod = true, // Parameter accepted for API consistency but ignored
+  bool generateMergeMethod =
+      true, // Parameter accepted for API consistency but ignored
 }) {
   final originalClassName = dataClass.name.toPascal;
 
@@ -36,7 +37,10 @@ String dartJsonSerializableDtoTemplate(
     );
   }
 
-  final base64Types = _getBase64FieldTypes(dataClass.parameters, discriminator: dataClass.discriminator);
+  final base64Types = _getBase64FieldTypes(
+    dataClass.parameters,
+    discriminator: dataClass.discriminator,
+  );
   final needsBase64Converter =
       base64Types.hasScalar ||
       base64Types.hasNullable ||
@@ -45,7 +49,10 @@ String dartJsonSerializableDtoTemplate(
   final base64ConverterClass = needsBase64Converter
       ? '\n${_base64ConverterClass(hasScalar: base64Types.hasScalar, hasNullable: base64Types.hasNullable, hasList: base64Types.hasList, hasListNullable: base64Types.hasListNullable)}'
       : '';
-  final dartCoreImports = _getDartCoreImports(dataClass.parameters, discriminator: dataClass.discriminator);
+  final dartCoreImports = _getDartCoreImports(
+    dataClass.parameters,
+    discriminator: dataClass.discriminator,
+  );
 
   return '''
 import 'package:json_annotation/json_annotation.dart';
@@ -660,7 +667,10 @@ String _deserializerExtensionName(String className) =>
     : '${className}UnionDeserializer';
 
 ({bool hasScalar, bool hasNullable, bool hasList, bool hasListNullable})
-_getBase64FieldTypes(Set<UniversalType> parameters, {Discriminator? discriminator}) {
+_getBase64FieldTypes(
+  Set<UniversalType> parameters, {
+  Discriminator? discriminator,
+}) {
   bool hasScalar = false;
   bool hasNullable = false;
   bool hasList = false;
@@ -700,7 +710,9 @@ _getBase64FieldTypes(Set<UniversalType> parameters, {Discriminator? discriminato
           final isNullable = !param.isRequired && param.defaultValue == null;
           final isList =
               param.wrappingCollections.isNotEmpty &&
-              param.wrappingCollections.first.collectionPrefix.startsWith('List<');
+              param.wrappingCollections.first.collectionPrefix.startsWith(
+                'List<',
+              );
 
           if (isList) {
             if (isNullable) {
@@ -728,10 +740,16 @@ _getBase64FieldTypes(Set<UniversalType> parameters, {Discriminator? discriminato
   );
 }
 
-String _getDartCoreImports(Set<UniversalType> parameters, {Discriminator? discriminator}) {
+String _getDartCoreImports(
+  Set<UniversalType> parameters, {
+  Discriminator? discriminator,
+}) {
   final imports = <String>[];
 
-  final base64Types = _getBase64FieldTypes(parameters, discriminator: discriminator);
+  final base64Types = _getBase64FieldTypes(
+    parameters,
+    discriminator: discriminator,
+  );
   final hasAnyBase64 =
       base64Types.hasScalar ||
       base64Types.hasNullable ||
