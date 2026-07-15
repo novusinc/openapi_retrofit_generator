@@ -15,7 +15,22 @@ abstract class ConfigExperimentalHookSessionCompleted
     Map<String, String>? environment,
   }) = _ConfigExperimentalHookSessionCompleted;
 
+  Map<String, dynamic> toJson() =>
+      _$ConfigExperimentalHookSessionCompletedToJson(
+        this as _ConfigExperimentalHookSessionCompleted,
+      );
   factory ConfigExperimentalHookSessionCompleted.fromJson(
     Map<String, Object?> json,
   ) => _$ConfigExperimentalHookSessionCompletedFromJson(json);
+}
+
+extension ConfigExperimentalHookSessionCompletedMergeX
+    on ConfigExperimentalHookSessionCompleted {
+  /// Returns a new [ConfigExperimentalHookSessionCompleted] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ConfigExperimentalHookSessionCompleted merge(
+    ConfigExperimentalHookSessionCompleted other,
+  ) {
+    return copyWith(command: other.command, environment: other.environment);
+  }
 }

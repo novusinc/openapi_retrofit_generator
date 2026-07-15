@@ -18,6 +18,20 @@ abstract class ListPostsResponse with _$ListPostsResponse {
     @JsonKey(includeIfNull: false) Map<String, String>? metadata,
   }) = _ListPostsResponse;
 
+  Map<String, dynamic> toJson() =>
+      _$ListPostsResponseToJson(this as _ListPostsResponse);
   factory ListPostsResponse.fromJson(Map<String, Object?> json) =>
       _$ListPostsResponseFromJson(json);
+}
+
+extension ListPostsResponseMergeX on ListPostsResponse {
+  /// Returns a new [ListPostsResponse] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ListPostsResponse merge(ListPostsResponse other) {
+    return copyWith(
+      posts: other.posts,
+      pagination: other.pagination,
+      metadata: other.metadata,
+    );
+  }
 }

@@ -19,6 +19,20 @@ abstract class Comment with _$Comment {
     @JsonKey(includeIfNull: false) PostModel? post,
   }) = _Comment;
 
+  Map<String, dynamic> toJson() => _$CommentToJson(this as _Comment);
   factory Comment.fromJson(Map<String, Object?> json) =>
       _$CommentFromJson(json);
+}
+
+extension CommentMergeX on Comment {
+  /// Returns a new [Comment] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Comment merge(Comment other) {
+    return copyWith(
+      id: other.id,
+      text: other.text,
+      author: other.author,
+      post: other.post,
+    );
+  }
 }

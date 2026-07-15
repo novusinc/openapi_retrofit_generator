@@ -9,13 +9,10 @@ part of 'get_duplicate_response_metadata.dart';
 _GetDuplicateResponseMetadata _$GetDuplicateResponseMetadataFromJson(
   Map<String, dynamic> json,
 ) => _GetDuplicateResponseMetadata(
-  data: json['data'] == null
-      ? null
-      : GetDuplicateResponseMetadataData.fromJson(
-          json['data'] as Map<String, dynamic>,
-        ),
+  id: json['id'] as String?,
+  value: (json['value'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$GetDuplicateResponseMetadataToJson(
   _GetDuplicateResponseMetadata instance,
-) => <String, dynamic>{'data': instance.data};
+) => <String, dynamic>{'id': instance.id, 'value': instance.value};

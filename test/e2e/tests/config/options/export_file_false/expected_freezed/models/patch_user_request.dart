@@ -21,6 +21,24 @@ abstract class PatchUserRequest with _$PatchUserRequest {
     UserSettings? settings,
   }) = _PatchUserRequest;
 
+  Map<String, dynamic> toJson() =>
+      _$PatchUserRequestToJson(this as _PatchUserRequest);
   factory PatchUserRequest.fromJson(Map<String, Object?> json) =>
       _$PatchUserRequestFromJson(json);
+}
+
+extension PatchUserRequestMergeX on PatchUserRequest {
+  /// Returns a new [PatchUserRequest] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  PatchUserRequest merge(PatchUserRequest other) {
+    return copyWith(
+      email: other.email,
+      username: other.username,
+      firstName: other.firstName,
+      lastName: other.lastName,
+      age: other.age,
+      bio: other.bio,
+      settings: other.settings,
+    );
+  }
 }

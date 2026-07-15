@@ -209,13 +209,21 @@ Set<UniversalEnumItem> protectEnumItemsNames(
       // Enum values with separator characters (dots, slashes, etc.) that
       // can be converted to valid camelCase Dart identifiers.
       // E.g., "health.check" → "healthCheck", "ai_indicator.update" → "aiIndicatorUpdate"
-      _ when !_enumNameRegExp.hasMatch(name) &&
+      _
+          when !_enumNameRegExp.hasMatch(name) &&
               camelName.isNotEmpty &&
               _enumNameRegExp.hasMatch(camelName) =>
         reservedFieldNames.contains(camelName)
             ? (
                 '$_valueConst $camelName',
                 'The name has been replaced because it contains a keyword. Original name: `$name`.',
+              )
+            // A separator-stripped name can still start with a digit
+            // (e.g. "#367B9C" → "367b9c"), which is not a valid identifier.
+            : _startWithNumberRegExp.hasMatch(camelName)
+            ? (
+                '$_valueConst $camelName',
+                'The name has been replaced because it starts with a number. Original name: `$name`.',
               )
             : (name, null),
       _ when !_enumNameRegExp.hasMatch(name) => (

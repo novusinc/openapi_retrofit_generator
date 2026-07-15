@@ -36,6 +36,37 @@ abstract class DarwinCorePlot with _$DarwinCorePlot {
     Model66? species,
   }) = _DarwinCorePlot;
 
+  Map<String, dynamic> toJson() =>
+      _$DarwinCorePlotToJson(this as _DarwinCorePlot);
   factory DarwinCorePlot.fromJson(Map<String, Object?> json) =>
       _$DarwinCorePlotFromJson(json);
+}
+
+extension DarwinCorePlotMergeX on DarwinCorePlot {
+  /// Returns a new [DarwinCorePlot] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  DarwinCorePlot merge(DarwinCorePlot other) {
+    return copyWith(
+      id: other.id,
+      eventDate: other.eventDate,
+      observedOn: other.observedOn,
+      title: other.title,
+      description: other.description,
+      eunis: other.eunis,
+      ownerInstitutionCodeProperty: other.ownerInstitutionCodeProperty,
+      basisOfRecord: other.basisOfRecord,
+      type: other.type,
+      accessRight: other.accessRight,
+      license: other.license,
+      rightsHolder: other.rightsHolder,
+      occurrenceStatus: other.occurrenceStatus,
+      decimalLatitude: other.decimalLatitude,
+      decimalLongitude: other.decimalLongitude,
+      elevation: other.elevation,
+      geolocationAccuracy: other.geolocationAccuracy,
+      geolocationAccuracyInfo: other.geolocationAccuracyInfo,
+      media: other.media,
+      species: other.species,
+    );
+  }
 }

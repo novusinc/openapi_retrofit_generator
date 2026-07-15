@@ -14,6 +14,15 @@ abstract class FileEdited with _$FileEdited {
     Map<String, String>? environment,
   }) = _FileEdited;
 
+  Map<String, dynamic> toJson() => _$FileEditedToJson(this as _FileEdited);
   factory FileEdited.fromJson(Map<String, Object?> json) =>
       _$FileEditedFromJson(json);
+}
+
+extension FileEditedMergeX on FileEdited {
+  /// Returns a new [FileEdited] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  FileEdited merge(FileEdited other) {
+    return copyWith(command: other.command, environment: other.environment);
+  }
 }

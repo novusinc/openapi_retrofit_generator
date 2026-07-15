@@ -18,6 +18,15 @@ abstract class Model85 with _$Model85 {
     required Model84 coordinates,
   }) = _Model85;
 
+  Map<String, dynamic> toJson() => _$Model85ToJson(this as _Model85);
   factory Model85.fromJson(Map<String, Object?> json) =>
       _$Model85FromJson(json);
+}
+
+extension Model85MergeX on Model85 {
+  /// Returns a new [Model85] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Model85 merge(Model85 other) {
+    return copyWith(type: other.type, coordinates: other.coordinates);
+  }
 }

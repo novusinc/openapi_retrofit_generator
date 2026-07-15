@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$EventSessionErrorProperties {
 
-@JsonKey(name: 'sessionID') String? get sessionId; EventSessionErrorPropertiesErrorError? get error;
+@JsonKey(name: 'sessionID') String? get sessionId; EventSessionErrorPropertiesError? get error;
 /// Create a copy of EventSessionErrorProperties
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $EventSessionErrorPropertiesCopyWith<$Res>  {
   factory $EventSessionErrorPropertiesCopyWith(EventSessionErrorProperties value, $Res Function(EventSessionErrorProperties) _then) = _$EventSessionErrorPropertiesCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'sessionID') String? sessionId, EventSessionErrorPropertiesErrorError? error
+@JsonKey(name: 'sessionID') String? sessionId, EventSessionErrorPropertiesError? error
 });
 
 
@@ -69,7 +69,7 @@ class _$EventSessionErrorPropertiesCopyWithImpl<$Res>
   return _then(_self.copyWith(
 sessionId: freezed == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
 as String?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
-as EventSessionErrorPropertiesErrorError?,
+as EventSessionErrorPropertiesError?,
   ));
 }
 
@@ -154,7 +154,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'sessionID')  String? sessionId,  EventSessionErrorPropertiesErrorError? error)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'sessionID')  String? sessionId,  EventSessionErrorPropertiesError? error)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _EventSessionErrorProperties() when $default != null:
 return $default(_that.sessionId,_that.error);case _:
@@ -175,7 +175,7 @@ return $default(_that.sessionId,_that.error);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'sessionID')  String? sessionId,  EventSessionErrorPropertiesErrorError? error)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'sessionID')  String? sessionId,  EventSessionErrorPropertiesError? error)  $default,) {final _that = this;
 switch (_that) {
 case _EventSessionErrorProperties():
 return $default(_that.sessionId,_that.error);case _:
@@ -195,7 +195,7 @@ return $default(_that.sessionId,_that.error);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'sessionID')  String? sessionId,  EventSessionErrorPropertiesErrorError? error)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'sessionID')  String? sessionId,  EventSessionErrorPropertiesError? error)?  $default,) {final _that = this;
 switch (_that) {
 case _EventSessionErrorProperties() when $default != null:
 return $default(_that.sessionId,_that.error);case _:
@@ -214,7 +214,7 @@ class _EventSessionErrorProperties implements EventSessionErrorProperties {
   factory _EventSessionErrorProperties.fromJson(Map<String, dynamic> json) => _$EventSessionErrorPropertiesFromJson(json);
 
 @override@JsonKey(name: 'sessionID') final  String? sessionId;
-@override final  EventSessionErrorPropertiesErrorError? error;
+@override final  EventSessionErrorPropertiesError? error;
 
 /// Create a copy of EventSessionErrorProperties
 /// with the given fields replaced by the non-null parameter values.
@@ -249,7 +249,7 @@ abstract mixin class _$EventSessionErrorPropertiesCopyWith<$Res> implements $Eve
   factory _$EventSessionErrorPropertiesCopyWith(_EventSessionErrorProperties value, $Res Function(_EventSessionErrorProperties) _then) = __$EventSessionErrorPropertiesCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'sessionID') String? sessionId, EventSessionErrorPropertiesErrorError? error
+@JsonKey(name: 'sessionID') String? sessionId, EventSessionErrorPropertiesError? error
 });
 
 
@@ -270,7 +270,7 @@ class __$EventSessionErrorPropertiesCopyWithImpl<$Res>
   return _then(_EventSessionErrorProperties(
 sessionId: freezed == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
 as String?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
-as EventSessionErrorPropertiesErrorError?,
+as EventSessionErrorPropertiesError?,
   ));
 }
 

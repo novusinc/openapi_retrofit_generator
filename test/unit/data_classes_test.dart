@@ -9,8 +9,8 @@ void main() {
         imports: {},
         parameters: {},
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillDtoContent(dataClass);
       const expectedContents = r'''
@@ -36,8 +36,8 @@ class ClassName {
         imports: {},
         parameters: {},
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           jsonSerializer: JsonSerializer.freezed,
@@ -53,7 +53,9 @@ part 'class_name.g.dart';
 @Freezed()
 abstract class ClassName with _$ClassName {
   const factory ClassName() = _ClassName;
+
   
+  Map<String, dynamic> toJson() => _$ClassNameToJson(this as _ClassName);
   factory ClassName.fromJson(Map<String, Object?> json) => _$ClassNameFromJson(json);
 }
 ''';
@@ -74,8 +76,8 @@ abstract class ClassName with _$ClassName {
         },
         parameters: {},
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillDtoContent(dataClass);
       const expectedContents = r'''
@@ -113,8 +115,8 @@ class ClassName {
         },
         parameters: {},
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           jsonSerializer: JsonSerializer.freezed,
@@ -136,7 +138,9 @@ part 'class_name.g.dart';
 @Freezed()
 abstract class ClassName with _$ClassName {
   const factory ClassName() = _ClassName;
+
   
+  Map<String, dynamic> toJson() => _$ClassNameToJson(this as _ClassName);
   factory ClassName.fromJson(Map<String, Object?> json) => _$ClassNameFromJson(json);
 }
 ''';
@@ -212,8 +216,8 @@ abstract class ClassName with _$ClassName {
           ),
         },
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillDtoContent(dataClass);
       const expectedContents = r'''
@@ -342,8 +346,8 @@ class _Base64Converter implements JsonConverter<Uint8List, String> {
           ),
         },
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           jsonSerializer: JsonSerializer.freezed,
@@ -374,8 +378,29 @@ abstract class ClassName with _$ClassName {
     required dynamic objectType,
     required Another anotherType,
   }) = _ClassName;
+
   
+  Map<String, dynamic> toJson() => _$ClassNameToJson(this as _ClassName);
   factory ClassName.fromJson(Map<String, Object?> json) => _$ClassNameFromJson(json);
+}
+extension ClassNameMergeX on ClassName {
+  /// Returns a new [ClassName] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ClassName merge(ClassName other) {
+    return copyWith(
+      intType: other.intType,
+      numberType: other.numberType,
+      doubleNumberType: other.doubleNumberType,
+      floatNumberType: other.floatNumberType,
+      stringType: other.stringType,
+      binaryStringType: other.binaryStringType,
+      dateStringType: other.dateStringType,
+      dateTimeStringType: other.dateTimeStringType,
+      boolType: other.boolType,
+      objectType: other.objectType,
+      anotherType: other.anotherType,
+    );
+  }
 }
 
 class _Base64Converter implements JsonConverter<Uint8List, String> {
@@ -463,15 +488,15 @@ class _Base64Converter implements JsonConverter<Uint8List, String> {
           ),
         },
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           jsonSerializer: JsonSerializer.dartMappable,
         ),
       );
       final filledContent = fillController.fillDtoContent(dataClass);
-      const expectedContents = '''
+      const expectedContents = r'''
 import 'package:dart_mappable/dart_mappable.dart';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -480,7 +505,6 @@ part 'class_name.mapper.dart';
 
 @MappableClass()
 class ClassName with ClassNameMappable {
-
   const ClassName({
     required this.intType,
     required this.numberType,
@@ -509,7 +533,26 @@ class ClassName with ClassNameMappable {
   final Another anotherType;
 
   static ClassName fromJson(Map<String, dynamic> json) => ClassNameMapper.fromJson(json);
+
+  /// Returns a new [ClassName] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ClassName merge(ClassName other) {
+    return copyWith(
+      intType: other.intType,
+      numberType: other.numberType,
+      doubleNumberType: other.doubleNumberType,
+      floatNumberType: other.floatNumberType,
+      stringType: other.stringType,
+      binaryStringType: other.binaryStringType,
+      dateStringType: other.dateStringType,
+      dateTimeStringType: other.dateTimeStringType,
+      boolType: other.boolType,
+      objectType: other.objectType,
+      anotherType: other.anotherType,
+    );
+  }
 }
+
 
 class _Base64Hook extends MappingHook {
   const _Base64Hook();
@@ -529,8 +572,7 @@ class _Base64Hook extends MappingHook {
     }
     return value;
   }
-}
-''';
+}''';
       expect(filledContent.content, equalsIgnoringWhitespace(expectedContents));
     });
 
@@ -547,22 +589,21 @@ class _Base64Hook extends MappingHook {
           ),
         },
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           jsonSerializer: JsonSerializer.dartMappable,
         ),
       );
       final filledContent = fillController.fillDtoContent(dataClass);
-      const expectedContents = '''
+      const expectedContents = r'''
 import 'package:dart_mappable/dart_mappable.dart';
 
 part 'class_name.mapper.dart';
 
 @MappableClass()
 class ClassName with ClassNameMappable {
-
   const ClassName({
     required this.imageUrl,
   });
@@ -571,7 +612,16 @@ class ClassName with ClassNameMappable {
   final String imageUrl;
 
   static ClassName fromJson(Map<String, dynamic> json) => ClassNameMapper.fromJson(json);
+
+  /// Returns a new [ClassName] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ClassName merge(ClassName other) {
+    return copyWith(
+      imageUrl: other.imageUrl,
+    );
+  }
 }
+
 ''';
       expect(filledContent.content, equalsIgnoringWhitespace(expectedContents));
     });
@@ -612,8 +662,8 @@ class ClassName with ClassNameMappable {
           ),
         },
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillDtoContent(dataClass);
       const expectedContents = r'''
@@ -677,8 +727,8 @@ class ClassName {
           ),
         },
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           jsonSerializer: JsonSerializer.freezed,
@@ -700,8 +750,21 @@ abstract class ClassName with _$ClassName {
     required List<List<String>> list1,
     required List<List<List<List<List<Another>>>>> list5,
   }) = _ClassName;
+
   
+  Map<String, dynamic> toJson() => _$ClassNameToJson(this as _ClassName);
   factory ClassName.fromJson(Map<String, Object?> json) => _$ClassNameFromJson(json);
+}
+extension ClassNameMergeX on ClassName {
+  /// Returns a new [ClassName] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ClassName merge(ClassName other) {
+    return copyWith(
+      list0: other.list0,
+      list1: other.list1,
+      list5: other.list5,
+    );
+  }
 }
 ''';
       expect(filledContent.content, expectedContents);
@@ -740,8 +803,8 @@ abstract class ClassName with _$ClassName {
           ),
         },
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillDtoContent(dataClass);
       const expectedContents = r'''
@@ -805,8 +868,8 @@ class ClassName {
           ),
         },
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           jsonSerializer: JsonSerializer.freezed,
@@ -830,8 +893,22 @@ abstract class ClassName with _$ClassName {
     @JsonKey(name: 'another')
     required Another anotherType,
   }) = _ClassName;
+
   
+  Map<String, dynamic> toJson() => _$ClassNameToJson(this as _ClassName);
   factory ClassName.fromJson(Map<String, Object?> json) => _$ClassNameFromJson(json);
+}
+extension ClassNameMergeX on ClassName {
+  /// Returns a new [ClassName] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ClassName merge(ClassName other) {
+    return copyWith(
+      intType: other.intType,
+      stringType: other.stringType,
+      boolType: other.boolType,
+      anotherType: other.anotherType,
+    );
+  }
 }
 ''';
       expect(filledContent.content, expectedContents);
@@ -878,8 +955,8 @@ abstract class ClassName with _$ClassName {
           ),
         },
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           includeIfNull: true,
@@ -957,8 +1034,8 @@ class ClassName {
           ),
         },
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           jsonSerializer: JsonSerializer.freezed,
@@ -989,8 +1066,23 @@ abstract class ClassName with _$ClassName {
     @Default(Haha.hehe)
     Haha enumType,
   }) = _ClassName;
+
   
+  Map<String, dynamic> toJson() => _$ClassNameToJson(this as _ClassName);
   factory ClassName.fromJson(Map<String, Object?> json) => _$ClassNameFromJson(json);
+}
+extension ClassNameMergeX on ClassName {
+  /// Returns a new [ClassName] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ClassName merge(ClassName other) {
+    return copyWith(
+      intType: other.intType,
+      stringType: other.stringType,
+      boolType: other.boolType,
+      nullableType: other.nullableType,
+      enumType: other.enumType,
+    );
+  }
 }
 ''';
       expect(filledContent.content, expectedContents);
@@ -1032,8 +1124,8 @@ abstract class ClassName with _$ClassName {
           ),
         },
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           includeIfNull: true,
@@ -1105,8 +1197,8 @@ class ClassName {
           ),
         },
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           jsonSerializer: JsonSerializer.freezed,
@@ -1132,8 +1224,22 @@ abstract class ClassName with _$ClassName {
     @JsonKey(includeIfNull: false)
     Another? another,
   }) = _ClassName;
+
   
+  Map<String, dynamic> toJson() => _$ClassNameToJson(this as _ClassName);
   factory ClassName.fromJson(Map<String, Object?> json) => _$ClassNameFromJson(json);
+}
+extension ClassNameMergeX on ClassName {
+  /// Returns a new [ClassName] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ClassName merge(ClassName other) {
+    return copyWith(
+      intType: other.intType,
+      list: other.list,
+      another: other.another,
+      anotherList: other.anotherList,
+    );
+  }
 }
 ''';
       expect(filledContent.content, expectedContents);
@@ -1171,8 +1277,8 @@ abstract class ClassName with _$ClassName {
           ),
         },
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           includeIfNull: true,
@@ -1240,8 +1346,8 @@ class ClassName {
           ),
         },
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           jsonSerializer: JsonSerializer.freezed,
@@ -1267,8 +1373,22 @@ abstract class ClassName with _$ClassName {
     @JsonKey(includeIfNull: false)
     Another? anotherNotRequired,
   }) = _ClassName;
+
   
+  Map<String, dynamic> toJson() => _$ClassNameToJson(this as _ClassName);
   factory ClassName.fromJson(Map<String, Object?> json) => _$ClassNameFromJson(json);
+}
+extension ClassNameMergeX on ClassName {
+  /// Returns a new [ClassName] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ClassName merge(ClassName other) {
+    return copyWith(
+      intNotRequired: other.intNotRequired,
+      intRequired: other.intRequired,
+      anotherNotRequired: other.anotherNotRequired,
+      list: other.list,
+    );
+  }
 }
 ''';
       expect(filledContent.content, expectedContents);
@@ -1314,8 +1434,8 @@ abstract class ClassName with _$ClassName {
           ),
         ];
 
-        const fillController = FillController(
-          config: GeneratorConfig(
+        final fillController = FillController(
+          config: const GeneratorConfig(
             name: '',
             outputDirectory: '.',
             unknownEnumValue: false,
@@ -1456,8 +1576,8 @@ enum EnumNameStringWithLeadingNumbers {
           ),
         ];
 
-        const fillController = FillController(
-          config: GeneratorConfig(
+        final fillController = FillController(
+          config: const GeneratorConfig(
             name: '',
             outputDirectory: '.',
             unknownEnumValue: false,
@@ -1544,8 +1664,8 @@ enum EnumNameString {
             items: UniversalEnumItem.listFromNames({'FALSE', 'for', 'do'}),
           ),
         ];
-        const fillController = FillController(
-          config: GeneratorConfig(
+        final fillController = FillController(
+          config: const GeneratorConfig(
             name: '',
             outputDirectory: '.',
             jsonSerializer: JsonSerializer.freezed,
@@ -1652,8 +1772,8 @@ enum KeywordsName {
             }),
           ),
         ];
-        const fillController = FillController(
-          config: GeneratorConfig(
+        final fillController = FillController(
+          config: const GeneratorConfig(
             name: '',
             outputDirectory: '.',
             jsonSerializer: JsonSerializer.freezed,
@@ -1744,8 +1864,8 @@ enum EnumNameString {
         type: 'int',
         items: UniversalEnumItem.listFromNames({'-2', '-1', '0', '1'}),
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final file = fillController.fillDtoContent(dataClass);
 
@@ -1792,8 +1912,8 @@ enum EnumName {
         type: 'int',
         items: UniversalEnumItem.listFromNames({'-2', '-1', '0', '1'}),
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           jsonSerializer: JsonSerializer.freezed,
@@ -1873,8 +1993,8 @@ enum EnumName {
           typeDef: true,
         ),
       ];
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final files = <GeneratedFile>[];
       for (final enumClass in dataClasses) {
@@ -1937,8 +2057,8 @@ typedef AnotherValue = Another;
           ),
         },
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           includeIfNull: true,
@@ -2016,8 +2136,8 @@ class ClassName {
           ),
         },
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           jsonSerializer: JsonSerializer.freezed,
@@ -2044,8 +2164,23 @@ abstract class ClassName with _$ClassName {
     @JsonKey(includeIfNull: false)
     String? list4,
   }) = _ClassName;
+
   
+  Map<String, dynamic> toJson() => _$ClassNameToJson(this as _ClassName);
   factory ClassName.fromJson(Map<String, Object?> json) => _$ClassNameFromJson(json);
+}
+extension ClassNameMergeX on ClassName {
+  /// Returns a new [ClassName] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ClassName merge(ClassName other) {
+    return copyWith(
+      list1: other.list1,
+      list2: other.list2,
+      list3: other.list3,
+      list4: other.list4,
+      list5: other.list5,
+    );
+  }
 }
 ''';
       expect(filledContent.content, expectedContents);
@@ -2101,8 +2236,8 @@ abstract class ClassName with _$ClassName {
           ),
         },
       );
-      const fillController = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final fillController = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
       final filledContent = fillController.fillDtoContent(dataClass);
       const expectedContents = r'''
@@ -2193,8 +2328,8 @@ class ClassName {
           ),
         },
       );
-      const fillController = FillController(
-        config: GeneratorConfig(
+      final fillController = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           jsonSerializer: JsonSerializer.freezed,
@@ -2227,8 +2362,24 @@ abstract class ClassName with _$ClassName {
     @Default('str')
     String defaultType,
   }) = _ClassName;
+
   
+  Map<String, dynamic> toJson() => _$ClassNameToJson(this as _ClassName);
   factory ClassName.fromJson(Map<String, Object?> json) => _$ClassNameFromJson(json);
+}
+extension ClassNameMergeX on ClassName {
+  /// Returns a new [ClassName] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ClassName merge(ClassName other) {
+    return copyWith(
+      stringType: other.stringType,
+      defaultType: other.defaultType,
+      jsonKeyValue: other.jsonKeyValue,
+      megaMind: other.megaMind,
+      emptyDescription: other.emptyDescription,
+      list: other.list,
+    );
+  }
 }
 ''';
       expect(filledContent.content, expectedContents);
@@ -2255,8 +2406,8 @@ abstract class ClassName with _$ClassName {
     );
 
     test('dart_mappable unions use sealed naming', () {
-      const controller = FillController(
-        config: GeneratorConfig(
+      final controller = FillController(
+        config: const GeneratorConfig(
           name: '',
           outputDirectory: '.',
           jsonSerializer: JsonSerializer.dartMappable,
@@ -2312,8 +2463,8 @@ class AnimalUnionDog with AnimalUnionDogMappable {
     });
 
     test('json_serializable unions use sealed naming', () {
-      const controller = FillController(
-        config: GeneratorConfig(name: '', outputDirectory: '.'),
+      final controller = FillController(
+        config: const GeneratorConfig(name: '', outputDirectory: '.'),
       );
 
       final generated = controller.fillDtoContent(buildUnionDataClass());

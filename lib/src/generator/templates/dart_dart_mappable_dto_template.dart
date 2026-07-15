@@ -568,10 +568,12 @@ String _getDartCoreImports(Set<UniversalType> parameters) {
 /// This is only generated for regular classes (not unions).
 String _generateMergeMethod(String className, Set<UniversalType> parameters) {
   // Build copyWith parameters: fieldName: other.fieldName
-  final copyWithParams = parameters.map((param) {
-    final name = param.name;
-    return '      $name: other.$name,';
-  }).join('\n');
+  final copyWithParams = parameters
+      .map((param) {
+        final name = param.name;
+        return '      $name: other.$name,';
+      })
+      .join('\n');
 
   return '''
 

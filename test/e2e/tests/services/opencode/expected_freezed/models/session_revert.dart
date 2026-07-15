@@ -16,6 +16,21 @@ abstract class SessionRevert with _$SessionRevert {
     String? diff,
   }) = _SessionRevert;
 
+  Map<String, dynamic> toJson() =>
+      _$SessionRevertToJson(this as _SessionRevert);
   factory SessionRevert.fromJson(Map<String, Object?> json) =>
       _$SessionRevertFromJson(json);
+}
+
+extension SessionRevertMergeX on SessionRevert {
+  /// Returns a new [SessionRevert] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  SessionRevert merge(SessionRevert other) {
+    return copyWith(
+      messageId: other.messageId,
+      partId: other.partId,
+      snapshot: other.snapshot,
+      diff: other.diff,
+    );
+  }
 }

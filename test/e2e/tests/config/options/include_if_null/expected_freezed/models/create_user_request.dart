@@ -21,6 +21,24 @@ abstract class CreateUserRequest with _$CreateUserRequest {
     @JsonKey(includeIfNull: false) UserRole? role,
   }) = _CreateUserRequest;
 
+  Map<String, dynamic> toJson() =>
+      _$CreateUserRequestToJson(this as _CreateUserRequest);
   factory CreateUserRequest.fromJson(Map<String, Object?> json) =>
       _$CreateUserRequestFromJson(json);
+}
+
+extension CreateUserRequestMergeX on CreateUserRequest {
+  /// Returns a new [CreateUserRequest] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  CreateUserRequest merge(CreateUserRequest other) {
+    return copyWith(
+      email: other.email,
+      username: other.username,
+      password: other.password,
+      firstName: other.firstName,
+      lastName: other.lastName,
+      age: other.age,
+      role: other.role,
+    );
+  }
 }

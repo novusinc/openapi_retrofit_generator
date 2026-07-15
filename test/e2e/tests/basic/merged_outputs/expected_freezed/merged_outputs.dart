@@ -58,8 +58,22 @@ abstract class RegisterUserDto with _$RegisterUserDto {
     required String password,
   }) = _RegisterUserDto;
 
+  Map<String, dynamic> toJson() =>
+      _$RegisterUserDtoToJson(this as _RegisterUserDto);
   factory RegisterUserDto.fromJson(Map<String, Object?> json) =>
       _$RegisterUserDtoFromJson(json);
+}
+
+extension RegisterUserDtoMergeX on RegisterUserDto {
+  /// Returns a new [RegisterUserDto] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  RegisterUserDto merge(RegisterUserDto other) {
+    return copyWith(
+      email: other.email,
+      name: other.name,
+      password: other.password,
+    );
+  }
 }
 
 @Freezed()
@@ -70,8 +84,17 @@ abstract class UserInfoDto with _$UserInfoDto {
     required String phone,
   }) = _UserInfoDto;
 
+  Map<String, dynamic> toJson() => _$UserInfoDtoToJson(this as _UserInfoDto);
   factory UserInfoDto.fromJson(Map<String, Object?> json) =>
       _$UserInfoDtoFromJson(json);
+}
+
+extension UserInfoDtoMergeX on UserInfoDto {
+  /// Returns a new [UserInfoDto] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  UserInfoDto merge(UserInfoDto other) {
+    return copyWith(email: other.email, name: other.name, phone: other.phone);
+  }
 }
 
 class RestClient {

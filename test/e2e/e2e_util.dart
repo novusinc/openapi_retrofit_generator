@@ -36,7 +36,7 @@ Future<void> e2eTest(
   print('Regenerate mode: ${generateExpectedFiles ? "ENABLED" : "DISABLED"}');
 
   print('\n[1/6] Cleaning generated folders...');
-  for (final serializer in JsonSerializer.values) {
+  for (final serializer in e2eSerializers) {
     final generatedFolderName = getGeneratedFolderName(serializer);
     final generatedFolder = p.join(
       'test',
@@ -78,7 +78,7 @@ Future<void> e2eTest(
   print(
     '\n[5/6] ${generateExpectedFiles ? "Moving to expected folders" : "Moving to generated folders"}...',
   );
-  for (final serializer in JsonSerializer.values) {
+  for (final serializer in e2eSerializers) {
     final expectedFolder = getExpectedFolderName(serializer);
     final generatedFolderName = getGeneratedFolderName(serializer);
 
@@ -121,7 +121,7 @@ Future<void> e2eTest(
 
     // Cleanup generated folders
     print('\n[7/7] Cleaning up generated folders...');
-    for (final serializer in JsonSerializer.values) {
+    for (final serializer in e2eSerializers) {
       final generatedFolderName = getGeneratedFolderName(serializer);
       final generatedFolder = p.join(
         'test',
@@ -139,7 +139,7 @@ Future<void> e2eTest(
   }
 
   print('\n[7/7] Comparing generated files with expected...');
-  for (final serializer in JsonSerializer.values) {
+  for (final serializer in e2eSerializers) {
     final expectedFolder = getExpectedFolderName(serializer);
     final generatedFolderName = getGeneratedFolderName(serializer);
 
@@ -217,7 +217,7 @@ Future<void> e2eTest(
   }
 
   // Cleanup all generated folders for this test
-  for (final serializer in JsonSerializer.values) {
+  for (final serializer in e2eSerializers) {
     final generatedFolderName = getGeneratedFolderName(serializer);
     final generatedFolderPath = p.join(
       'test',
@@ -284,7 +284,7 @@ Future<void> _runAnalyzer(
       ? testFolder
       : p.join('test', 'generated', testName);
 
-  for (final serializer in JsonSerializer.values) {
+  for (final serializer in e2eSerializers) {
     final folderName = isRegenerateMode
         ? getExpectedFolderName(serializer)
         : getGeneratedFolderName(serializer);

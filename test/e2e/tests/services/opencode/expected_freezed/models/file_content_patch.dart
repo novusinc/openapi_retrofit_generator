@@ -20,6 +20,23 @@ abstract class FileContentPatch with _$FileContentPatch {
     @JsonKey(name: 'index') String? indexField,
   }) = _FileContentPatch;
 
+  Map<String, dynamic> toJson() =>
+      _$FileContentPatchToJson(this as _FileContentPatch);
   factory FileContentPatch.fromJson(Map<String, Object?> json) =>
       _$FileContentPatchFromJson(json);
+}
+
+extension FileContentPatchMergeX on FileContentPatch {
+  /// Returns a new [FileContentPatch] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  FileContentPatch merge(FileContentPatch other) {
+    return copyWith(
+      oldFileName: other.oldFileName,
+      newFileName: other.newFileName,
+      oldHeader: other.oldHeader,
+      newHeader: other.newHeader,
+      hunks: other.hunks,
+      indexField: other.indexField,
+    );
+  }
 }

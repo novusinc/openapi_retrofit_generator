@@ -26,6 +26,8 @@ abstract class OrganizationEntity with _$OrganizationEntity {
     double? revenue,
   }) = _OrganizationEntity;
 
+  Map<String, dynamic> toJson() =>
+      _$OrganizationEntityToJson(this as _OrganizationEntity);
   factory OrganizationEntity.fromJson(Map<String, Object?> json) =>
       _$OrganizationEntityFromJson(json);
   static const int employeeCountMin = 0;
@@ -42,5 +44,25 @@ extension OrganizationEntityValidationX on OrganizationEntity {
       return false;
     }
     return true;
+  }
+}
+
+extension OrganizationEntityMergeX on OrganizationEntity {
+  /// Returns a new [OrganizationEntity] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  OrganizationEntity merge(OrganizationEntity other) {
+    return copyWith(
+      id: other.id,
+      entityType: other.entityType,
+      name: other.name,
+      description: other.description,
+      createdAt: other.createdAt,
+      updatedAt: other.updatedAt,
+      registrationNumber: other.registrationNumber,
+      foundedDate: other.foundedDate,
+      industry: other.industry,
+      employeeCount: other.employeeCount,
+      revenue: other.revenue,
+    );
   }
 }

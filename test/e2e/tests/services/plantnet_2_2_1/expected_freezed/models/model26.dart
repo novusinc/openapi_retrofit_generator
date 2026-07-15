@@ -26,6 +26,27 @@ abstract class Model26 with _$Model26 {
     @JsonKey(name: 'organs_votes') OrgansVotes? organsVotes,
   }) = _Model26;
 
+  Map<String, dynamic> toJson() => _$Model26ToJson(this as _Model26);
   factory Model26.fromJson(Map<String, Object?> json) =>
       _$Model26FromJson(json);
+}
+
+extension Model26MergeX on Model26 {
+  /// Returns a new [Model26] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Model26 merge(Model26 other) {
+    return copyWith(
+      id: other.id,
+      o: other.o,
+      m: other.m,
+      s: other.s,
+      organ: other.organ,
+      deleted: other.deleted,
+      partnerId: other.partnerId,
+      partnerUrl: other.partnerUrl,
+      noplant: other.noplant,
+      qualityVotes: other.qualityVotes,
+      organsVotes: other.organsVotes,
+    );
+  }
 }

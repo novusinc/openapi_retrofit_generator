@@ -16,6 +16,16 @@ abstract class EventSessionIdle with _$EventSessionIdle {
     required EventSessionIdleProperties properties,
   }) = _EventSessionIdle;
 
+  Map<String, dynamic> toJson() =>
+      _$EventSessionIdleToJson(this as _EventSessionIdle);
   factory EventSessionIdle.fromJson(Map<String, Object?> json) =>
       _$EventSessionIdleFromJson(json);
+}
+
+extension EventSessionIdleMergeX on EventSessionIdle {
+  /// Returns a new [EventSessionIdle] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventSessionIdle merge(EventSessionIdle other) {
+    return copyWith(type: other.type, properties: other.properties);
+  }
 }

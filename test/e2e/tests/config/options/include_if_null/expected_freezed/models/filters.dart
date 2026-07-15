@@ -17,6 +17,19 @@ abstract class Filters with _$Filters {
     @JsonKey(includeIfNull: false) FiltersDateRange? dateRange,
   }) = _Filters;
 
+  Map<String, dynamic> toJson() => _$FiltersToJson(this as _Filters);
   factory Filters.fromJson(Map<String, Object?> json) =>
       _$FiltersFromJson(json);
+}
+
+extension FiltersMergeX on Filters {
+  /// Returns a new [Filters] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Filters merge(Filters other) {
+    return copyWith(
+      authorId: other.authorId,
+      tags: other.tags,
+      dateRange: other.dateRange,
+    );
+  }
 }

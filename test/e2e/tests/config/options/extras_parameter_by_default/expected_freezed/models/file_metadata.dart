@@ -16,6 +16,20 @@ abstract class FileMetadata with _$FileMetadata {
     List<String>? tags,
   }) = _FileMetadata;
 
+  Map<String, dynamic> toJson() => _$FileMetadataToJson(this as _FileMetadata);
   factory FileMetadata.fromJson(Map<String, Object?> json) =>
       _$FileMetadataFromJson(json);
+}
+
+extension FileMetadataMergeX on FileMetadata {
+  /// Returns a new [FileMetadata] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  FileMetadata merge(FileMetadata other) {
+    return copyWith(
+      filename: other.filename,
+      mimeType: other.mimeType,
+      size: other.size,
+      tags: other.tags,
+    );
+  }
 }

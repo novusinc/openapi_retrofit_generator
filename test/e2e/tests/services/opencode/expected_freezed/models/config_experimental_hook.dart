@@ -18,6 +18,19 @@ abstract class ConfigExperimentalHook with _$ConfigExperimentalHook {
     List<ConfigExperimentalHookSessionCompleted>? sessionCompleted,
   }) = _ConfigExperimentalHook;
 
+  Map<String, dynamic> toJson() =>
+      _$ConfigExperimentalHookToJson(this as _ConfigExperimentalHook);
   factory ConfigExperimentalHook.fromJson(Map<String, Object?> json) =>
       _$ConfigExperimentalHookFromJson(json);
+}
+
+extension ConfigExperimentalHookMergeX on ConfigExperimentalHook {
+  /// Returns a new [ConfigExperimentalHook] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ConfigExperimentalHook merge(ConfigExperimentalHook other) {
+    return copyWith(
+      fileEdited: other.fileEdited,
+      sessionCompleted: other.sessionCompleted,
+    );
+  }
 }

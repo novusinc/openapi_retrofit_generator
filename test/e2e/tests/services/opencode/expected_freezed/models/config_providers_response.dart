@@ -16,6 +16,19 @@ abstract class ConfigProvidersResponse with _$ConfigProvidersResponse {
     @JsonKey(name: 'default') required Map<String, String> defaultField,
   }) = _ConfigProvidersResponse;
 
+  Map<String, dynamic> toJson() =>
+      _$ConfigProvidersResponseToJson(this as _ConfigProvidersResponse);
   factory ConfigProvidersResponse.fromJson(Map<String, Object?> json) =>
       _$ConfigProvidersResponseFromJson(json);
+}
+
+extension ConfigProvidersResponseMergeX on ConfigProvidersResponse {
+  /// Returns a new [ConfigProvidersResponse] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ConfigProvidersResponse merge(ConfigProvidersResponse other) {
+    return copyWith(
+      providers: other.providers,
+      defaultField: other.defaultField,
+    );
+  }
 }

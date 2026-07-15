@@ -16,6 +16,16 @@ abstract class EventSessionCompacted with _$EventSessionCompacted {
     required EventSessionCompactedProperties properties,
   }) = _EventSessionCompacted;
 
+  Map<String, dynamic> toJson() =>
+      _$EventSessionCompactedToJson(this as _EventSessionCompacted);
   factory EventSessionCompacted.fromJson(Map<String, Object?> json) =>
       _$EventSessionCompactedFromJson(json);
+}
+
+extension EventSessionCompactedMergeX on EventSessionCompacted {
+  /// Returns a new [EventSessionCompacted] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventSessionCompacted merge(EventSessionCompacted other) {
+    return copyWith(type: other.type, properties: other.properties);
+  }
 }

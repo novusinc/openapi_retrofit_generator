@@ -18,5 +18,14 @@ abstract class Extent with _$Extent {
     required Coordinates coordinates,
   }) = _Extent;
 
+  Map<String, dynamic> toJson() => _$ExtentToJson(this as _Extent);
   factory Extent.fromJson(Map<String, Object?> json) => _$ExtentFromJson(json);
+}
+
+extension ExtentMergeX on Extent {
+  /// Returns a new [Extent] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Extent merge(Extent other) {
+    return copyWith(type: other.type, coordinates: other.coordinates);
+  }
 }

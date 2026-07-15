@@ -23,7 +23,10 @@ String dartFreezedDtoTemplate(
   final isUndiscriminatedUnion =
       dataClass.undiscriminatedUnionVariants?.isNotEmpty ?? false;
   final isUnion = discriminator != null || isUndiscriminatedUnion;
-  final base64Types = _getBase64FieldTypes(dataClass.parameters, discriminator: dataClass.discriminator);
+  final base64Types = _getBase64FieldTypes(
+    dataClass.parameters,
+    discriminator: dataClass.discriminator,
+  );
   final needsBase64Converter =
       base64Types.hasScalar ||
       base64Types.hasNullable ||
@@ -32,7 +35,10 @@ String dartFreezedDtoTemplate(
   final base64ConverterClass = needsBase64Converter
       ? '\n${_base64ConverterClass(hasScalar: base64Types.hasScalar, hasNullable: base64Types.hasNullable, hasList: base64Types.hasList, hasListNullable: base64Types.hasListNullable)}'
       : '';
-  final dartCoreImports = _getDartCoreImports(dataClass.parameters, discriminator: dataClass.discriminator);
+  final dartCoreImports = _getDartCoreImports(
+    dataClass.parameters,
+    discriminator: dataClass.discriminator,
+  );
 
   // For undiscriminated unions, use simple JSON wrapper pattern (no Freezed)
   if (isUndiscriminatedUnion) {
@@ -55,10 +61,13 @@ $variantClasses$base64ConverterClass''';
 
   // Check if we need to import custom metadata annotations
   // For discriminated unions, also check variant parameters
-  bool needsCustomMetadataImport = customMetadata.isActive &&
+  bool needsCustomMetadataImport =
+      customMetadata.isActive &&
       dataClass.parameters.any((p) => p.customMetadata.isNotEmpty);
 
-  if (!needsCustomMetadataImport && customMetadata.isActive && discriminator != null) {
+  if (!needsCustomMetadataImport &&
+      customMetadata.isActive &&
+      discriminator != null) {
     // Check variant parameters for custom metadata
     for (final variantParams in discriminator.refProperties.values) {
       if (variantParams.any((p) => p.customMetadata.isNotEmpty)) {
@@ -154,7 +163,9 @@ String dartFreezedUnionFamilyTemplate(
   };
 
   final sealedClasses = family.unions
-      .map((union) => _sealedUnionClass(union, commonFieldsByUnion[union.name]!))
+      .map(
+        (union) => _sealedUnionClass(union, commonFieldsByUnion[union.name]!),
+      )
       .join('\n');
   final unknownClasses = family.unions
       .map(
@@ -179,7 +190,10 @@ String dartFreezedUnionFamilyTemplate(
       )
       .join('\n');
   final compatExtensions = family.unions
-      .map((union) => _unionCompatExtensions(union, commonFieldsByUnion[union.name]!))
+      .map(
+        (union) =>
+            _unionCompatExtensions(union, commonFieldsByUnion[union.name]!),
+      )
       .join('\n');
 
   return '''
@@ -475,7 +489,8 @@ String _unknownGetterBody(
   const scalarWireTypes = {'String', 'int', 'double', 'num', 'bool'};
   final registryWireType = enumWireTypes[nonNullType];
   final inlineEnumWireType = param.enumType?.toDartType();
-  final enumCast = registryWireType ??
+  final enumCast =
+      registryWireType ??
       (scalarWireTypes.contains(inlineEnumWireType)
           ? inlineEnumWireType
           : null);
@@ -1247,7 +1262,10 @@ Set<String> _filterUnionImportsForFreezed(UniversalComponentClass dataClass) {
 }
 
 ({bool hasScalar, bool hasNullable, bool hasList, bool hasListNullable})
-_getBase64FieldTypes(Set<UniversalType> parameters, {Discriminator? discriminator}) {
+_getBase64FieldTypes(
+  Set<UniversalType> parameters, {
+  Discriminator? discriminator,
+}) {
   bool hasScalar = false;
   bool hasNullable = false;
   bool hasList = false;
@@ -1287,7 +1305,9 @@ _getBase64FieldTypes(Set<UniversalType> parameters, {Discriminator? discriminato
           final isNullable = !param.isRequired && param.defaultValue == null;
           final isList =
               param.wrappingCollections.isNotEmpty &&
-              param.wrappingCollections.first.collectionPrefix.startsWith('List<');
+              param.wrappingCollections.first.collectionPrefix.startsWith(
+                'List<',
+              );
 
           if (isList) {
             if (isNullable) {
@@ -1315,10 +1335,16 @@ _getBase64FieldTypes(Set<UniversalType> parameters, {Discriminator? discriminato
   );
 }
 
-String _getDartCoreImports(Set<UniversalType> parameters, {Discriminator? discriminator}) {
+String _getDartCoreImports(
+  Set<UniversalType> parameters, {
+  Discriminator? discriminator,
+}) {
   final imports = <String>[];
 
-  final base64Types = _getBase64FieldTypes(parameters, discriminator: discriminator);
+  final base64Types = _getBase64FieldTypes(
+    parameters,
+    discriminator: discriminator,
+  );
   final hasAnyBase64 =
       base64Types.hasScalar ||
       base64Types.hasNullable ||
@@ -1334,7 +1360,10 @@ String _getDartCoreImports(Set<UniversalType> parameters, {Discriminator? discri
 }
 
 /// Generate custom annotations for a field based on custom metadata
-String _customAnnotations(UniversalType t, CustomMetadataConfig customMetadata) {
+String _customAnnotations(
+  UniversalType t,
+  CustomMetadataConfig customMetadata,
+) {
   if (!customMetadata.isActive || t.customMetadata.isEmpty) {
     return '';
   }
@@ -1343,14 +1372,16 @@ String _customAnnotations(UniversalType t, CustomMetadataConfig customMetadata) 
 
   for (final fieldConfig in customMetadata.fields) {
     final metadataValue = t.customMetadata[fieldConfig.name];
-    
+
     if (metadataValue != null) {
       // If there's an annotation template, use it with the value
       if (fieldConfig.annotationTemplate != null && metadataValue != true) {
-        final annotation = fieldConfig.annotationTemplate!
-            .replaceAll('{value}', metadataValue.toString());
+        final annotation = fieldConfig.annotationTemplate!.replaceAll(
+          '{value}',
+          metadataValue.toString(),
+        );
         buffer.write('    $annotation\n');
-      } 
+      }
       // Otherwise, use simple annotation (for boolean presence checks)
       else if (metadataValue == true || metadataValue == 'true') {
         buffer.write('    ${fieldConfig.annotation}\n');
@@ -1372,15 +1403,20 @@ String _customAnnotations(UniversalType t, CustomMetadataConfig customMetadata) 
 /// generates the concrete class (_ClassName) with "implements" instead of "extends",
 /// meaning any method added to the abstract class body must be re-implemented
 /// in the generated concrete class (which we cannot modify).
-String _generateMergeExtension(String className, Set<UniversalType> parameters) {
+String _generateMergeExtension(
+  String className,
+  Set<UniversalType> parameters,
+) {
   // Freezed doesn't generate copyWith() for classes with zero fields,
   // so skip the merge extension entirely for empty classes.
   if (parameters.isEmpty) return '';
 
-  final copyWithParams = parameters.map((param) {
-    final name = param.name;
-    return '      $name: other.$name,';
-  }).join('\n');
+  final copyWithParams = parameters
+      .map((param) {
+        final name = param.name;
+        return '      $name: other.$name,';
+      })
+      .join('\n');
 
   return '''
 extension ${className}MergeX on $className {

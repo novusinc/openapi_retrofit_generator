@@ -16,6 +16,20 @@ abstract class Formatter with _$Formatter {
     List<String>? extensions,
   }) = _Formatter;
 
+  Map<String, dynamic> toJson() => _$FormatterToJson(this as _Formatter);
   factory Formatter.fromJson(Map<String, Object?> json) =>
       _$FormatterFromJson(json);
+}
+
+extension FormatterMergeX on Formatter {
+  /// Returns a new [Formatter] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Formatter merge(Formatter other) {
+    return copyWith(
+      disabled: other.disabled,
+      command: other.command,
+      environment: other.environment,
+      extensions: other.extensions,
+    );
+  }
 }

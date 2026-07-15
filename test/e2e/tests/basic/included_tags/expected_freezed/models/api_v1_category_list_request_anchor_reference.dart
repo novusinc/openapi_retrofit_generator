@@ -16,7 +16,25 @@ abstract class ApiV1CategoryListRequestAnchorReference
     @JsonKey(includeIfNull: false) int? sharedField2,
   }) = _ApiV1CategoryListRequestAnchorReference;
 
+  Map<String, dynamic> toJson() =>
+      _$ApiV1CategoryListRequestAnchorReferenceToJson(
+        this as _ApiV1CategoryListRequestAnchorReference,
+      );
   factory ApiV1CategoryListRequestAnchorReference.fromJson(
     Map<String, Object?> json,
   ) => _$ApiV1CategoryListRequestAnchorReferenceFromJson(json);
+}
+
+extension ApiV1CategoryListRequestAnchorReferenceMergeX
+    on ApiV1CategoryListRequestAnchorReference {
+  /// Returns a new [ApiV1CategoryListRequestAnchorReference] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ApiV1CategoryListRequestAnchorReference merge(
+    ApiV1CategoryListRequestAnchorReference other,
+  ) {
+    return copyWith(
+      sharedField1: other.sharedField1,
+      sharedField2: other.sharedField2,
+    );
+  }
 }

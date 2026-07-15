@@ -21,6 +21,22 @@ abstract class FindTextResponse with _$FindTextResponse {
     required List<FindTextResponseSubmatches> submatches,
   }) = _FindTextResponse;
 
+  Map<String, dynamic> toJson() =>
+      _$FindTextResponseToJson(this as _FindTextResponse);
   factory FindTextResponse.fromJson(Map<String, Object?> json) =>
       _$FindTextResponseFromJson(json);
+}
+
+extension FindTextResponseMergeX on FindTextResponse {
+  /// Returns a new [FindTextResponse] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  FindTextResponse merge(FindTextResponse other) {
+    return copyWith(
+      path: other.path,
+      lines: other.lines,
+      lineNumber: other.lineNumber,
+      absoluteOffset: other.absoluteOffset,
+      submatches: other.submatches,
+    );
+  }
 }

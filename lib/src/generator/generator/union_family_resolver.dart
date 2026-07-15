@@ -125,9 +125,7 @@ UnionFamilyResolution resolveUnionFamilies(
   // real schema. Fail loudly instead of silently emitting a duplicate class.
   for (final union in eligibleUnions) {
     final unknownName = '${union.name.toPascal}Unknown';
-    final collision = dataClasses.any(
-      (dc) => dc.name.toPascal == unknownName,
-    );
+    final collision = dataClasses.any((dc) => dc.name.toPascal == unknownName);
     if (collision) {
       throw GeneratorException(
         "Schema '$unknownName' collides with the generated unknown-variant "

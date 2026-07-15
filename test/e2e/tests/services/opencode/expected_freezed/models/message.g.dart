@@ -31,9 +31,7 @@ MessageAssistantMessage _$MessageAssistantMessageFromJson(
   time: AssistantMessageTime.fromJson(json['time'] as Map<String, dynamic>),
   error: json['error'] == null
       ? null
-      : AssistantMessageErrorError.fromJson(
-          json['error'] as Map<String, dynamic>,
-        ),
+      : AssistantMessageError.fromJson(json['error'] as Map<String, dynamic>),
   system: (json['system'] as List<dynamic>).map((e) => e as String).toList(),
   modelId: json['modelID'] as String,
   providerId: json['providerID'] as String,

@@ -17,6 +17,19 @@ abstract class UserSettingsPrivacy with _$UserSettingsPrivacy {
     @Default(false) bool showEmail,
   }) = _UserSettingsPrivacy;
 
+  Map<String, dynamic> toJson() =>
+      _$UserSettingsPrivacyToJson(this as _UserSettingsPrivacy);
   factory UserSettingsPrivacy.fromJson(Map<String, Object?> json) =>
       _$UserSettingsPrivacyFromJson(json);
+}
+
+extension UserSettingsPrivacyMergeX on UserSettingsPrivacy {
+  /// Returns a new [UserSettingsPrivacy] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  UserSettingsPrivacy merge(UserSettingsPrivacy other) {
+    return copyWith(
+      profileVisibility: other.profileVisibility,
+      showEmail: other.showEmail,
+    );
+  }
 }

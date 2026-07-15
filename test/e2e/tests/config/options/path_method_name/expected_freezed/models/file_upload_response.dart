@@ -18,6 +18,23 @@ abstract class FileUploadResponse with _$FileUploadResponse {
     DateTime? uploadedAt,
   }) = _FileUploadResponse;
 
+  Map<String, dynamic> toJson() =>
+      _$FileUploadResponseToJson(this as _FileUploadResponse);
   factory FileUploadResponse.fromJson(Map<String, Object?> json) =>
       _$FileUploadResponseFromJson(json);
+}
+
+extension FileUploadResponseMergeX on FileUploadResponse {
+  /// Returns a new [FileUploadResponse] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  FileUploadResponse merge(FileUploadResponse other) {
+    return copyWith(
+      id: other.id,
+      url: other.url,
+      filename: other.filename,
+      mimeType: other.mimeType,
+      size: other.size,
+      uploadedAt: other.uploadedAt,
+    );
+  }
 }

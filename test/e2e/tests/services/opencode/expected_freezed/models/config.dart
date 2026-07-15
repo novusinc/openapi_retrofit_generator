@@ -14,8 +14,8 @@ import 'config_watcher.dart';
 import 'formatter.dart';
 import 'keybinds_config.dart';
 import 'layout_config.dart';
-import 'lsp_lsp.dart';
-import 'mcp_mcp.dart';
+import 'lsp.dart';
+import 'mcp.dart';
 import 'provider.dart';
 
 part 'config.freezed.dart';
@@ -71,9 +71,9 @@ abstract class Config with _$Config {
     Map<String, Provider>? provider,
 
     /// MCP (Model Context Protocol) server configurations
-    Map<String, McpMcp>? mcp,
+    Map<String, Mcp>? mcp,
     Map<String, Formatter>? formatter,
-    Map<String, LspLsp>? lsp,
+    Map<String, Lsp>? lsp,
 
     /// Additional instruction files or patterns to include
     List<String>? instructions,
@@ -83,5 +83,41 @@ abstract class Config with _$Config {
     ConfigExperimental? experimental,
   }) = _Config;
 
+  Map<String, dynamic> toJson() => _$ConfigToJson(this as _Config);
   factory Config.fromJson(Map<String, Object?> json) => _$ConfigFromJson(json);
+}
+
+extension ConfigMergeX on Config {
+  /// Returns a new [Config] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Config merge(Config other) {
+    return copyWith(
+      schema: other.schema,
+      theme: other.theme,
+      keybinds: other.keybinds,
+      tui: other.tui,
+      command: other.command,
+      watcher: other.watcher,
+      plugin: other.plugin,
+      snapshot: other.snapshot,
+      share: other.share,
+      autoshare: other.autoshare,
+      autoupdate: other.autoupdate,
+      disabledProviders: other.disabledProviders,
+      model: other.model,
+      smallModel: other.smallModel,
+      username: other.username,
+      mode: other.mode,
+      agent: other.agent,
+      provider: other.provider,
+      mcp: other.mcp,
+      formatter: other.formatter,
+      lsp: other.lsp,
+      instructions: other.instructions,
+      layout: other.layout,
+      permission: other.permission,
+      tools: other.tools,
+      experimental: other.experimental,
+    );
+  }
 }

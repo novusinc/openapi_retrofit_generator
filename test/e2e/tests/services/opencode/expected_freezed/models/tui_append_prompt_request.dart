@@ -12,6 +12,16 @@ abstract class TuiAppendPromptRequest with _$TuiAppendPromptRequest {
   const factory TuiAppendPromptRequest({required String text}) =
       _TuiAppendPromptRequest;
 
+  Map<String, dynamic> toJson() =>
+      _$TuiAppendPromptRequestToJson(this as _TuiAppendPromptRequest);
   factory TuiAppendPromptRequest.fromJson(Map<String, Object?> json) =>
       _$TuiAppendPromptRequestFromJson(json);
+}
+
+extension TuiAppendPromptRequestMergeX on TuiAppendPromptRequest {
+  /// Returns a new [TuiAppendPromptRequest] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  TuiAppendPromptRequest merge(TuiAppendPromptRequest other) {
+    return copyWith(text: other.text);
+  }
 }

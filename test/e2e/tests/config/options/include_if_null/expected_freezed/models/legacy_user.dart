@@ -15,6 +15,15 @@ abstract class LegacyUser with _$LegacyUser {
     @JsonKey(includeIfNull: false) String? email,
   }) = _LegacyUser;
 
+  Map<String, dynamic> toJson() => _$LegacyUserToJson(this as _LegacyUser);
   factory LegacyUser.fromJson(Map<String, Object?> json) =>
       _$LegacyUserFromJson(json);
+}
+
+extension LegacyUserMergeX on LegacyUser {
+  /// Returns a new [LegacyUser] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  LegacyUser merge(LegacyUser other) {
+    return copyWith(id: other.id, name: other.name, email: other.email);
+  }
 }

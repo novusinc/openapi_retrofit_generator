@@ -20,5 +20,21 @@ abstract class Option with _$Option {
     @JsonKey(includeIfNull: false, name: 'optional_name') String? optionalName,
   }) = _Option;
 
+  Map<String, dynamic> toJson() => _$OptionToJson(this as _Option);
   factory Option.fromJson(Map<String, Object?> json) => _$OptionFromJson(json);
+}
+
+extension OptionMergeX on Option {
+  /// Returns a new [Option] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Option merge(Option other) {
+    return copyWith(
+      requiredId: other.requiredId,
+      requiredName: other.requiredName,
+      requiredNullableId: other.requiredNullableId,
+      requiredNullableName: other.requiredNullableName,
+      optionalId: other.optionalId,
+      optionalName: other.optionalName,
+    );
+  }
 }

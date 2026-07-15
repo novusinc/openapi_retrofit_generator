@@ -24,5 +24,21 @@ abstract class Result with _$Result {
     Model16? iucn,
   }) = _Result;
 
+  Map<String, dynamic> toJson() => _$ResultToJson(this as _Result);
   factory Result.fromJson(Map<String, Object?> json) => _$ResultFromJson(json);
+}
+
+extension ResultMergeX on Result {
+  /// Returns a new [Result] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Result merge(Result other) {
+    return copyWith(
+      score: other.score,
+      species: other.species,
+      images: other.images,
+      gbif: other.gbif,
+      powo: other.powo,
+      iucn: other.iucn,
+    );
+  }
 }

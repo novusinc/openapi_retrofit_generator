@@ -50,5 +50,6 @@ sealed class Ai with _$Ai {
     @JsonKey(includeIfNull: false) Ai? baseAi,
   }) = AiCustom;
 
+  Map<String, dynamic> toJson() => throw UnimplementedError();
   factory Ai.fromJson(Map<String, Object?> json) => _$AiFromJson(json);
 }

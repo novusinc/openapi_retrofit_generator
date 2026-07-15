@@ -16,7 +16,7 @@ _PaymentResponse _$PaymentResponseFromJson(Map<String, dynamic> json) =>
           : DateTime.parse(json['processedAt'] as String),
       details: json['details'] == null
           ? null
-          : PaymentResponseDetailsDetails.fromJson(
+          : PaymentResponseDetails.fromJson(
               json['details'] as Map<String, dynamic>,
             ),
       currency: json['currency'] as String? ?? 'USD',

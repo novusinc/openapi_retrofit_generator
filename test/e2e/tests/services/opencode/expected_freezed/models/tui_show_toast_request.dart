@@ -17,6 +17,20 @@ abstract class TuiShowToastRequest with _$TuiShowToastRequest {
     String? title,
   }) = _TuiShowToastRequest;
 
+  Map<String, dynamic> toJson() =>
+      _$TuiShowToastRequestToJson(this as _TuiShowToastRequest);
   factory TuiShowToastRequest.fromJson(Map<String, Object?> json) =>
       _$TuiShowToastRequestFromJson(json);
+}
+
+extension TuiShowToastRequestMergeX on TuiShowToastRequest {
+  /// Returns a new [TuiShowToastRequest] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  TuiShowToastRequest merge(TuiShowToastRequest other) {
+    return copyWith(
+      title: other.title,
+      message: other.message,
+      variant: other.variant,
+    );
+  }
 }

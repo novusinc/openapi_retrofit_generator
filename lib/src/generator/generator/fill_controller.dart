@@ -27,16 +27,16 @@ final class FillController {
     this.info = const OpenApiInfo(schemaVersion: OAS.v3_1),
     List<UniversalDataClass> dataClasses = const [],
     UnionFamilyResolution unionFamilies = UnionFamilyResolution.none,
-  })  : _unionFamilies = unionFamilies,
-        _unionVariantMap = _buildUnionVariantMap(dataClasses, unionFamilies),
-        _dataClassMap = {
-          for (final dc in dataClasses)
-            if (dc is UniversalComponentClass) dc.name.toLowerCase(): dc,
-        },
-        _enumWireTypes = {
-          for (final dc in dataClasses)
-            if (dc is UniversalEnumClass) dc.name.toPascal: dc.type.toDartType(),
-        };
+  }) : _unionFamilies = unionFamilies,
+       _unionVariantMap = _buildUnionVariantMap(dataClasses, unionFamilies),
+       _dataClassMap = {
+         for (final dc in dataClasses)
+           if (dc is UniversalComponentClass) dc.name.toLowerCase(): dc,
+       },
+       _enumWireTypes = {
+         for (final dc in dataClasses)
+           if (dc is UniversalEnumClass) dc.name.toPascal: dc.type.toDartType(),
+       };
 
   /// Api info
   final OpenApiInfo info;
@@ -64,8 +64,8 @@ final class FillController {
   /// off so legacy code paths stay byte-identical.
   Map<String, String>? get _fileOverridesOrNull =>
       _unionFamilies.familyMemberNames.isEmpty
-          ? null
-          : _unionFamilies.classFileOverrides;
+      ? null
+      : _unionFamilies.classFileOverrides;
 
   /// Resolves the on-disk file base name for a generated model class,
   /// following family overrides when the class was merged into a family file.
@@ -90,7 +90,8 @@ final class FillController {
       // Family unions dispatch on the leaf classes themselves; legacy unions
       // dispatch on the Freezed clone classes (`<Union><Factory>`).
       final isFamilyUnion = unionFamilies.familyMemberNames.contains(dc.name);
-      for (final entry in discriminator.discriminatorValueToRefMapping.entries) {
+      for (final entry
+          in discriminator.discriminatorValueToRefMapping.entries) {
         final discriminatorValue = entry.key; // e.g., 'agent'
         final refName = entry.value.toPascal; // e.g., 'Agent'
         final factoryName = discriminatorValue.toCamel; // e.g., 'agent'
@@ -155,37 +156,42 @@ final class FillController {
     if (!config.generateConverters) return null;
     if (dataClass is! UniversalComponentClass) return null;
     if (!dataClass.name.startsWith('Db')) return null;
-    
+
     // Skip converter generation for union types (discriminated oneOf)
     // Union types should use their specific variant converters instead
     // Check for both the root union and its variants
-    if (dataClass.discriminator != null || dataClass.discriminatorValue != null || dataClass.undiscriminatedUnionVariants != null) {
+    if (dataClass.discriminator != null ||
+        dataClass.discriminatorValue != null ||
+        dataClass.undiscriminatedUnionVariants != null) {
       // This is a union type (root or variant), skip converter generation
       return null;
     }
-    
+
     final dbClassName = dataClass.name.toPascal;
     final hydratedModelName = dbClassName.substring(2); // Remove 'Db'
     // Follow family overrides: a hydrated model merged into a union family
     // file lives under the family's file name, not its own.
-    final hydratedModelFileName =
-        _resolveModelFileBaseName(hydratedModelName.toSnake);
+    final hydratedModelFileName = _resolveModelFileBaseName(
+      hydratedModelName.toSnake,
+    );
 
     // Path to the hydrated model file (relative to output directory)
-    final hydratedModelPath = '${config.outputDirectory}/${config.converterHydratedModelsDirectory}/$hydratedModelFileName.dart';
+    final hydratedModelPath =
+        '${config.outputDirectory}/${config.converterHydratedModelsDirectory}/$hydratedModelFileName.dart';
 
     if (!File(hydratedModelPath).existsSync()) {
       // If hydrated model doesn't exist, we skip converter generation or generate a context-only converter
       // For now, let's skip to avoid analyzer errors
       return null;
     }
-    
+
     // Check if the hydrated model is a sealed/union type by reading the file
     // This catches cases where discriminator info is not yet populated in the dataClass
     try {
       final hydratedModelContent = File(hydratedModelPath).readAsStringSync();
       // Check for sealed class with uppercase first letter (e.g., 'sealed class Ai')
-      final capitalizedName = hydratedModelName[0].toUpperCase() + hydratedModelName.substring(1);
+      final capitalizedName =
+          hydratedModelName[0].toUpperCase() + hydratedModelName.substring(1);
       if (hydratedModelContent.contains('sealed class $capitalizedName')) {
         // This is a union/sealed type, skip converter generation
         // Use specific converters for each variant instead
@@ -194,7 +200,7 @@ final class FillController {
     } catch (e) {
       // If we can't read the file, continue with generation
     }
-    
+
     final parser = HydratedModelParser();
     // Anchor to the class name: family files hold many factory constructors,
     // and the unanchored parser would take the first one in the file.
@@ -202,11 +208,11 @@ final class FillController {
       hydratedModelPath,
       className: hydratedModelName.toPascal,
     );
-    
+
     // Calculate the models base path (e.g., packages/my_models/lib/src)
     // by removing the filename and subdirectory from the hydrated model path
     final modelsBasePath = File(hydratedModelPath).parent.parent.path;
-    
+
     // Look up if the hydrated model is a variant of a union/sealed class
     final unionVariantInfo = _lookupUnionVariant(hydratedModelName);
 
@@ -232,7 +238,7 @@ final class FillController {
     if (!config.generateDefaults) return null;
     if (dataClass is! UniversalComponentClass) return null;
     if (!dataClass.name.startsWith('Db')) return null;
-    
+
     // Only generate if there are actually defaults
     if (!dataClass.parameters.any((p) => p.defaultValue != null)) return null;
 
@@ -321,27 +327,33 @@ final class FillController {
     final hydratedUnionClassName = dbUnionClassName.substring(2).toPascal;
 
     // Ensure the hydrated union class exists and is itself a discriminated union
-    final hydratedUnionClass = _dataClassMap[hydratedUnionClassName.toLowerCase()];
-    if (hydratedUnionClass == null || hydratedUnionClass.discriminator == null) {
+    final hydratedUnionClass =
+        _dataClassMap[hydratedUnionClassName.toLowerCase()];
+    if (hydratedUnionClass == null ||
+        hydratedUnionClass.discriminator == null) {
       return null;
     }
 
     // Family unions dispatch on the leaf classes from each side's own
     // discriminator mapping; legacy unions dispatch on the Freezed clone
     // classes (`<Union><Factory>`).
-    final dbIsFamily =
-        _unionFamilies.familyMemberNames.contains(dataClass.name);
-    final hydratedIsFamily =
-        _unionFamilies.familyMemberNames.contains(hydratedUnionClass.name);
+    final dbIsFamily = _unionFamilies.familyMemberNames.contains(
+      dataClass.name,
+    );
+    final hydratedIsFamily = _unionFamilies.familyMemberNames.contains(
+      hydratedUnionClass.name,
+    );
 
     final variants = <UnionVariantConverterInfo>[];
 
-    for (final entry in dataClass.discriminator!.discriminatorValueToRefMapping.entries) {
+    for (final entry
+        in dataClass.discriminator!.discriminatorValueToRefMapping.entries) {
       final discriminatorValue = entry.key; // e.g., 'audio', 'url_preview'
       final dbRefName = entry.value.toPascal; // e.g., 'DbAudioFile'
 
       // Factory name is the camelCase discriminator value (matches Freezed factory)
-      final factoryName = discriminatorValue.toCamel; // e.g., 'audio', 'urlPreview'
+      final factoryName =
+          discriminatorValue.toCamel; // e.g., 'audio', 'urlPreview'
 
       // Variant class dispatched on the DB side: the leaf itself for family
       // unions ('DbAudioFile'), otherwise the clone ('DbFileAudio').
@@ -349,11 +361,13 @@ final class FillController {
           ? dbRefName
           : '$dbUnionClassName${factoryName.toPascal}';
       final hydratedRefName = hydratedUnionClass
-          .discriminator!.discriminatorValueToRefMapping[discriminatorValue];
+          .discriminator!
+          .discriminatorValueToRefMapping[discriminatorValue];
       final hydratedVariantFreezedClass =
           (hydratedIsFamily && hydratedRefName != null)
-              ? hydratedRefName.toPascal // e.g., 'AudioFile'
-              : '$hydratedUnionClassName${factoryName.toPascal}'; // e.g., 'FileAudio'
+          ? hydratedRefName
+                .toPascal // e.g., 'AudioFile'
+          : '$hydratedUnionClassName${factoryName.toPascal}'; // e.g., 'FileAudio'
 
       // Converter class name follows the schema name, e.g., 'DbAudioFileConverter'
       final converterClassName = '${dbRefName}Converter';
@@ -366,20 +380,27 @@ final class FillController {
       // strip the 'Db' prefix from the DB ref name (e.g., 'DbCustomAi' → 'CustomAi' → 'custom_ai').
       // This matches what fillConverterContent uses and avoids looking for Freezed
       // variant class names (e.g., 'AiCustom' → 'ai_custom.dart') which don't exist.
-      final hydratedModelNameForLookup = dbRefName.substring(2); // e.g., 'CustomAi'
+      final hydratedModelNameForLookup = dbRefName.substring(
+        2,
+      ); // e.g., 'CustomAi'
       final dbVariantClass = _dataClassMap[dbRefName.toLowerCase()];
       final fromDbParams = dbVariantClass != null
-          ? _computeVariantHydratedParams(dbVariantClass, hydratedModelNameForLookup)
+          ? _computeVariantHydratedParams(
+              dbVariantClass,
+              hydratedModelNameForLookup,
+            )
           : const <HydratedField>[];
 
-      variants.add(UnionVariantConverterInfo(
-        factoryName: factoryName,
-        staticFieldName: staticFieldName,
-        converterClassName: converterClassName,
-        dbVariantFreezedClass: dbVariantFreezedClass,
-        hydratedVariantFreezedClass: hydratedVariantFreezedClass,
-        fromDbParams: fromDbParams,
-      ));
+      variants.add(
+        UnionVariantConverterInfo(
+          factoryName: factoryName,
+          staticFieldName: staticFieldName,
+          converterClassName: converterClassName,
+          dbVariantFreezedClass: dbVariantFreezedClass,
+          hydratedVariantFreezedClass: hydratedVariantFreezedClass,
+          fromDbParams: fromDbParams,
+        ),
+      );
     }
 
     if (variants.isEmpty) return null;
@@ -393,8 +414,9 @@ final class FillController {
         hydratedModelImport: config.converterHydratedModelPrefix!,
         // Sealed family unions carry an Unknown fallback; pass both sides so
         // the dispatcher round-trips unknown variants instead of throwing.
-        hydratedUnknownClass:
-            hydratedIsFamily ? '${hydratedUnionClassName}Unknown' : null,
+        hydratedUnknownClass: hydratedIsFamily
+            ? '${hydratedUnionClassName}Unknown'
+            : null,
         dbUnknownClass: dbIsFamily ? '${dbUnionClassName}Unknown' : null,
       ),
     );
@@ -411,8 +433,9 @@ final class FillController {
     UniversalComponentClass dbVariantClass,
     String hydratedModelName,
   ) {
-    final hydratedModelFileName =
-        _resolveModelFileBaseName(hydratedModelName.toSnake);
+    final hydratedModelFileName = _resolveModelFileBaseName(
+      hydratedModelName.toSnake,
+    );
     final hydratedModelPath =
         '${config.outputDirectory}/${config.converterHydratedModelsDirectory}/$hydratedModelFileName.dart';
 

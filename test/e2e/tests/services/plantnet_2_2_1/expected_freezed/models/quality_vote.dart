@@ -14,6 +14,15 @@ abstract class QualityVote with _$QualityVote {
     required bool quality,
   }) = _QualityVote;
 
+  Map<String, dynamic> toJson() => _$QualityVoteToJson(this as _QualityVote);
   factory QualityVote.fromJson(Map<String, Object?> json) =>
       _$QualityVoteFromJson(json);
+}
+
+extension QualityVoteMergeX on QualityVote {
+  /// Returns a new [QualityVote] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  QualityVote merge(QualityVote other) {
+    return copyWith(quality: other.quality);
+  }
 }

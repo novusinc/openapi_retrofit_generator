@@ -35,6 +35,7 @@ sealed class MessagePartDto with _$MessagePartDto {
     @JsonKey(includeIfNull: false) dynamic toolArgs,
   }) = MessagePartDtoTool;
 
+  Map<String, dynamic> toJson() => throw UnimplementedError();
   factory MessagePartDto.fromJson(Map<String, Object?> json) =>
       _$MessagePartDtoFromJson(json);
 }

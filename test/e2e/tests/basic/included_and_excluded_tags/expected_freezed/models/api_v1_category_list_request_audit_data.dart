@@ -18,7 +18,24 @@ abstract class ApiV1CategoryListRequestAuditData
     @JsonKey(includeIfNull: false) String? modifiedBy,
   }) = _ApiV1CategoryListRequestAuditData;
 
+  Map<String, dynamic> toJson() => _$ApiV1CategoryListRequestAuditDataToJson(
+    this as _ApiV1CategoryListRequestAuditData,
+  );
   factory ApiV1CategoryListRequestAuditData.fromJson(
     Map<String, Object?> json,
   ) => _$ApiV1CategoryListRequestAuditDataFromJson(json);
+}
+
+extension ApiV1CategoryListRequestAuditDataMergeX
+    on ApiV1CategoryListRequestAuditData {
+  /// Returns a new [ApiV1CategoryListRequestAuditData] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ApiV1CategoryListRequestAuditData merge(
+    ApiV1CategoryListRequestAuditData other,
+  ) {
+    return copyWith(
+      lastModified: other.lastModified,
+      modifiedBy: other.modifiedBy,
+    );
+  }
 }

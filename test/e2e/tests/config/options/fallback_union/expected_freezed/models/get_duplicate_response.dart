@@ -17,6 +17,16 @@ abstract class GetDuplicateResponse with _$GetDuplicateResponse {
     GetDuplicateResponseMetadata? metadata,
   }) = _GetDuplicateResponse;
 
+  Map<String, dynamic> toJson() =>
+      _$GetDuplicateResponseToJson(this as _GetDuplicateResponse);
   factory GetDuplicateResponse.fromJson(Map<String, Object?> json) =>
       _$GetDuplicateResponseFromJson(json);
+}
+
+extension GetDuplicateResponseMergeX on GetDuplicateResponse {
+  /// Returns a new [GetDuplicateResponse] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  GetDuplicateResponse merge(GetDuplicateResponse other) {
+    return copyWith(data: other.data, metadata: other.metadata);
+  }
 }

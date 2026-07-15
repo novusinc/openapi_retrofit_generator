@@ -22,6 +22,24 @@ abstract class ToolPart with _$ToolPart {
     Map<String, dynamic>? metadata,
   }) = _ToolPart;
 
+  Map<String, dynamic> toJson() => _$ToolPartToJson(this as _ToolPart);
   factory ToolPart.fromJson(Map<String, Object?> json) =>
       _$ToolPartFromJson(json);
+}
+
+extension ToolPartMergeX on ToolPart {
+  /// Returns a new [ToolPart] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ToolPart merge(ToolPart other) {
+    return copyWith(
+      id: other.id,
+      sessionId: other.sessionId,
+      messageId: other.messageId,
+      type: other.type,
+      callId: other.callId,
+      tool: other.tool,
+      state: other.state,
+      metadata: other.metadata,
+    );
+  }
 }

@@ -36,6 +36,7 @@ sealed class SearchResult with _$SearchResult {
     double? score,
   }) = SearchResultComment;
 
+  Map<String, dynamic> toJson() => throw UnimplementedError();
   factory SearchResult.fromJson(Map<String, Object?> json) =>
       _$SearchResultFromJson(json);
 }

@@ -22,6 +22,24 @@ abstract class DarwinCoreOccurrences with _$DarwinCoreOccurrences {
     num? startTime,
   }) = _DarwinCoreOccurrences;
 
+  Map<String, dynamic> toJson() =>
+      _$DarwinCoreOccurrencesToJson(this as _DarwinCoreOccurrences);
   factory DarwinCoreOccurrences.fromJson(Map<String, Object?> json) =>
       _$DarwinCoreOccurrencesFromJson(json);
+}
+
+extension DarwinCoreOccurrencesMergeX on DarwinCoreOccurrences {
+  /// Returns a new [DarwinCoreOccurrences] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  DarwinCoreOccurrences merge(DarwinCoreOccurrences other) {
+    return copyWith(
+      results: other.results,
+      offset: other.offset,
+      limit: other.limit,
+      endOfRecords: other.endOfRecords,
+      count: other.count,
+      facets: other.facets,
+      startTime: other.startTime,
+    );
+  }
 }

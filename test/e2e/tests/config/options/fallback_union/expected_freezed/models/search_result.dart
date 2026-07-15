@@ -38,6 +38,7 @@ sealed class SearchResult with _$SearchResult {
 
   const factory SearchResult.unknown() = SearchResultUnknown;
 
+  Map<String, dynamic> toJson() => throw UnimplementedError();
   factory SearchResult.fromJson(Map<String, Object?> json) =>
       _$SearchResultFromJson(json);
 }

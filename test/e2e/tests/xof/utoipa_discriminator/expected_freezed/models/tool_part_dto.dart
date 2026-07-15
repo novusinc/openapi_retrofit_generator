@@ -19,6 +19,15 @@ abstract class ToolPartDto with _$ToolPartDto {
     @JsonKey(includeIfNull: false) dynamic toolArgs,
   }) = _ToolPartDto;
 
+  Map<String, dynamic> toJson() => _$ToolPartDtoToJson(this as _ToolPartDto);
   factory ToolPartDto.fromJson(Map<String, Object?> json) =>
       _$ToolPartDtoFromJson(json);
+}
+
+extension ToolPartDtoMergeX on ToolPartDto {
+  /// Returns a new [ToolPartDto] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ToolPartDto merge(ToolPartDto other) {
+    return copyWith(toolName: other.toolName, toolArgs: other.toolArgs);
+  }
 }

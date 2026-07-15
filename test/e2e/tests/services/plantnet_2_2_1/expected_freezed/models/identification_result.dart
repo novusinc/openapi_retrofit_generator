@@ -27,6 +27,27 @@ abstract class IdentificationResult with _$IdentificationResult {
     OtherResults? otherResults,
   }) = _IdentificationResult;
 
+  Map<String, dynamic> toJson() =>
+      _$IdentificationResultToJson(this as _IdentificationResult);
   factory IdentificationResult.fromJson(Map<String, Object?> json) =>
       _$IdentificationResultFromJson(json);
+}
+
+extension IdentificationResultMergeX on IdentificationResult {
+  /// Returns a new [IdentificationResult] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  IdentificationResult merge(IdentificationResult other) {
+    return copyWith(
+      query: other.query,
+      language: other.language,
+      preferedReferential: other.preferedReferential,
+      switchToProject: other.switchToProject,
+      bestMatch: other.bestMatch,
+      results: other.results,
+      remainingIdentificationRequests: other.remainingIdentificationRequests,
+      version: other.version,
+      predictedOrgans: other.predictedOrgans,
+      otherResults: other.otherResults,
+    );
+  }
 }

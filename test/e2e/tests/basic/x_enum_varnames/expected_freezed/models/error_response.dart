@@ -18,6 +18,20 @@ abstract class ErrorResponse with _$ErrorResponse {
     @JsonKey(name: 'status_code') HttpStatusCode? statusCode,
   }) = _ErrorResponse;
 
+  Map<String, dynamic> toJson() =>
+      _$ErrorResponseToJson(this as _ErrorResponse);
   factory ErrorResponse.fromJson(Map<String, Object?> json) =>
       _$ErrorResponseFromJson(json);
+}
+
+extension ErrorResponseMergeX on ErrorResponse {
+  /// Returns a new [ErrorResponse] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ErrorResponse merge(ErrorResponse other) {
+    return copyWith(
+      error: other.error,
+      errorDescription: other.errorDescription,
+      statusCode: other.statusCode,
+    );
+  }
 }

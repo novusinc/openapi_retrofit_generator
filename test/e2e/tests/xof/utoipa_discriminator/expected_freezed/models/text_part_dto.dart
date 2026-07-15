@@ -16,6 +16,15 @@ abstract class TextPartDto with _$TextPartDto {
     required String content,
   }) = _TextPartDto;
 
+  Map<String, dynamic> toJson() => _$TextPartDtoToJson(this as _TextPartDto);
   factory TextPartDto.fromJson(Map<String, Object?> json) =>
       _$TextPartDtoFromJson(json);
+}
+
+extension TextPartDtoMergeX on TextPartDto {
+  /// Returns a new [TextPartDto] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  TextPartDto merge(TextPartDto other) {
+    return copyWith(content: other.content);
+  }
 }

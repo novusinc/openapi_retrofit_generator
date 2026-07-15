@@ -40,6 +40,45 @@ abstract class ComplexCasingModel with _$ComplexCasingModel {
     @JsonKey(name: 'Xml2jsonV3Parser') required String xml2jsonV3Parser,
   }) = _ComplexCasingModel;
 
+  Map<String, dynamic> toJson() =>
+      _$ComplexCasingModelToJson(this as _ComplexCasingModel);
   factory ComplexCasingModel.fromJson(Map<String, Object?> json) =>
       _$ComplexCasingModelFromJson(json);
+}
+
+extension ComplexCasingModelMergeX on ComplexCasingModel {
+  /// Returns a new [ComplexCasingModel] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ComplexCasingModel merge(ComplexCasingModel other) {
+    return copyWith(
+      isNotOnBlocklist: other.isNotOnBlocklist,
+      httpMethod: other.httpMethod,
+      xmlData: other.xmlData,
+      apiKey: other.apiKey,
+      sqlDbConnection: other.sqlDbConnection,
+      htmlParser: other.htmlParser,
+      userId123: other.userId123,
+      http2Protocol: other.http2Protocol,
+      oauth2Token: other.oauth2Token,
+      v1ApiEndpoint: other.v1ApiEndpoint,
+      html5Parser: other.html5Parser,
+      xml2jsonConverter: other.xml2jsonConverter,
+      api2V3Endpoint: other.api2V3Endpoint,
+      httpsConnection: other.httpsConnection,
+      xmlHttpRequest: other.xmlHttpRequest,
+      sqlDbConnection2: other.sqlDbConnection2,
+      jsonApiResponse: other.jsonApiResponse,
+      jwtAuthToken: other.jwtAuthToken,
+      abc: other.abc,
+      xyz: other.xyz,
+      ioOperation: other.ioOperation,
+      uiComponent: other.uiComponent,
+      idField: other.idField,
+      uuidV4Generator: other.uuidV4Generator,
+      cssHtml5Renderer: other.cssHtml5Renderer,
+      apiV2HttpsEndpoint: other.apiV2HttpsEndpoint,
+      oauth2JwtToken: other.oauth2JwtToken,
+      xml2jsonV3Parser: other.xml2jsonV3Parser,
+    );
+  }
 }

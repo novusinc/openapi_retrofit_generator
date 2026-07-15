@@ -15,6 +15,20 @@ abstract class RegisterUserDto with _$RegisterUserDto {
     required String password,
   }) = _RegisterUserDto;
 
+  Map<String, dynamic> toJson() =>
+      _$RegisterUserDtoToJson(this as _RegisterUserDto);
   factory RegisterUserDto.fromJson(Map<String, Object?> json) =>
       _$RegisterUserDtoFromJson(json);
+}
+
+extension RegisterUserDtoMergeX on RegisterUserDto {
+  /// Returns a new [RegisterUserDto] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  RegisterUserDto merge(RegisterUserDto other) {
+    return copyWith(
+      email: other.email,
+      name: other.name,
+      password: other.password,
+    );
+  }
 }

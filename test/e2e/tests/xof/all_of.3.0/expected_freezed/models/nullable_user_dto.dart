@@ -15,6 +15,16 @@ abstract class NullableUserDto with _$NullableUserDto {
     @JsonKey(includeIfNull: true) required UserDto? data,
   }) = _NullableUserDto;
 
+  Map<String, dynamic> toJson() =>
+      _$NullableUserDtoToJson(this as _NullableUserDto);
   factory NullableUserDto.fromJson(Map<String, Object?> json) =>
       _$NullableUserDtoFromJson(json);
+}
+
+extension NullableUserDtoMergeX on NullableUserDto {
+  /// Returns a new [NullableUserDto] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  NullableUserDto merge(NullableUserDto other) {
+    return copyWith(data: other.data);
+  }
 }

@@ -17,6 +17,19 @@ abstract class SymbolModel with _$SymbolModel {
     required SymbolModelLocation location,
   }) = _SymbolModel;
 
+  Map<String, dynamic> toJson() => _$SymbolModelToJson(this as _SymbolModel);
   factory SymbolModel.fromJson(Map<String, Object?> json) =>
       _$SymbolModelFromJson(json);
+}
+
+extension SymbolModelMergeX on SymbolModel {
+  /// Returns a new [SymbolModel] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  SymbolModel merge(SymbolModel other) {
+    return copyWith(
+      name: other.name,
+      kind: other.kind,
+      location: other.location,
+    );
+  }
 }

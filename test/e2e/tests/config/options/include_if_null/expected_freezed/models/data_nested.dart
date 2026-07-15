@@ -15,6 +15,15 @@ abstract class DataNested with _$DataNested {
     @JsonKey(includeIfNull: false) List<DataNestedData>? data,
   }) = _DataNested;
 
+  Map<String, dynamic> toJson() => _$DataNestedToJson(this as _DataNested);
   factory DataNested.fromJson(Map<String, Object?> json) =>
       _$DataNestedFromJson(json);
+}
+
+extension DataNestedMergeX on DataNested {
+  /// Returns a new [DataNested] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  DataNested merge(DataNested other) {
+    return copyWith(data: other.data);
+  }
 }

@@ -14,6 +14,16 @@ abstract class AssistantMessageTokensCache with _$AssistantMessageTokensCache {
     required num write,
   }) = _AssistantMessageTokensCache;
 
+  Map<String, dynamic> toJson() =>
+      _$AssistantMessageTokensCacheToJson(this as _AssistantMessageTokensCache);
   factory AssistantMessageTokensCache.fromJson(Map<String, Object?> json) =>
       _$AssistantMessageTokensCacheFromJson(json);
+}
+
+extension AssistantMessageTokensCacheMergeX on AssistantMessageTokensCache {
+  /// Returns a new [AssistantMessageTokensCache] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  AssistantMessageTokensCache merge(AssistantMessageTokensCache other) {
+    return copyWith(read: other.read, write: other.write);
+  }
 }

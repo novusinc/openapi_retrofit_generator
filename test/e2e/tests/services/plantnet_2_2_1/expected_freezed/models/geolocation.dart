@@ -16,6 +16,20 @@ abstract class Geolocation with _$Geolocation {
     num? accuracy,
   }) = _Geolocation;
 
+  Map<String, dynamic> toJson() => _$GeolocationToJson(this as _Geolocation);
   factory Geolocation.fromJson(Map<String, Object?> json) =>
       _$GeolocationFromJson(json);
+}
+
+extension GeolocationMergeX on Geolocation {
+  /// Returns a new [Geolocation] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Geolocation merge(Geolocation other) {
+    return copyWith(
+      lat: other.lat,
+      lon: other.lon,
+      place: other.place,
+      accuracy: other.accuracy,
+    );
+  }
 }

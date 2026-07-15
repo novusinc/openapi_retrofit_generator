@@ -18,6 +18,8 @@ abstract class CreatePostRequest with _$CreatePostRequest {
     dynamic metadata,
   }) = _CreatePostRequest;
 
+  Map<String, dynamic> toJson() =>
+      _$CreatePostRequestToJson(this as _CreatePostRequest);
   factory CreatePostRequest.fromJson(Map<String, Object?> json) =>
       _$CreatePostRequestFromJson(json);
   static const int titleMinLength = 1;
@@ -65,5 +67,20 @@ extension CreatePostRequestValidationX on CreatePostRequest {
       return false;
     }
     return true;
+  }
+}
+
+extension CreatePostRequestMergeX on CreatePostRequest {
+  /// Returns a new [CreatePostRequest] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  CreatePostRequest merge(CreatePostRequest other) {
+    return copyWith(
+      title: other.title,
+      content: other.content,
+      authorId: other.authorId,
+      tags: other.tags,
+      publishAt: other.publishAt,
+      metadata: other.metadata,
+    );
   }
 }

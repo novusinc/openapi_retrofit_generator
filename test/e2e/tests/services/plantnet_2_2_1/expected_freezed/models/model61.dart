@@ -26,6 +26,25 @@ abstract class Model61 with _$Model61 {
     Model60? family,
   }) = _Model61;
 
+  Map<String, dynamic> toJson() => _$Model61ToJson(this as _Model61);
   factory Model61.fromJson(Map<String, Object?> json) =>
       _$Model61FromJson(json);
+}
+
+extension Model61MergeX on Model61 {
+  /// Returns a new [Model61] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Model61 merge(Model61 other) {
+    return copyWith(
+      nbSubQueries: other.nbSubQueries,
+      nbMatchingSubQueries: other.nbMatchingSubQueries,
+      uncovered: other.uncovered,
+      tileSize: other.tileSize,
+      tileStride: other.tileStride,
+      image: other.image,
+      species: other.species,
+      genus: other.genus,
+      family: other.family,
+    );
+  }
 }

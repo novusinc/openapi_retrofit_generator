@@ -19,5 +19,20 @@ abstract class Error with _$Error {
     String? requestId,
   }) = _Error;
 
+  Map<String, dynamic> toJson() => _$ErrorToJson(this as _Error);
   factory Error.fromJson(Map<String, Object?> json) => _$ErrorFromJson(json);
+}
+
+extension ErrorMergeX on Error {
+  /// Returns a new [Error] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Error merge(Error other) {
+    return copyWith(
+      code: other.code,
+      message: other.message,
+      details: other.details,
+      timestamp: other.timestamp,
+      requestId: other.requestId,
+    );
+  }
 }

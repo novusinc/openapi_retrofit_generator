@@ -81,14 +81,15 @@ void main() {
       final family = resolution.families.single;
       expect(family.primary.name, 'ChannelMember');
       expect(family.fileBaseName, 'channel_member');
-      expect(
-        family.leaves.map((l) => l.name),
-        ['AiChannelMember', 'HumanChannelMember'],
-      );
-      expect(
-        resolution.familyMemberNames,
-        {'ChannelMember', 'HumanChannelMember', 'AiChannelMember'},
-      );
+      expect(family.leaves.map((l) => l.name), [
+        'AiChannelMember',
+        'HumanChannelMember',
+      ]);
+      expect(resolution.familyMemberNames, {
+        'ChannelMember',
+        'HumanChannelMember',
+        'AiChannelMember',
+      });
       expect(resolution.classFileOverrides, {
         'human_channel_member': 'channel_member',
         'ai_channel_member': 'channel_member',
@@ -123,10 +124,10 @@ void main() {
       ]);
 
       expect(resolution.families, hasLength(2));
-      expect(
-        resolution.families.map((f) => f.fileBaseName),
-        ['channel_member', 'file'],
-      );
+      expect(resolution.families.map((f) => f.fileBaseName), [
+        'channel_member',
+        'file',
+      ]);
     });
 
     test('a union with an unresolved mapping ref is ineligible', () {
@@ -186,7 +187,9 @@ void main() {
         imports: const {},
         parameters: const {},
         undiscriminatedUnionVariants: {
-          'a': {const UniversalType(type: 'String', name: 'x', isRequired: true)},
+          'a': {
+            const UniversalType(type: 'String', name: 'x', isRequired: true),
+          },
         },
       );
       final resolution = resolveUnionFamilies([undiscriminated]);

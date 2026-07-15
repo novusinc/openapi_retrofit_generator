@@ -18,5 +18,18 @@ abstract class Item with _$Item {
     required Priority priority,
   }) = _Item;
 
+  Map<String, dynamic> toJson() => _$ItemToJson(this as _Item);
   factory Item.fromJson(Map<String, Object?> json) => _$ItemFromJson(json);
+}
+
+extension ItemMergeX on Item {
+  /// Returns a new [Item] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Item merge(Item other) {
+    return copyWith(
+      id: other.id,
+      status: other.status,
+      priority: other.priority,
+    );
+  }
 }

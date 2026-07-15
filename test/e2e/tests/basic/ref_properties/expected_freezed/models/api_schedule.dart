@@ -21,6 +21,23 @@ abstract class ApiSchedule with _$ApiSchedule {
     @JsonKey(includeIfNull: true, name: 'SAT') required ApiScheduleDetail? sat,
   }) = _ApiSchedule;
 
+  Map<String, dynamic> toJson() => _$ApiScheduleToJson(this as _ApiSchedule);
   factory ApiSchedule.fromJson(Map<String, Object?> json) =>
       _$ApiScheduleFromJson(json);
+}
+
+extension ApiScheduleMergeX on ApiSchedule {
+  /// Returns a new [ApiSchedule] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ApiSchedule merge(ApiSchedule other) {
+    return copyWith(
+      sun: other.sun,
+      mon: other.mon,
+      tue: other.tue,
+      wed: other.wed,
+      thu: other.thu,
+      fri: other.fri,
+      sat: other.sat,
+    );
+  }
 }

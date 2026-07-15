@@ -19,6 +19,20 @@ abstract class CommentSearchResult with _$CommentSearchResult {
     double? score,
   }) = _CommentSearchResult;
 
+  Map<String, dynamic> toJson() =>
+      _$CommentSearchResultToJson(this as _CommentSearchResult);
   factory CommentSearchResult.fromJson(Map<String, Object?> json) =>
       _$CommentSearchResultFromJson(json);
+}
+
+extension CommentSearchResultMergeX on CommentSearchResult {
+  /// Returns a new [CommentSearchResult] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  CommentSearchResult merge(CommentSearchResult other) {
+    return copyWith(
+      type: other.type,
+      comment: other.comment,
+      score: other.score,
+    );
+  }
 }

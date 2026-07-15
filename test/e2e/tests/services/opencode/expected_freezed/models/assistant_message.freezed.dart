@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AssistantMessage {
 
- String get id;@JsonKey(name: 'sessionID') String get sessionId; String get role; AssistantMessageTime get time; List<String> get system;@JsonKey(name: 'modelID') String get modelId;@JsonKey(name: 'providerID') String get providerId; String get mode; AssistantMessagePath get path; num get cost; AssistantMessageTokens get tokens; AssistantMessageErrorError? get error; bool? get summary;
+ String get id;@JsonKey(name: 'sessionID') String get sessionId; String get role; AssistantMessageTime get time; List<String> get system;@JsonKey(name: 'modelID') String get modelId;@JsonKey(name: 'providerID') String get providerId; String get mode; AssistantMessagePath get path; num get cost; AssistantMessageTokens get tokens; AssistantMessageError? get error; bool? get summary;
 /// Create a copy of AssistantMessage
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $AssistantMessageCopyWith<$Res>  {
   factory $AssistantMessageCopyWith(AssistantMessage value, $Res Function(AssistantMessage) _then) = _$AssistantMessageCopyWithImpl;
 @useResult
 $Res call({
- String id,@JsonKey(name: 'sessionID') String sessionId, String role, AssistantMessageTime time, List<String> system,@JsonKey(name: 'modelID') String modelId,@JsonKey(name: 'providerID') String providerId, String mode, AssistantMessagePath path, num cost, AssistantMessageTokens tokens, AssistantMessageErrorError? error, bool? summary
+ String id,@JsonKey(name: 'sessionID') String sessionId, String role, AssistantMessageTime time, List<String> system,@JsonKey(name: 'modelID') String modelId,@JsonKey(name: 'providerID') String providerId, String mode, AssistantMessagePath path, num cost, AssistantMessageTokens tokens, AssistantMessageError? error, bool? summary
 });
 
 
@@ -79,7 +79,7 @@ as String,path: null == path ? _self.path : path // ignore: cast_nullable_to_non
 as AssistantMessagePath,cost: null == cost ? _self.cost : cost // ignore: cast_nullable_to_non_nullable
 as num,tokens: null == tokens ? _self.tokens : tokens // ignore: cast_nullable_to_non_nullable
 as AssistantMessageTokens,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
-as AssistantMessageErrorError?,summary: freezed == summary ? _self.summary : summary // ignore: cast_nullable_to_non_nullable
+as AssistantMessageError?,summary: freezed == summary ? _self.summary : summary // ignore: cast_nullable_to_non_nullable
 as bool?,
   ));
 }
@@ -192,7 +192,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'sessionID')  String sessionId,  String role,  AssistantMessageTime time,  List<String> system, @JsonKey(name: 'modelID')  String modelId, @JsonKey(name: 'providerID')  String providerId,  String mode,  AssistantMessagePath path,  num cost,  AssistantMessageTokens tokens,  AssistantMessageErrorError? error,  bool? summary)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'sessionID')  String sessionId,  String role,  AssistantMessageTime time,  List<String> system, @JsonKey(name: 'modelID')  String modelId, @JsonKey(name: 'providerID')  String providerId,  String mode,  AssistantMessagePath path,  num cost,  AssistantMessageTokens tokens,  AssistantMessageError? error,  bool? summary)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AssistantMessage() when $default != null:
 return $default(_that.id,_that.sessionId,_that.role,_that.time,_that.system,_that.modelId,_that.providerId,_that.mode,_that.path,_that.cost,_that.tokens,_that.error,_that.summary);case _:
@@ -213,7 +213,7 @@ return $default(_that.id,_that.sessionId,_that.role,_that.time,_that.system,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'sessionID')  String sessionId,  String role,  AssistantMessageTime time,  List<String> system, @JsonKey(name: 'modelID')  String modelId, @JsonKey(name: 'providerID')  String providerId,  String mode,  AssistantMessagePath path,  num cost,  AssistantMessageTokens tokens,  AssistantMessageErrorError? error,  bool? summary)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'sessionID')  String sessionId,  String role,  AssistantMessageTime time,  List<String> system, @JsonKey(name: 'modelID')  String modelId, @JsonKey(name: 'providerID')  String providerId,  String mode,  AssistantMessagePath path,  num cost,  AssistantMessageTokens tokens,  AssistantMessageError? error,  bool? summary)  $default,) {final _that = this;
 switch (_that) {
 case _AssistantMessage():
 return $default(_that.id,_that.sessionId,_that.role,_that.time,_that.system,_that.modelId,_that.providerId,_that.mode,_that.path,_that.cost,_that.tokens,_that.error,_that.summary);case _:
@@ -233,7 +233,7 @@ return $default(_that.id,_that.sessionId,_that.role,_that.time,_that.system,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'sessionID')  String sessionId,  String role,  AssistantMessageTime time,  List<String> system, @JsonKey(name: 'modelID')  String modelId, @JsonKey(name: 'providerID')  String providerId,  String mode,  AssistantMessagePath path,  num cost,  AssistantMessageTokens tokens,  AssistantMessageErrorError? error,  bool? summary)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'sessionID')  String sessionId,  String role,  AssistantMessageTime time,  List<String> system, @JsonKey(name: 'modelID')  String modelId, @JsonKey(name: 'providerID')  String providerId,  String mode,  AssistantMessagePath path,  num cost,  AssistantMessageTokens tokens,  AssistantMessageError? error,  bool? summary)?  $default,) {final _that = this;
 switch (_that) {
 case _AssistantMessage() when $default != null:
 return $default(_that.id,_that.sessionId,_that.role,_that.time,_that.system,_that.modelId,_that.providerId,_that.mode,_that.path,_that.cost,_that.tokens,_that.error,_that.summary);case _:
@@ -268,7 +268,7 @@ class _AssistantMessage implements AssistantMessage {
 @override final  AssistantMessagePath path;
 @override final  num cost;
 @override final  AssistantMessageTokens tokens;
-@override final  AssistantMessageErrorError? error;
+@override final  AssistantMessageError? error;
 @override final  bool? summary;
 
 /// Create a copy of AssistantMessage
@@ -304,7 +304,7 @@ abstract mixin class _$AssistantMessageCopyWith<$Res> implements $AssistantMessa
   factory _$AssistantMessageCopyWith(_AssistantMessage value, $Res Function(_AssistantMessage) _then) = __$AssistantMessageCopyWithImpl;
 @override @useResult
 $Res call({
- String id,@JsonKey(name: 'sessionID') String sessionId, String role, AssistantMessageTime time, List<String> system,@JsonKey(name: 'modelID') String modelId,@JsonKey(name: 'providerID') String providerId, String mode, AssistantMessagePath path, num cost, AssistantMessageTokens tokens, AssistantMessageErrorError? error, bool? summary
+ String id,@JsonKey(name: 'sessionID') String sessionId, String role, AssistantMessageTime time, List<String> system,@JsonKey(name: 'modelID') String modelId,@JsonKey(name: 'providerID') String providerId, String mode, AssistantMessagePath path, num cost, AssistantMessageTokens tokens, AssistantMessageError? error, bool? summary
 });
 
 
@@ -335,7 +335,7 @@ as String,path: null == path ? _self.path : path // ignore: cast_nullable_to_non
 as AssistantMessagePath,cost: null == cost ? _self.cost : cost // ignore: cast_nullable_to_non_nullable
 as num,tokens: null == tokens ? _self.tokens : tokens // ignore: cast_nullable_to_non_nullable
 as AssistantMessageTokens,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
-as AssistantMessageErrorError?,summary: freezed == summary ? _self.summary : summary // ignore: cast_nullable_to_non_nullable
+as AssistantMessageError?,summary: freezed == summary ? _self.summary : summary // ignore: cast_nullable_to_non_nullable
 as bool?,
   ));
 }

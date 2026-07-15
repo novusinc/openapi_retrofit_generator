@@ -25,6 +25,25 @@ abstract class Session with _$Session {
     SessionRevert? revert,
   }) = _Session;
 
+  Map<String, dynamic> toJson() => _$SessionToJson(this as _Session);
   factory Session.fromJson(Map<String, Object?> json) =>
       _$SessionFromJson(json);
+}
+
+extension SessionMergeX on Session {
+  /// Returns a new [Session] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Session merge(Session other) {
+    return copyWith(
+      id: other.id,
+      projectId: other.projectId,
+      directory: other.directory,
+      parentId: other.parentId,
+      share: other.share,
+      title: other.title,
+      version: other.version,
+      time: other.time,
+      revert: other.revert,
+    );
+  }
 }

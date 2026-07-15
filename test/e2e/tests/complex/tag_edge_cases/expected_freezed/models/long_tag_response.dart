@@ -14,6 +14,16 @@ abstract class LongTagResponse with _$LongTagResponse {
     @JsonKey(includeIfNull: false) DateTime? timestamp,
   }) = _LongTagResponse;
 
+  Map<String, dynamic> toJson() =>
+      _$LongTagResponseToJson(this as _LongTagResponse);
   factory LongTagResponse.fromJson(Map<String, Object?> json) =>
       _$LongTagResponseFromJson(json);
+}
+
+extension LongTagResponseMergeX on LongTagResponse {
+  /// Returns a new [LongTagResponse] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  LongTagResponse merge(LongTagResponse other) {
+    return copyWith(data: other.data, timestamp: other.timestamp);
+  }
 }

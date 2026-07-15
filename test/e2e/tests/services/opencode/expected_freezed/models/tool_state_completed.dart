@@ -22,6 +22,24 @@ abstract class ToolStateCompleted with _$ToolStateCompleted {
     List<FilePart>? attachments,
   }) = _ToolStateCompleted;
 
+  Map<String, dynamic> toJson() =>
+      _$ToolStateCompletedToJson(this as _ToolStateCompleted);
   factory ToolStateCompleted.fromJson(Map<String, Object?> json) =>
       _$ToolStateCompletedFromJson(json);
+}
+
+extension ToolStateCompletedMergeX on ToolStateCompleted {
+  /// Returns a new [ToolStateCompleted] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ToolStateCompleted merge(ToolStateCompleted other) {
+    return copyWith(
+      status: other.status,
+      input: other.input,
+      output: other.output,
+      title: other.title,
+      metadata: other.metadata,
+      time: other.time,
+      attachments: other.attachments,
+    );
+  }
 }

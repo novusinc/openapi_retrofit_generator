@@ -23,6 +23,23 @@ abstract class Model12 with _$Model12 {
     String? predictedName,
   }) = _Model12;
 
+  Map<String, dynamic> toJson() => _$Model12ToJson(this as _Model12);
   factory Model12.fromJson(Map<String, Object?> json) =>
       _$Model12FromJson(json);
+}
+
+extension Model12MergeX on Model12 {
+  /// Returns a new [Model12] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Model12 merge(Model12 other) {
+    return copyWith(
+      name: other.name,
+      author: other.author,
+      family: other.family,
+      commonNames: other.commonNames,
+      images: other.images,
+      iucn: other.iucn,
+      predictedName: other.predictedName,
+    );
+  }
 }

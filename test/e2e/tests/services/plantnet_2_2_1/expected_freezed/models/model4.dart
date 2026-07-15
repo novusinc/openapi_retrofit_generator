@@ -23,5 +23,20 @@ abstract class Model4 with _$Model4 {
     Security? security,
   }) = _Model4;
 
+  Map<String, dynamic> toJson() => _$Model4ToJson(this as _Model4);
   factory Model4.fromJson(Map<String, Object?> json) => _$Model4FromJson(json);
+}
+
+extension Model4MergeX on Model4 {
+  /// Returns a new [Model4] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Model4 merge(Model4 other) {
+    return copyWith(
+      account: other.account,
+      contract: other.contract,
+      history: other.history,
+      billing: other.billing,
+      security: other.security,
+    );
+  }
 }

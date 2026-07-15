@@ -18,6 +18,20 @@ abstract class Project with _$Project {
     String? vcs,
   }) = _Project;
 
+  Map<String, dynamic> toJson() => _$ProjectToJson(this as _Project);
   factory Project.fromJson(Map<String, Object?> json) =>
       _$ProjectFromJson(json);
+}
+
+extension ProjectMergeX on Project {
+  /// Returns a new [Project] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Project merge(Project other) {
+    return copyWith(
+      id: other.id,
+      worktree: other.worktree,
+      vcs: other.vcs,
+      time: other.time,
+    );
+  }
 }

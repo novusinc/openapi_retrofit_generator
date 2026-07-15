@@ -14,6 +14,15 @@ abstract class ConfigTui with _$ConfigTui {
     @JsonKey(name: 'scroll_speed') @Default(2) num scrollSpeed,
   }) = _ConfigTui;
 
+  Map<String, dynamic> toJson() => _$ConfigTuiToJson(this as _ConfigTui);
   factory ConfigTui.fromJson(Map<String, Object?> json) =>
       _$ConfigTuiFromJson(json);
+}
+
+extension ConfigTuiMergeX on ConfigTui {
+  /// Returns a new [ConfigTui] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ConfigTui merge(ConfigTui other) {
+    return copyWith(scrollSpeed: other.scrollSpeed);
+  }
 }

@@ -30,6 +30,21 @@ abstract class CustomAi with _$CustomAi {
     @JsonKey(includeIfNull: false) Ai? baseAi,
   }) = _CustomAi;
 
+  Map<String, dynamic> toJson() => _$CustomAiToJson(this as _CustomAi);
   factory CustomAi.fromJson(Map<String, Object?> json) =>
       _$CustomAiFromJson(json);
+}
+
+extension CustomAiMergeX on CustomAi {
+  /// Returns a new [CustomAi] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  CustomAi merge(CustomAi other) {
+    return copyWith(
+      type: other.type,
+      id: other.id,
+      name: other.name,
+      baseAiId: other.baseAiId,
+      baseAi: other.baseAi,
+    );
+  }
 }

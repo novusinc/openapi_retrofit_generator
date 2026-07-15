@@ -14,6 +14,15 @@ abstract class UserProfile with _$UserProfile {
     @JsonKey(includeIfNull: false) String? lastName,
   }) = _UserProfile;
 
+  Map<String, dynamic> toJson() => _$UserProfileToJson(this as _UserProfile);
   factory UserProfile.fromJson(Map<String, Object?> json) =>
       _$UserProfileFromJson(json);
+}
+
+extension UserProfileMergeX on UserProfile {
+  /// Returns a new [UserProfile] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  UserProfile merge(UserProfile other) {
+    return copyWith(firstName: other.firstName, lastName: other.lastName);
+  }
 }

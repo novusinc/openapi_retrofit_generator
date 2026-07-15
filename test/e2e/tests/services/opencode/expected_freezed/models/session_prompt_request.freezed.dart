@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SessionPromptRequest {
 
- List<SessionPromptRequestPartsParts> get parts;@JsonKey(name: 'messageID') String? get messageId; SessionPromptRequestModel? get model; String? get agent; String? get system; Map<String, bool>? get tools; SessionPromptRequestAcpConnection? get acpConnection;
+ List<SessionPromptRequestParts> get parts;@JsonKey(name: 'messageID') String? get messageId; SessionPromptRequestModel? get model; String? get agent; String? get system; Map<String, bool>? get tools; SessionPromptRequestAcpConnection? get acpConnection;
 /// Create a copy of SessionPromptRequest
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $SessionPromptRequestCopyWith<$Res>  {
   factory $SessionPromptRequestCopyWith(SessionPromptRequest value, $Res Function(SessionPromptRequest) _then) = _$SessionPromptRequestCopyWithImpl;
 @useResult
 $Res call({
- List<SessionPromptRequestPartsParts> parts,@JsonKey(name: 'messageID') String? messageId, SessionPromptRequestModel? model, String? agent, String? system, Map<String, bool>? tools, SessionPromptRequestAcpConnection? acpConnection
+ List<SessionPromptRequestParts> parts,@JsonKey(name: 'messageID') String? messageId, SessionPromptRequestModel? model, String? agent, String? system, Map<String, bool>? tools, SessionPromptRequestAcpConnection? acpConnection
 });
 
 
@@ -68,7 +68,7 @@ class _$SessionPromptRequestCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? parts = null,Object? messageId = freezed,Object? model = freezed,Object? agent = freezed,Object? system = freezed,Object? tools = freezed,Object? acpConnection = freezed,}) {
   return _then(_self.copyWith(
 parts: null == parts ? _self.parts : parts // ignore: cast_nullable_to_non_nullable
-as List<SessionPromptRequestPartsParts>,messageId: freezed == messageId ? _self.messageId : messageId // ignore: cast_nullable_to_non_nullable
+as List<SessionPromptRequestParts>,messageId: freezed == messageId ? _self.messageId : messageId // ignore: cast_nullable_to_non_nullable
 as String?,model: freezed == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
 as SessionPromptRequestModel?,agent: freezed == agent ? _self.agent : agent // ignore: cast_nullable_to_non_nullable
 as String?,system: freezed == system ? _self.system : system // ignore: cast_nullable_to_non_nullable
@@ -183,7 +183,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<SessionPromptRequestPartsParts> parts, @JsonKey(name: 'messageID')  String? messageId,  SessionPromptRequestModel? model,  String? agent,  String? system,  Map<String, bool>? tools,  SessionPromptRequestAcpConnection? acpConnection)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<SessionPromptRequestParts> parts, @JsonKey(name: 'messageID')  String? messageId,  SessionPromptRequestModel? model,  String? agent,  String? system,  Map<String, bool>? tools,  SessionPromptRequestAcpConnection? acpConnection)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SessionPromptRequest() when $default != null:
 return $default(_that.parts,_that.messageId,_that.model,_that.agent,_that.system,_that.tools,_that.acpConnection);case _:
@@ -204,7 +204,7 @@ return $default(_that.parts,_that.messageId,_that.model,_that.agent,_that.system
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<SessionPromptRequestPartsParts> parts, @JsonKey(name: 'messageID')  String? messageId,  SessionPromptRequestModel? model,  String? agent,  String? system,  Map<String, bool>? tools,  SessionPromptRequestAcpConnection? acpConnection)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<SessionPromptRequestParts> parts, @JsonKey(name: 'messageID')  String? messageId,  SessionPromptRequestModel? model,  String? agent,  String? system,  Map<String, bool>? tools,  SessionPromptRequestAcpConnection? acpConnection)  $default,) {final _that = this;
 switch (_that) {
 case _SessionPromptRequest():
 return $default(_that.parts,_that.messageId,_that.model,_that.agent,_that.system,_that.tools,_that.acpConnection);case _:
@@ -224,7 +224,7 @@ return $default(_that.parts,_that.messageId,_that.model,_that.agent,_that.system
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<SessionPromptRequestPartsParts> parts, @JsonKey(name: 'messageID')  String? messageId,  SessionPromptRequestModel? model,  String? agent,  String? system,  Map<String, bool>? tools,  SessionPromptRequestAcpConnection? acpConnection)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<SessionPromptRequestParts> parts, @JsonKey(name: 'messageID')  String? messageId,  SessionPromptRequestModel? model,  String? agent,  String? system,  Map<String, bool>? tools,  SessionPromptRequestAcpConnection? acpConnection)?  $default,) {final _that = this;
 switch (_that) {
 case _SessionPromptRequest() when $default != null:
 return $default(_that.parts,_that.messageId,_that.model,_that.agent,_that.system,_that.tools,_that.acpConnection);case _:
@@ -239,11 +239,11 @@ return $default(_that.parts,_that.messageId,_that.model,_that.agent,_that.system
 @JsonSerializable()
 
 class _SessionPromptRequest implements SessionPromptRequest {
-  const _SessionPromptRequest({required final  List<SessionPromptRequestPartsParts> parts, @JsonKey(name: 'messageID') this.messageId, this.model, this.agent, this.system, final  Map<String, bool>? tools, this.acpConnection}): _parts = parts,_tools = tools;
+  const _SessionPromptRequest({required final  List<SessionPromptRequestParts> parts, @JsonKey(name: 'messageID') this.messageId, this.model, this.agent, this.system, final  Map<String, bool>? tools, this.acpConnection}): _parts = parts,_tools = tools;
   factory _SessionPromptRequest.fromJson(Map<String, dynamic> json) => _$SessionPromptRequestFromJson(json);
 
- final  List<SessionPromptRequestPartsParts> _parts;
-@override List<SessionPromptRequestPartsParts> get parts {
+ final  List<SessionPromptRequestParts> _parts;
+@override List<SessionPromptRequestParts> get parts {
   if (_parts is EqualUnmodifiableListView) return _parts;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_parts);
@@ -297,7 +297,7 @@ abstract mixin class _$SessionPromptRequestCopyWith<$Res> implements $SessionPro
   factory _$SessionPromptRequestCopyWith(_SessionPromptRequest value, $Res Function(_SessionPromptRequest) _then) = __$SessionPromptRequestCopyWithImpl;
 @override @useResult
 $Res call({
- List<SessionPromptRequestPartsParts> parts,@JsonKey(name: 'messageID') String? messageId, SessionPromptRequestModel? model, String? agent, String? system, Map<String, bool>? tools, SessionPromptRequestAcpConnection? acpConnection
+ List<SessionPromptRequestParts> parts,@JsonKey(name: 'messageID') String? messageId, SessionPromptRequestModel? model, String? agent, String? system, Map<String, bool>? tools, SessionPromptRequestAcpConnection? acpConnection
 });
 
 
@@ -317,7 +317,7 @@ class __$SessionPromptRequestCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? parts = null,Object? messageId = freezed,Object? model = freezed,Object? agent = freezed,Object? system = freezed,Object? tools = freezed,Object? acpConnection = freezed,}) {
   return _then(_SessionPromptRequest(
 parts: null == parts ? _self._parts : parts // ignore: cast_nullable_to_non_nullable
-as List<SessionPromptRequestPartsParts>,messageId: freezed == messageId ? _self.messageId : messageId // ignore: cast_nullable_to_non_nullable
+as List<SessionPromptRequestParts>,messageId: freezed == messageId ? _self.messageId : messageId // ignore: cast_nullable_to_non_nullable
 as String?,model: freezed == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
 as SessionPromptRequestModel?,agent: freezed == agent ? _self.agent : agent // ignore: cast_nullable_to_non_nullable
 as String?,system: freezed == system ? _self.system : system // ignore: cast_nullable_to_non_nullable

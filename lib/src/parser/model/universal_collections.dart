@@ -58,7 +58,8 @@ enum UniversalCollections {
     UniversalCollections.map ||
     UniversalCollections.mapNullableValue ||
     UniversalCollections.nullableMap ||
-    UniversalCollections.nullableMapNullableValue => 'Map<${keyType ?? 'String'}, ',
+    UniversalCollections.nullableMapNullableValue =>
+      'Map<${keyType ?? 'String'}, ',
   };
 
   /// Returns question mark for the collection itself if it's nullable, otherwise empty string.

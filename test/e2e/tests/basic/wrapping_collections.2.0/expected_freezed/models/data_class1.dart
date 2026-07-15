@@ -15,6 +15,19 @@ abstract class DataClass1 with _$DataClass1 {
     required Map<String, List<String>> errors,
   }) = _DataClass1;
 
+  Map<String, dynamic> toJson() => _$DataClass1ToJson(this as _DataClass1);
   factory DataClass1.fromJson(Map<String, Object?> json) =>
       _$DataClass1FromJson(json);
+}
+
+extension DataClass1MergeX on DataClass1 {
+  /// Returns a new [DataClass1] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  DataClass1 merge(DataClass1 other) {
+    return copyWith(
+      type: other.type,
+      instance: other.instance,
+      errors: other.errors,
+    );
+  }
 }

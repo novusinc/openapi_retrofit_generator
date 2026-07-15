@@ -12,6 +12,16 @@ abstract class FindTextResponseLines with _$FindTextResponseLines {
   const factory FindTextResponseLines({required String text}) =
       _FindTextResponseLines;
 
+  Map<String, dynamic> toJson() =>
+      _$FindTextResponseLinesToJson(this as _FindTextResponseLines);
   factory FindTextResponseLines.fromJson(Map<String, Object?> json) =>
       _$FindTextResponseLinesFromJson(json);
+}
+
+extension FindTextResponseLinesMergeX on FindTextResponseLines {
+  /// Returns a new [FindTextResponseLines] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  FindTextResponseLines merge(FindTextResponseLines other) {
+    return copyWith(text: other.text);
+  }
 }

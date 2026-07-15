@@ -21,5 +21,18 @@ abstract class Pet with _$Pet {
     @JsonKey(includeIfNull: false) ApiSchedule? schedule,
   }) = _Pet;
 
+  Map<String, dynamic> toJson() => _$PetToJson(this as _Pet);
   factory Pet.fromJson(Map<String, Object?> json) => _$PetFromJson(json);
+}
+
+extension PetMergeX on Pet {
+  /// Returns a new [Pet] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Pet merge(Pet other) {
+    return copyWith(
+      schedule: other.schedule,
+      nullableDateTime: other.nullableDateTime,
+      nullableDateTimeRef: other.nullableDateTimeRef,
+    );
+  }
 }

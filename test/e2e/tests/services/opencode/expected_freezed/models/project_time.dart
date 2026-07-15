@@ -12,6 +12,15 @@ abstract class ProjectTime with _$ProjectTime {
   const factory ProjectTime({required num created, num? initialized}) =
       _ProjectTime;
 
+  Map<String, dynamic> toJson() => _$ProjectTimeToJson(this as _ProjectTime);
   factory ProjectTime.fromJson(Map<String, Object?> json) =>
       _$ProjectTimeFromJson(json);
+}
+
+extension ProjectTimeMergeX on ProjectTime {
+  /// Returns a new [ProjectTime] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ProjectTime merge(ProjectTime other) {
+    return copyWith(created: other.created, initialized: other.initialized);
+  }
 }

@@ -19,6 +19,16 @@ abstract class UserSearchResult with _$UserSearchResult {
     @JsonKey(includeIfNull: false) double? score,
   }) = _UserSearchResult;
 
+  Map<String, dynamic> toJson() =>
+      _$UserSearchResultToJson(this as _UserSearchResult);
   factory UserSearchResult.fromJson(Map<String, Object?> json) =>
       _$UserSearchResultFromJson(json);
+}
+
+extension UserSearchResultMergeX on UserSearchResult {
+  /// Returns a new [UserSearchResult] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  UserSearchResult merge(UserSearchResult other) {
+    return copyWith(type: other.type, user: other.user, score: other.score);
+  }
 }

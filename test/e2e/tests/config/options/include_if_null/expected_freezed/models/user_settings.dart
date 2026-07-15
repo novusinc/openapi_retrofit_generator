@@ -20,6 +20,20 @@ abstract class UserSettings with _$UserSettings {
     @Default('en') String language,
   }) = _UserSettings;
 
+  Map<String, dynamic> toJson() => _$UserSettingsToJson(this as _UserSettings);
   factory UserSettings.fromJson(Map<String, Object?> json) =>
       _$UserSettingsFromJson(json);
+}
+
+extension UserSettingsMergeX on UserSettings {
+  /// Returns a new [UserSettings] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  UserSettings merge(UserSettings other) {
+    return copyWith(
+      theme: other.theme,
+      notifications: other.notifications,
+      privacy: other.privacy,
+      language: other.language,
+    );
+  }
 }

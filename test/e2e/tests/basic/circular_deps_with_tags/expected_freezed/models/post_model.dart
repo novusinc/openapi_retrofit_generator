@@ -19,6 +19,20 @@ abstract class PostModel with _$PostModel {
     @JsonKey(includeIfNull: false) List<Comment>? comments,
   }) = _PostModel;
 
+  Map<String, dynamic> toJson() => _$PostModelToJson(this as _PostModel);
   factory PostModel.fromJson(Map<String, Object?> json) =>
       _$PostModelFromJson(json);
+}
+
+extension PostModelMergeX on PostModel {
+  /// Returns a new [PostModel] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  PostModel merge(PostModel other) {
+    return copyWith(
+      id: other.id,
+      title: other.title,
+      author: other.author,
+      comments: other.comments,
+    );
+  }
 }

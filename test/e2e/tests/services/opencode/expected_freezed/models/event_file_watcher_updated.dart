@@ -16,6 +16,16 @@ abstract class EventFileWatcherUpdated with _$EventFileWatcherUpdated {
     required EventFileWatcherUpdatedProperties properties,
   }) = _EventFileWatcherUpdated;
 
+  Map<String, dynamic> toJson() =>
+      _$EventFileWatcherUpdatedToJson(this as _EventFileWatcherUpdated);
   factory EventFileWatcherUpdated.fromJson(Map<String, Object?> json) =>
       _$EventFileWatcherUpdatedFromJson(json);
+}
+
+extension EventFileWatcherUpdatedMergeX on EventFileWatcherUpdated {
+  /// Returns a new [EventFileWatcherUpdated] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventFileWatcherUpdated merge(EventFileWatcherUpdated other) {
+    return copyWith(type: other.type, properties: other.properties);
+  }
 }

@@ -14,6 +14,16 @@ abstract class EventServerConnected with _$EventServerConnected {
     required dynamic properties,
   }) = _EventServerConnected;
 
+  Map<String, dynamic> toJson() =>
+      _$EventServerConnectedToJson(this as _EventServerConnected);
   factory EventServerConnected.fromJson(Map<String, Object?> json) =>
       _$EventServerConnectedFromJson(json);
+}
+
+extension EventServerConnectedMergeX on EventServerConnected {
+  /// Returns a new [EventServerConnected] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventServerConnected merge(EventServerConnected other) {
+    return copyWith(type: other.type, properties: other.properties);
+  }
 }

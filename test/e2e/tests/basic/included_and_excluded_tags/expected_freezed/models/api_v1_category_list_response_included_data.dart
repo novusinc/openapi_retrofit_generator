@@ -19,7 +19,26 @@ abstract class ApiV1CategoryListResponseIncludedData
     @JsonKey(includeIfNull: false) int? priority,
   }) = _ApiV1CategoryListResponseIncludedData;
 
+  Map<String, dynamic> toJson() =>
+      _$ApiV1CategoryListResponseIncludedDataToJson(
+        this as _ApiV1CategoryListResponseIncludedData,
+      );
   factory ApiV1CategoryListResponseIncludedData.fromJson(
     Map<String, Object?> json,
   ) => _$ApiV1CategoryListResponseIncludedDataFromJson(json);
+}
+
+extension ApiV1CategoryListResponseIncludedDataMergeX
+    on ApiV1CategoryListResponseIncludedData {
+  /// Returns a new [ApiV1CategoryListResponseIncludedData] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ApiV1CategoryListResponseIncludedData merge(
+    ApiV1CategoryListResponseIncludedData other,
+  ) {
+    return copyWith(
+      dataField: other.dataField,
+      level: other.level,
+      priority: other.priority,
+    );
+  }
 }

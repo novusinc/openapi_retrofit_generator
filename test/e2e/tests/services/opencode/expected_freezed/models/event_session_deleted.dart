@@ -16,6 +16,16 @@ abstract class EventSessionDeleted with _$EventSessionDeleted {
     required EventSessionDeletedProperties properties,
   }) = _EventSessionDeleted;
 
+  Map<String, dynamic> toJson() =>
+      _$EventSessionDeletedToJson(this as _EventSessionDeleted);
   factory EventSessionDeleted.fromJson(Map<String, Object?> json) =>
       _$EventSessionDeletedFromJson(json);
+}
+
+extension EventSessionDeletedMergeX on EventSessionDeleted {
+  /// Returns a new [EventSessionDeleted] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventSessionDeleted merge(EventSessionDeleted other) {
+    return copyWith(type: other.type, properties: other.properties);
+  }
 }

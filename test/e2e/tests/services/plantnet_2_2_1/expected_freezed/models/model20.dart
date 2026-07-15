@@ -14,6 +14,18 @@ abstract class Model20 with _$Model20 {
   const factory Model20({String? scientificName, CommonNames? commonNames}) =
       _Model20;
 
+  Map<String, dynamic> toJson() => _$Model20ToJson(this as _Model20);
   factory Model20.fromJson(Map<String, Object?> json) =>
       _$Model20FromJson(json);
+}
+
+extension Model20MergeX on Model20 {
+  /// Returns a new [Model20] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Model20 merge(Model20 other) {
+    return copyWith(
+      scientificName: other.scientificName,
+      commonNames: other.commonNames,
+    );
+  }
 }

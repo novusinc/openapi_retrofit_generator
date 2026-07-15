@@ -20,6 +20,20 @@ abstract class ApiV1CategoryListRequest with _$ApiV1CategoryListRequest {
     @JsonKey(includeIfNull: false) ApiV1CategoryListRequestMetadata? metadata,
   }) = _ApiV1CategoryListRequest;
 
+  Map<String, dynamic> toJson() =>
+      _$ApiV1CategoryListRequestToJson(this as _ApiV1CategoryListRequest);
   factory ApiV1CategoryListRequest.fromJson(Map<String, Object?> json) =>
       _$ApiV1CategoryListRequestFromJson(json);
+}
+
+extension ApiV1CategoryListRequestMergeX on ApiV1CategoryListRequest {
+  /// Returns a new [ApiV1CategoryListRequest] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ApiV1CategoryListRequest merge(ApiV1CategoryListRequest other) {
+    return copyWith(
+      includedField: other.includedField,
+      nestedIncluded: other.nestedIncluded,
+      metadata: other.metadata,
+    );
+  }
 }

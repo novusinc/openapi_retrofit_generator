@@ -44,6 +44,7 @@ sealed class PaymentRequest with _$PaymentRequest {
     String? transactionHash,
   }) = PaymentRequestCrypto;
 
+  Map<String, dynamic> toJson() => throw UnimplementedError();
   factory PaymentRequest.fromJson(Map<String, Object?> json) =>
       _$PaymentRequestFromJson(json);
 }

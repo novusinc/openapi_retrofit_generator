@@ -42,6 +42,8 @@ abstract class ClassWithNullableTypes with _$ClassWithNullableTypes {
     @JsonKey(name: 'optional_null_anyOf') dynamic optionalNullAnyOf,
   }) = _ClassWithNullableTypes;
 
+  Map<String, dynamic> toJson() =>
+      _$ClassWithNullableTypesToJson(this as _ClassWithNullableTypes);
   factory ClassWithNullableTypes.fromJson(Map<String, Object?> json) =>
       _$ClassWithNullableTypesFromJson(json);
   static const int validIntMin = 0;
@@ -122,5 +124,41 @@ extension ClassWithNullableTypesValidationX on ClassWithNullableTypes {
       return false;
     }
     return true;
+  }
+}
+
+extension ClassWithNullableTypesMergeX on ClassWithNullableTypes {
+  /// Returns a new [ClassWithNullableTypes] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ClassWithNullableTypes merge(ClassWithNullableTypes other) {
+    return copyWith(
+      validInt: other.validInt,
+      validString: other.validString,
+      validArray: other.validArray,
+      p1: other.p1,
+      p2: other.p2,
+      p2Null: other.p2Null,
+      p2NullItem: other.p2NullItem,
+      p2NullAll: other.p2NullAll,
+      p3: other.p3,
+      p1N: other.p1N,
+      p2N: other.p2N,
+      p3N: other.p3N,
+      p1List: other.p1List,
+      p2List: other.p2List,
+      p3List: other.p3List,
+      nonNullAnyOf: other.nonNullAnyOf,
+      optionalNullAnyOf: other.optionalNullAnyOf,
+      requiredNullAnyOf: other.requiredNullAnyOf,
+      p1AnyOf: other.p1AnyOf,
+      p2AnyOf: other.p2AnyOf,
+      p3AnyOf: other.p3AnyOf,
+      p1OneOf: other.p1OneOf,
+      p2OneOf: other.p2OneOf,
+      p3OneOf: other.p3OneOf,
+      p1AllOf: other.p1AllOf,
+      p2AllOf: other.p2AllOf,
+      p3AllOf: other.p3AllOf,
+    );
   }
 }

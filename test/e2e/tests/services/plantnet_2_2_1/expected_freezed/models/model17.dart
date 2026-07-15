@@ -16,6 +16,20 @@ abstract class Model17 with _$Model17 {
     num? score,
   }) = _Model17;
 
+  Map<String, dynamic> toJson() => _$Model17ToJson(this as _Model17);
   factory Model17.fromJson(Map<String, Object?> json) =>
       _$Model17FromJson(json);
+}
+
+extension Model17MergeX on Model17 {
+  /// Returns a new [Model17] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Model17 merge(Model17 other) {
+    return copyWith(
+      image: other.image,
+      filename: other.filename,
+      organ: other.organ,
+      score: other.score,
+    );
+  }
 }

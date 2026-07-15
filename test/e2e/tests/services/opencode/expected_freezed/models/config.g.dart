@@ -44,13 +44,13 @@ _Config _$ConfigFromJson(Map<String, dynamic> json) => _Config(
     (k, e) => MapEntry(k, Provider.fromJson(e as Map<String, dynamic>)),
   ),
   mcp: (json['mcp'] as Map<String, dynamic>?)?.map(
-    (k, e) => MapEntry(k, McpMcp.fromJson(e as Map<String, dynamic>)),
+    (k, e) => MapEntry(k, Mcp.fromJson(e as Map<String, dynamic>)),
   ),
   formatter: (json['formatter'] as Map<String, dynamic>?)?.map(
     (k, e) => MapEntry(k, Formatter.fromJson(e as Map<String, dynamic>)),
   ),
   lsp: (json['lsp'] as Map<String, dynamic>?)?.map(
-    (k, e) => MapEntry(k, LspLsp.fromJson(e as Map<String, dynamic>)),
+    (k, e) => MapEntry(k, Lsp.fromJson(e as Map<String, dynamic>)),
   ),
   instructions: (json['instructions'] as List<dynamic>?)
       ?.map((e) => e as String)

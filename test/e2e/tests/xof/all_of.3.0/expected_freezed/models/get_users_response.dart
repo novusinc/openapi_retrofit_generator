@@ -18,6 +18,20 @@ abstract class GetUsersResponse with _$GetUsersResponse {
     required List<UserDto> data,
   }) = _GetUsersResponse;
 
+  Map<String, dynamic> toJson() =>
+      _$GetUsersResponseToJson(this as _GetUsersResponse);
   factory GetUsersResponse.fromJson(Map<String, Object?> json) =>
       _$GetUsersResponseFromJson(json);
+}
+
+extension GetUsersResponseMergeX on GetUsersResponse {
+  /// Returns a new [GetUsersResponse] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  GetUsersResponse merge(GetUsersResponse other) {
+    return copyWith(
+      nextCursor: other.nextCursor,
+      previousCursor: other.previousCursor,
+      data: other.data,
+    );
+  }
 }

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Family {
 
- List<FamilyMembersMembers> get members;
+ List<FamilyMembers> get members;
 /// Create a copy of Family
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $FamilyCopyWith<$Res>  {
   factory $FamilyCopyWith(Family value, $Res Function(Family) _then) = _$FamilyCopyWithImpl;
 @useResult
 $Res call({
- List<FamilyMembersMembers> members
+ List<FamilyMembers> members
 });
 
 
@@ -68,7 +68,7 @@ class _$FamilyCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? members = null,}) {
   return _then(_self.copyWith(
 members: null == members ? _self.members : members // ignore: cast_nullable_to_non_nullable
-as List<FamilyMembersMembers>,
+as List<FamilyMembers>,
   ));
 }
 
@@ -153,7 +153,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<FamilyMembersMembers> members)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<FamilyMembers> members)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Family() when $default != null:
 return $default(_that.members);case _:
@@ -174,7 +174,7 @@ return $default(_that.members);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<FamilyMembersMembers> members)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<FamilyMembers> members)  $default,) {final _that = this;
 switch (_that) {
 case _Family():
 return $default(_that.members);case _:
@@ -194,7 +194,7 @@ return $default(_that.members);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<FamilyMembersMembers> members)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<FamilyMembers> members)?  $default,) {final _that = this;
 switch (_that) {
 case _Family() when $default != null:
 return $default(_that.members);case _:
@@ -209,11 +209,11 @@ return $default(_that.members);case _:
 @JsonSerializable()
 
 class _Family implements Family {
-  const _Family({required final  List<FamilyMembersMembers> members}): _members = members;
+  const _Family({required final  List<FamilyMembers> members}): _members = members;
   factory _Family.fromJson(Map<String, dynamic> json) => _$FamilyFromJson(json);
 
- final  List<FamilyMembersMembers> _members;
-@override List<FamilyMembersMembers> get members {
+ final  List<FamilyMembers> _members;
+@override List<FamilyMembers> get members {
   if (_members is EqualUnmodifiableListView) return _members;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_members);
@@ -253,7 +253,7 @@ abstract mixin class _$FamilyCopyWith<$Res> implements $FamilyCopyWith<$Res> {
   factory _$FamilyCopyWith(_Family value, $Res Function(_Family) _then) = __$FamilyCopyWithImpl;
 @override @useResult
 $Res call({
- List<FamilyMembersMembers> members
+ List<FamilyMembers> members
 });
 
 
@@ -273,7 +273,7 @@ class __$FamilyCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? members = null,}) {
   return _then(_Family(
 members: null == members ? _self._members : members // ignore: cast_nullable_to_non_nullable
-as List<FamilyMembersMembers>,
+as List<FamilyMembers>,
   ));
 }
 

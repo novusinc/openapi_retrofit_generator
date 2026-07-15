@@ -189,6 +189,66 @@ abstract class KeybindsConfig with _$KeybindsConfig {
     String agentCycleReverse,
   }) = _KeybindsConfig;
 
+  Map<String, dynamic> toJson() =>
+      _$KeybindsConfigToJson(this as _KeybindsConfig);
   factory KeybindsConfig.fromJson(Map<String, Object?> json) =>
       _$KeybindsConfigFromJson(json);
+}
+
+extension KeybindsConfigMergeX on KeybindsConfig {
+  /// Returns a new [KeybindsConfig] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  KeybindsConfig merge(KeybindsConfig other) {
+    return copyWith(
+      leader: other.leader,
+      appHelp: other.appHelp,
+      appExit: other.appExit,
+      editorOpen: other.editorOpen,
+      themeList: other.themeList,
+      projectInit: other.projectInit,
+      toolDetails: other.toolDetails,
+      thinkingBlocks: other.thinkingBlocks,
+      sessionExport: other.sessionExport,
+      sessionNew: other.sessionNew,
+      sessionList: other.sessionList,
+      sessionTimeline: other.sessionTimeline,
+      sessionShare: other.sessionShare,
+      sessionUnshare: other.sessionUnshare,
+      sessionInterrupt: other.sessionInterrupt,
+      sessionCompact: other.sessionCompact,
+      sessionChildCycle: other.sessionChildCycle,
+      sessionChildCycleReverse: other.sessionChildCycleReverse,
+      messagesPageUp: other.messagesPageUp,
+      messagesPageDown: other.messagesPageDown,
+      messagesHalfPageUp: other.messagesHalfPageUp,
+      messagesHalfPageDown: other.messagesHalfPageDown,
+      messagesFirst: other.messagesFirst,
+      messagesLast: other.messagesLast,
+      messagesCopy: other.messagesCopy,
+      messagesUndo: other.messagesUndo,
+      messagesRedo: other.messagesRedo,
+      modelList: other.modelList,
+      modelCycleRecent: other.modelCycleRecent,
+      modelCycleRecentReverse: other.modelCycleRecentReverse,
+      agentList: other.agentList,
+      agentCycle: other.agentCycle,
+      agentCycleReverse: other.agentCycleReverse,
+      inputClear: other.inputClear,
+      inputPaste: other.inputPaste,
+      inputSubmit: other.inputSubmit,
+      inputNewline: other.inputNewline,
+      switchMode: other.switchMode,
+      switchModeReverse: other.switchModeReverse,
+      switchAgent: other.switchAgent,
+      switchAgentReverse: other.switchAgentReverse,
+      fileList: other.fileList,
+      fileClose: other.fileClose,
+      fileSearch: other.fileSearch,
+      fileDiffToggle: other.fileDiffToggle,
+      messagesPrevious: other.messagesPrevious,
+      messagesNext: other.messagesNext,
+      messagesLayoutToggle: other.messagesLayoutToggle,
+      messagesRevert: other.messagesRevert,
+    );
+  }
 }

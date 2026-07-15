@@ -19,6 +19,21 @@ abstract class FileNode with _$FileNode {
     required bool ignored,
   }) = _FileNode;
 
+  Map<String, dynamic> toJson() => _$FileNodeToJson(this as _FileNode);
   factory FileNode.fromJson(Map<String, Object?> json) =>
       _$FileNodeFromJson(json);
+}
+
+extension FileNodeMergeX on FileNode {
+  /// Returns a new [FileNode] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  FileNode merge(FileNode other) {
+    return copyWith(
+      name: other.name,
+      path: other.path,
+      absolute: other.absolute,
+      type: other.type,
+      ignored: other.ignored,
+    );
+  }
 }

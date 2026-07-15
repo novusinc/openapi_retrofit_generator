@@ -41,5 +41,6 @@ sealed class Entity with _$Entity {
     @JsonKey(includeIfNull: false) double? revenue,
   }) = EntityOrganization;
 
+  Map<String, dynamic> toJson() => throw UnimplementedError();
   factory Entity.fromJson(Map<String, Object?> json) => _$EntityFromJson(json);
 }

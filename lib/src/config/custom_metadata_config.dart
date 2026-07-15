@@ -72,10 +72,7 @@ class CustomMetadataField {
 @immutable
 class CustomMetadataConfig {
   /// Creates a [CustomMetadataConfig].
-  const CustomMetadataConfig({
-    this.enabled = false,
-    this.fields = const [],
-  });
+  const CustomMetadataConfig({this.enabled = false, this.fields = const []});
 
   /// Whether custom metadata generation is enabled
   final bool enabled;
@@ -105,10 +102,7 @@ class CustomMetadataConfig {
       }
     }
 
-    return CustomMetadataConfig(
-      enabled: enabled,
-      fields: fields,
-    );
+    return CustomMetadataConfig(enabled: enabled, fields: fields);
   }
 
   /// Checks if custom metadata is effectively active

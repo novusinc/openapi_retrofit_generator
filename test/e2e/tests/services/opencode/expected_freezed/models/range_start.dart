@@ -12,6 +12,15 @@ abstract class RangeStart with _$RangeStart {
   const factory RangeStart({required num line, required num character}) =
       _RangeStart;
 
+  Map<String, dynamic> toJson() => _$RangeStartToJson(this as _RangeStart);
   factory RangeStart.fromJson(Map<String, Object?> json) =>
       _$RangeStartFromJson(json);
+}
+
+extension RangeStartMergeX on RangeStart {
+  /// Returns a new [RangeStart] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  RangeStart merge(RangeStart other) {
+    return copyWith(line: other.line, character: other.character);
+  }
 }

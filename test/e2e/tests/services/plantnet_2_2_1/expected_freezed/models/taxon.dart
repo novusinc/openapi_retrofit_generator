@@ -24,5 +24,25 @@ abstract class Taxon with _$Taxon {
     @JsonKey(name: 'iucn_red_list_category') String? iucnRedListCategory,
   }) = _Taxon;
 
+  Map<String, dynamic> toJson() => _$TaxonToJson(this as _Taxon);
   factory Taxon.fromJson(Map<String, Object?> json) => _$TaxonFromJson(json);
+}
+
+extension TaxonMergeX on Taxon {
+  /// Returns a new [Taxon] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Taxon merge(Taxon other) {
+    return copyWith(
+      id: other.id,
+      name: other.name,
+      rank: other.rank,
+      rankLevel: other.rankLevel,
+      kingdom: other.kingdom,
+      family: other.family,
+      genus: other.genus,
+      url: other.url,
+      commonNames: other.commonNames,
+      iucnRedListCategory: other.iucnRedListCategory,
+    );
+  }
 }

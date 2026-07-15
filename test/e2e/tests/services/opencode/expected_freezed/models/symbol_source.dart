@@ -21,6 +21,22 @@ abstract class SymbolSource with _$SymbolSource {
     required int kind,
   }) = _SymbolSource;
 
+  Map<String, dynamic> toJson() => _$SymbolSourceToJson(this as _SymbolSource);
   factory SymbolSource.fromJson(Map<String, Object?> json) =>
       _$SymbolSourceFromJson(json);
+}
+
+extension SymbolSourceMergeX on SymbolSource {
+  /// Returns a new [SymbolSource] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  SymbolSource merge(SymbolSource other) {
+    return copyWith(
+      text: other.text,
+      type: other.type,
+      path: other.path,
+      range: other.range,
+      name: other.name,
+      kind: other.kind,
+    );
+  }
 }

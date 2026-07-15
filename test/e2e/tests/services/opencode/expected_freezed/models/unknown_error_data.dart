@@ -11,6 +11,16 @@ part 'unknown_error_data.g.dart';
 abstract class UnknownErrorData with _$UnknownErrorData {
   const factory UnknownErrorData({required String message}) = _UnknownErrorData;
 
+  Map<String, dynamic> toJson() =>
+      _$UnknownErrorDataToJson(this as _UnknownErrorData);
   factory UnknownErrorData.fromJson(Map<String, Object?> json) =>
       _$UnknownErrorDataFromJson(json);
+}
+
+extension UnknownErrorDataMergeX on UnknownErrorData {
+  /// Returns a new [UnknownErrorData] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  UnknownErrorData merge(UnknownErrorData other) {
+    return copyWith(message: other.message);
+  }
 }

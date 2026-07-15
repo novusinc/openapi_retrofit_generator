@@ -12,6 +12,16 @@ abstract class SearchRequest with _$SearchRequest {
   const factory SearchRequest({String? query, Map<String, String>? filters}) =
       _SearchRequest;
 
+  Map<String, dynamic> toJson() =>
+      _$SearchRequestToJson(this as _SearchRequest);
   factory SearchRequest.fromJson(Map<String, Object?> json) =>
       _$SearchRequestFromJson(json);
+}
+
+extension SearchRequestMergeX on SearchRequest {
+  /// Returns a new [SearchRequest] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  SearchRequest merge(SearchRequest other) {
+    return copyWith(query: other.query, filters: other.filters);
+  }
 }

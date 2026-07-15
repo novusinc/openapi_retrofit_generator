@@ -34,6 +34,34 @@ abstract class Model71 with _$Model71 {
     @JsonKey(name: 'percentage_covered') num? percentageCovered,
   }) = _Model71;
 
+  Map<String, dynamic> toJson() => _$Model71ToJson(this as _Model71);
   factory Model71.fromJson(Map<String, Object?> json) =>
       _$Model71FromJson(json);
+}
+
+extension Model71MergeX on Model71 {
+  /// Returns a new [Model71] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Model71 merge(Model71 other) {
+    return copyWith(
+      name: other.name,
+      author: other.author,
+      family: other.family,
+      commonNames: other.commonNames,
+      images: other.images,
+      iucn: other.iucn,
+      predictedName: other.predictedName,
+      gpnId: other.gpnId,
+      plantnetId: other.plantnetId,
+      gbifTaxonKey: other.gbifTaxonKey,
+      isTree: other.isTree,
+      isInvasive: other.isInvasive,
+      isEuDirective: other.isEuDirective,
+      isGrinUses: other.isGrinUses,
+      iucnRedListCategory: other.iucnRedListCategory,
+      areaSurface: other.areaSurface,
+      areaSpecies: other.areaSpecies,
+      percentageCovered: other.percentageCovered,
+    );
+  }
 }

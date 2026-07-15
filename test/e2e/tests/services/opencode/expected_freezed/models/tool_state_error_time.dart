@@ -12,6 +12,16 @@ abstract class ToolStateErrorTime with _$ToolStateErrorTime {
   const factory ToolStateErrorTime({required num start, required num end}) =
       _ToolStateErrorTime;
 
+  Map<String, dynamic> toJson() =>
+      _$ToolStateErrorTimeToJson(this as _ToolStateErrorTime);
   factory ToolStateErrorTime.fromJson(Map<String, Object?> json) =>
       _$ToolStateErrorTimeFromJson(json);
+}
+
+extension ToolStateErrorTimeMergeX on ToolStateErrorTime {
+  /// Returns a new [ToolStateErrorTime] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ToolStateErrorTime merge(ToolStateErrorTime other) {
+    return copyWith(start: other.start, end: other.end);
+  }
 }

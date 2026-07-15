@@ -15,6 +15,16 @@ abstract class UserSettingsNotifications with _$UserSettingsNotifications {
     @Default(false) bool sms,
   }) = _UserSettingsNotifications;
 
+  Map<String, dynamic> toJson() =>
+      _$UserSettingsNotificationsToJson(this as _UserSettingsNotifications);
   factory UserSettingsNotifications.fromJson(Map<String, Object?> json) =>
       _$UserSettingsNotificationsFromJson(json);
+}
+
+extension UserSettingsNotificationsMergeX on UserSettingsNotifications {
+  /// Returns a new [UserSettingsNotifications] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  UserSettingsNotifications merge(UserSettingsNotifications other) {
+    return copyWith(email: other.email, push: other.push, sms: other.sms);
+  }
 }

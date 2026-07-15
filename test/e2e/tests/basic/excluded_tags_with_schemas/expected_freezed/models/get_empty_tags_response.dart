@@ -13,6 +13,16 @@ abstract class GetEmptyTagsResponse with _$GetEmptyTagsResponse {
     @JsonKey(includeIfNull: false) String? value,
   }) = _GetEmptyTagsResponse;
 
+  Map<String, dynamic> toJson() =>
+      _$GetEmptyTagsResponseToJson(this as _GetEmptyTagsResponse);
   factory GetEmptyTagsResponse.fromJson(Map<String, Object?> json) =>
       _$GetEmptyTagsResponseFromJson(json);
+}
+
+extension GetEmptyTagsResponseMergeX on GetEmptyTagsResponse {
+  /// Returns a new [GetEmptyTagsResponse] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  GetEmptyTagsResponse merge(GetEmptyTagsResponse other) {
+    return copyWith(value: other.value);
+  }
 }

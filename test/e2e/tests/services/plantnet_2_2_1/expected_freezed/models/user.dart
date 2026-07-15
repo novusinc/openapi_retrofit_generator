@@ -11,5 +11,14 @@ part 'user.g.dart';
 abstract class User with _$User {
   const factory User({String? id}) = _User;
 
+  Map<String, dynamic> toJson() => _$UserToJson(this as _User);
   factory User.fromJson(Map<String, Object?> json) => _$UserFromJson(json);
+}
+
+extension UserMergeX on User {
+  /// Returns a new [User] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  User merge(User other) {
+    return copyWith(id: other.id);
+  }
 }

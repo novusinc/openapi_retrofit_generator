@@ -17,6 +17,22 @@ abstract class FileContentPatchHunks with _$FileContentPatchHunks {
     required List<String> lines,
   }) = _FileContentPatchHunks;
 
+  Map<String, dynamic> toJson() =>
+      _$FileContentPatchHunksToJson(this as _FileContentPatchHunks);
   factory FileContentPatchHunks.fromJson(Map<String, Object?> json) =>
       _$FileContentPatchHunksFromJson(json);
+}
+
+extension FileContentPatchHunksMergeX on FileContentPatchHunks {
+  /// Returns a new [FileContentPatchHunks] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  FileContentPatchHunks merge(FileContentPatchHunks other) {
+    return copyWith(
+      oldStart: other.oldStart,
+      oldLines: other.oldLines,
+      newStart: other.newStart,
+      newLines: other.newLines,
+      lines: other.lines,
+    );
+  }
 }

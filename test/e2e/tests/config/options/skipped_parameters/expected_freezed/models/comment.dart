@@ -34,6 +34,29 @@ abstract class Comment with _$Comment {
     DateTime? deletedAt,
   }) = _Comment;
 
+  Map<String, dynamic> toJson() => _$CommentToJson(this as _Comment);
   factory Comment.fromJson(Map<String, Object?> json) =>
       _$CommentFromJson(json);
+}
+
+extension CommentMergeX on Comment {
+  /// Returns a new [Comment] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Comment merge(Comment other) {
+    return copyWith(
+      id: other.id,
+      content: other.content,
+      authorId: other.authorId,
+      author: other.author,
+      postId: other.postId,
+      parentId: other.parentId,
+      parent: other.parent,
+      replies: other.replies,
+      depth: other.depth,
+      likeCount: other.likeCount,
+      createdAt: other.createdAt,
+      updatedAt: other.updatedAt,
+      deletedAt: other.deletedAt,
+    );
+  }
 }

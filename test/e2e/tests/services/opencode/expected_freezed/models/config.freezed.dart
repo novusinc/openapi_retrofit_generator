@@ -30,7 +30,7 @@ mixin _$Config {
  Map<String, AgentConfig>? get mode;/// Agent configuration, see https://opencode.ai/docs/agent
  Map<String, AgentConfig>? get agent;/// Custom provider configurations and model overrides
  Map<String, Provider>? get provider;/// MCP (Model Context Protocol) server configurations
- Map<String, McpMcp>? get mcp; Map<String, Formatter>? get formatter; Map<String, LspLsp>? get lsp;/// Additional instruction files or patterns to include
+ Map<String, Mcp>? get mcp; Map<String, Formatter>? get formatter; Map<String, Lsp>? get lsp;/// Additional instruction files or patterns to include
  List<String>? get instructions; LayoutConfig? get layout; ConfigPermission? get permission; Map<String, bool>? get tools; ConfigExperimental? get experimental;
 /// Create a copy of Config
 /// with the given fields replaced by the non-null parameter values.
@@ -64,7 +64,7 @@ abstract mixin class $ConfigCopyWith<$Res>  {
   factory $ConfigCopyWith(Config value, $Res Function(Config) _then) = _$ConfigCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: '\$schema') String? schema, String? theme, KeybindsConfig? keybinds, ConfigTui? tui, Map<String, Command>? command, ConfigWatcher? watcher, List<String>? plugin, bool? snapshot, ConfigShareShare? share, bool? autoshare, bool? autoupdate,@JsonKey(name: 'disabled_providers') List<String>? disabledProviders, String? model,@JsonKey(name: 'small_model') String? smallModel, String? username, Map<String, AgentConfig>? mode, Map<String, AgentConfig>? agent, Map<String, Provider>? provider, Map<String, McpMcp>? mcp, Map<String, Formatter>? formatter, Map<String, LspLsp>? lsp, List<String>? instructions, LayoutConfig? layout, ConfigPermission? permission, Map<String, bool>? tools, ConfigExperimental? experimental
+@JsonKey(name: '\$schema') String? schema, String? theme, KeybindsConfig? keybinds, ConfigTui? tui, Map<String, Command>? command, ConfigWatcher? watcher, List<String>? plugin, bool? snapshot, ConfigShareShare? share, bool? autoshare, bool? autoupdate,@JsonKey(name: 'disabled_providers') List<String>? disabledProviders, String? model,@JsonKey(name: 'small_model') String? smallModel, String? username, Map<String, AgentConfig>? mode, Map<String, AgentConfig>? agent, Map<String, Provider>? provider, Map<String, Mcp>? mcp, Map<String, Formatter>? formatter, Map<String, Lsp>? lsp, List<String>? instructions, LayoutConfig? layout, ConfigPermission? permission, Map<String, bool>? tools, ConfigExperimental? experimental
 });
 
 
@@ -102,9 +102,9 @@ as String?,mode: freezed == mode ? _self.mode : mode // ignore: cast_nullable_to
 as Map<String, AgentConfig>?,agent: freezed == agent ? _self.agent : agent // ignore: cast_nullable_to_non_nullable
 as Map<String, AgentConfig>?,provider: freezed == provider ? _self.provider : provider // ignore: cast_nullable_to_non_nullable
 as Map<String, Provider>?,mcp: freezed == mcp ? _self.mcp : mcp // ignore: cast_nullable_to_non_nullable
-as Map<String, McpMcp>?,formatter: freezed == formatter ? _self.formatter : formatter // ignore: cast_nullable_to_non_nullable
+as Map<String, Mcp>?,formatter: freezed == formatter ? _self.formatter : formatter // ignore: cast_nullable_to_non_nullable
 as Map<String, Formatter>?,lsp: freezed == lsp ? _self.lsp : lsp // ignore: cast_nullable_to_non_nullable
-as Map<String, LspLsp>?,instructions: freezed == instructions ? _self.instructions : instructions // ignore: cast_nullable_to_non_nullable
+as Map<String, Lsp>?,instructions: freezed == instructions ? _self.instructions : instructions // ignore: cast_nullable_to_non_nullable
 as List<String>?,layout: freezed == layout ? _self.layout : layout // ignore: cast_nullable_to_non_nullable
 as LayoutConfig?,permission: freezed == permission ? _self.permission : permission // ignore: cast_nullable_to_non_nullable
 as ConfigPermission?,tools: freezed == tools ? _self.tools : tools // ignore: cast_nullable_to_non_nullable
@@ -254,7 +254,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: '\$schema')  String? schema,  String? theme,  KeybindsConfig? keybinds,  ConfigTui? tui,  Map<String, Command>? command,  ConfigWatcher? watcher,  List<String>? plugin,  bool? snapshot,  ConfigShareShare? share,  bool? autoshare,  bool? autoupdate, @JsonKey(name: 'disabled_providers')  List<String>? disabledProviders,  String? model, @JsonKey(name: 'small_model')  String? smallModel,  String? username,  Map<String, AgentConfig>? mode,  Map<String, AgentConfig>? agent,  Map<String, Provider>? provider,  Map<String, McpMcp>? mcp,  Map<String, Formatter>? formatter,  Map<String, LspLsp>? lsp,  List<String>? instructions,  LayoutConfig? layout,  ConfigPermission? permission,  Map<String, bool>? tools,  ConfigExperimental? experimental)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: '\$schema')  String? schema,  String? theme,  KeybindsConfig? keybinds,  ConfigTui? tui,  Map<String, Command>? command,  ConfigWatcher? watcher,  List<String>? plugin,  bool? snapshot,  ConfigShareShare? share,  bool? autoshare,  bool? autoupdate, @JsonKey(name: 'disabled_providers')  List<String>? disabledProviders,  String? model, @JsonKey(name: 'small_model')  String? smallModel,  String? username,  Map<String, AgentConfig>? mode,  Map<String, AgentConfig>? agent,  Map<String, Provider>? provider,  Map<String, Mcp>? mcp,  Map<String, Formatter>? formatter,  Map<String, Lsp>? lsp,  List<String>? instructions,  LayoutConfig? layout,  ConfigPermission? permission,  Map<String, bool>? tools,  ConfigExperimental? experimental)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Config() when $default != null:
 return $default(_that.schema,_that.theme,_that.keybinds,_that.tui,_that.command,_that.watcher,_that.plugin,_that.snapshot,_that.share,_that.autoshare,_that.autoupdate,_that.disabledProviders,_that.model,_that.smallModel,_that.username,_that.mode,_that.agent,_that.provider,_that.mcp,_that.formatter,_that.lsp,_that.instructions,_that.layout,_that.permission,_that.tools,_that.experimental);case _:
@@ -275,7 +275,7 @@ return $default(_that.schema,_that.theme,_that.keybinds,_that.tui,_that.command,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: '\$schema')  String? schema,  String? theme,  KeybindsConfig? keybinds,  ConfigTui? tui,  Map<String, Command>? command,  ConfigWatcher? watcher,  List<String>? plugin,  bool? snapshot,  ConfigShareShare? share,  bool? autoshare,  bool? autoupdate, @JsonKey(name: 'disabled_providers')  List<String>? disabledProviders,  String? model, @JsonKey(name: 'small_model')  String? smallModel,  String? username,  Map<String, AgentConfig>? mode,  Map<String, AgentConfig>? agent,  Map<String, Provider>? provider,  Map<String, McpMcp>? mcp,  Map<String, Formatter>? formatter,  Map<String, LspLsp>? lsp,  List<String>? instructions,  LayoutConfig? layout,  ConfigPermission? permission,  Map<String, bool>? tools,  ConfigExperimental? experimental)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: '\$schema')  String? schema,  String? theme,  KeybindsConfig? keybinds,  ConfigTui? tui,  Map<String, Command>? command,  ConfigWatcher? watcher,  List<String>? plugin,  bool? snapshot,  ConfigShareShare? share,  bool? autoshare,  bool? autoupdate, @JsonKey(name: 'disabled_providers')  List<String>? disabledProviders,  String? model, @JsonKey(name: 'small_model')  String? smallModel,  String? username,  Map<String, AgentConfig>? mode,  Map<String, AgentConfig>? agent,  Map<String, Provider>? provider,  Map<String, Mcp>? mcp,  Map<String, Formatter>? formatter,  Map<String, Lsp>? lsp,  List<String>? instructions,  LayoutConfig? layout,  ConfigPermission? permission,  Map<String, bool>? tools,  ConfigExperimental? experimental)  $default,) {final _that = this;
 switch (_that) {
 case _Config():
 return $default(_that.schema,_that.theme,_that.keybinds,_that.tui,_that.command,_that.watcher,_that.plugin,_that.snapshot,_that.share,_that.autoshare,_that.autoupdate,_that.disabledProviders,_that.model,_that.smallModel,_that.username,_that.mode,_that.agent,_that.provider,_that.mcp,_that.formatter,_that.lsp,_that.instructions,_that.layout,_that.permission,_that.tools,_that.experimental);case _:
@@ -295,7 +295,7 @@ return $default(_that.schema,_that.theme,_that.keybinds,_that.tui,_that.command,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: '\$schema')  String? schema,  String? theme,  KeybindsConfig? keybinds,  ConfigTui? tui,  Map<String, Command>? command,  ConfigWatcher? watcher,  List<String>? plugin,  bool? snapshot,  ConfigShareShare? share,  bool? autoshare,  bool? autoupdate, @JsonKey(name: 'disabled_providers')  List<String>? disabledProviders,  String? model, @JsonKey(name: 'small_model')  String? smallModel,  String? username,  Map<String, AgentConfig>? mode,  Map<String, AgentConfig>? agent,  Map<String, Provider>? provider,  Map<String, McpMcp>? mcp,  Map<String, Formatter>? formatter,  Map<String, LspLsp>? lsp,  List<String>? instructions,  LayoutConfig? layout,  ConfigPermission? permission,  Map<String, bool>? tools,  ConfigExperimental? experimental)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: '\$schema')  String? schema,  String? theme,  KeybindsConfig? keybinds,  ConfigTui? tui,  Map<String, Command>? command,  ConfigWatcher? watcher,  List<String>? plugin,  bool? snapshot,  ConfigShareShare? share,  bool? autoshare,  bool? autoupdate, @JsonKey(name: 'disabled_providers')  List<String>? disabledProviders,  String? model, @JsonKey(name: 'small_model')  String? smallModel,  String? username,  Map<String, AgentConfig>? mode,  Map<String, AgentConfig>? agent,  Map<String, Provider>? provider,  Map<String, Mcp>? mcp,  Map<String, Formatter>? formatter,  Map<String, Lsp>? lsp,  List<String>? instructions,  LayoutConfig? layout,  ConfigPermission? permission,  Map<String, bool>? tools,  ConfigExperimental? experimental)?  $default,) {final _that = this;
 switch (_that) {
 case _Config() when $default != null:
 return $default(_that.schema,_that.theme,_that.keybinds,_that.tui,_that.command,_that.watcher,_that.plugin,_that.snapshot,_that.share,_that.autoshare,_that.autoupdate,_that.disabledProviders,_that.model,_that.smallModel,_that.username,_that.mode,_that.agent,_that.provider,_that.mcp,_that.formatter,_that.lsp,_that.instructions,_that.layout,_that.permission,_that.tools,_that.experimental);case _:
@@ -310,7 +310,7 @@ return $default(_that.schema,_that.theme,_that.keybinds,_that.tui,_that.command,
 @JsonSerializable()
 
 class _Config implements Config {
-  const _Config({@JsonKey(name: '\$schema') this.schema, this.theme, this.keybinds, this.tui, final  Map<String, Command>? command, this.watcher, final  List<String>? plugin, this.snapshot, this.share, this.autoshare, this.autoupdate, @JsonKey(name: 'disabled_providers') final  List<String>? disabledProviders, this.model, @JsonKey(name: 'small_model') this.smallModel, this.username, final  Map<String, AgentConfig>? mode, final  Map<String, AgentConfig>? agent, final  Map<String, Provider>? provider, final  Map<String, McpMcp>? mcp, final  Map<String, Formatter>? formatter, final  Map<String, LspLsp>? lsp, final  List<String>? instructions, this.layout, this.permission, final  Map<String, bool>? tools, this.experimental}): _command = command,_plugin = plugin,_disabledProviders = disabledProviders,_mode = mode,_agent = agent,_provider = provider,_mcp = mcp,_formatter = formatter,_lsp = lsp,_instructions = instructions,_tools = tools;
+  const _Config({@JsonKey(name: '\$schema') this.schema, this.theme, this.keybinds, this.tui, final  Map<String, Command>? command, this.watcher, final  List<String>? plugin, this.snapshot, this.share, this.autoshare, this.autoupdate, @JsonKey(name: 'disabled_providers') final  List<String>? disabledProviders, this.model, @JsonKey(name: 'small_model') this.smallModel, this.username, final  Map<String, AgentConfig>? mode, final  Map<String, AgentConfig>? agent, final  Map<String, Provider>? provider, final  Map<String, Mcp>? mcp, final  Map<String, Formatter>? formatter, final  Map<String, Lsp>? lsp, final  List<String>? instructions, this.layout, this.permission, final  Map<String, bool>? tools, this.experimental}): _command = command,_plugin = plugin,_disabledProviders = disabledProviders,_mode = mode,_agent = agent,_provider = provider,_mcp = mcp,_formatter = formatter,_lsp = lsp,_instructions = instructions,_tools = tools;
   factory _Config.fromJson(Map<String, dynamic> json) => _$ConfigFromJson(json);
 
 /// JSON schema reference for configuration validation
@@ -399,9 +399,9 @@ class _Config implements Config {
 }
 
 /// MCP (Model Context Protocol) server configurations
- final  Map<String, McpMcp>? _mcp;
+ final  Map<String, Mcp>? _mcp;
 /// MCP (Model Context Protocol) server configurations
-@override Map<String, McpMcp>? get mcp {
+@override Map<String, Mcp>? get mcp {
   final value = _mcp;
   if (value == null) return null;
   if (_mcp is EqualUnmodifiableMapView) return _mcp;
@@ -418,8 +418,8 @@ class _Config implements Config {
   return EqualUnmodifiableMapView(value);
 }
 
- final  Map<String, LspLsp>? _lsp;
-@override Map<String, LspLsp>? get lsp {
+ final  Map<String, Lsp>? _lsp;
+@override Map<String, Lsp>? get lsp {
   final value = _lsp;
   if (value == null) return null;
   if (_lsp is EqualUnmodifiableMapView) return _lsp;
@@ -484,7 +484,7 @@ abstract mixin class _$ConfigCopyWith<$Res> implements $ConfigCopyWith<$Res> {
   factory _$ConfigCopyWith(_Config value, $Res Function(_Config) _then) = __$ConfigCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: '\$schema') String? schema, String? theme, KeybindsConfig? keybinds, ConfigTui? tui, Map<String, Command>? command, ConfigWatcher? watcher, List<String>? plugin, bool? snapshot, ConfigShareShare? share, bool? autoshare, bool? autoupdate,@JsonKey(name: 'disabled_providers') List<String>? disabledProviders, String? model,@JsonKey(name: 'small_model') String? smallModel, String? username, Map<String, AgentConfig>? mode, Map<String, AgentConfig>? agent, Map<String, Provider>? provider, Map<String, McpMcp>? mcp, Map<String, Formatter>? formatter, Map<String, LspLsp>? lsp, List<String>? instructions, LayoutConfig? layout, ConfigPermission? permission, Map<String, bool>? tools, ConfigExperimental? experimental
+@JsonKey(name: '\$schema') String? schema, String? theme, KeybindsConfig? keybinds, ConfigTui? tui, Map<String, Command>? command, ConfigWatcher? watcher, List<String>? plugin, bool? snapshot, ConfigShareShare? share, bool? autoshare, bool? autoupdate,@JsonKey(name: 'disabled_providers') List<String>? disabledProviders, String? model,@JsonKey(name: 'small_model') String? smallModel, String? username, Map<String, AgentConfig>? mode, Map<String, AgentConfig>? agent, Map<String, Provider>? provider, Map<String, Mcp>? mcp, Map<String, Formatter>? formatter, Map<String, Lsp>? lsp, List<String>? instructions, LayoutConfig? layout, ConfigPermission? permission, Map<String, bool>? tools, ConfigExperimental? experimental
 });
 
 
@@ -522,9 +522,9 @@ as String?,mode: freezed == mode ? _self._mode : mode // ignore: cast_nullable_t
 as Map<String, AgentConfig>?,agent: freezed == agent ? _self._agent : agent // ignore: cast_nullable_to_non_nullable
 as Map<String, AgentConfig>?,provider: freezed == provider ? _self._provider : provider // ignore: cast_nullable_to_non_nullable
 as Map<String, Provider>?,mcp: freezed == mcp ? _self._mcp : mcp // ignore: cast_nullable_to_non_nullable
-as Map<String, McpMcp>?,formatter: freezed == formatter ? _self._formatter : formatter // ignore: cast_nullable_to_non_nullable
+as Map<String, Mcp>?,formatter: freezed == formatter ? _self._formatter : formatter // ignore: cast_nullable_to_non_nullable
 as Map<String, Formatter>?,lsp: freezed == lsp ? _self._lsp : lsp // ignore: cast_nullable_to_non_nullable
-as Map<String, LspLsp>?,instructions: freezed == instructions ? _self._instructions : instructions // ignore: cast_nullable_to_non_nullable
+as Map<String, Lsp>?,instructions: freezed == instructions ? _self._instructions : instructions // ignore: cast_nullable_to_non_nullable
 as List<String>?,layout: freezed == layout ? _self.layout : layout // ignore: cast_nullable_to_non_nullable
 as LayoutConfig?,permission: freezed == permission ? _self.permission : permission // ignore: cast_nullable_to_non_nullable
 as ConfigPermission?,tools: freezed == tools ? _self._tools : tools // ignore: cast_nullable_to_non_nullable

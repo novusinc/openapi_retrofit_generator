@@ -18,6 +18,16 @@ abstract class PostApiV1Request with _$PostApiV1Request {
     PostApiV1RequestP2EnumP2Enum? p2Enum,
   }) = _PostApiV1Request;
 
+  Map<String, dynamic> toJson() =>
+      _$PostApiV1RequestToJson(this as _PostApiV1Request);
   factory PostApiV1Request.fromJson(Map<String, Object?> json) =>
       _$PostApiV1RequestFromJson(json);
+}
+
+extension PostApiV1RequestMergeX on PostApiV1Request {
+  /// Returns a new [PostApiV1Request] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  PostApiV1Request merge(PostApiV1Request other) {
+    return copyWith(p1Class: other.p1Class, p2Enum: other.p2Enum);
+  }
 }

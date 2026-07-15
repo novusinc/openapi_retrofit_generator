@@ -14,6 +14,15 @@ abstract class ErrorDetails with _$ErrorDetails {
     @JsonKey(includeIfNull: false) String? message,
   }) = _ErrorDetails;
 
+  Map<String, dynamic> toJson() => _$ErrorDetailsToJson(this as _ErrorDetails);
   factory ErrorDetails.fromJson(Map<String, Object?> json) =>
       _$ErrorDetailsFromJson(json);
+}
+
+extension ErrorDetailsMergeX on ErrorDetails {
+  /// Returns a new [ErrorDetails] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ErrorDetails merge(ErrorDetails other) {
+    return copyWith(field: other.field, message: other.message);
+  }
 }

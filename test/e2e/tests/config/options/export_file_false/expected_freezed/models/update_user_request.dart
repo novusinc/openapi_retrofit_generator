@@ -18,6 +18,23 @@ abstract class UpdateUserRequest with _$UpdateUserRequest {
     String? bio,
   }) = _UpdateUserRequest;
 
+  Map<String, dynamic> toJson() =>
+      _$UpdateUserRequestToJson(this as _UpdateUserRequest);
   factory UpdateUserRequest.fromJson(Map<String, Object?> json) =>
       _$UpdateUserRequestFromJson(json);
+}
+
+extension UpdateUserRequestMergeX on UpdateUserRequest {
+  /// Returns a new [UpdateUserRequest] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  UpdateUserRequest merge(UpdateUserRequest other) {
+    return copyWith(
+      email: other.email,
+      username: other.username,
+      firstName: other.firstName,
+      lastName: other.lastName,
+      age: other.age,
+      bio: other.bio,
+    );
+  }
 }

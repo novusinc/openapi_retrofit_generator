@@ -4,7 +4,7 @@
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import 'assistant_message_error_error.dart';
+import 'assistant_message_error.dart';
 import 'assistant_message_path.dart';
 import 'assistant_message_time.dart';
 import 'assistant_message_tokens.dart';
@@ -26,10 +26,34 @@ abstract class AssistantMessage with _$AssistantMessage {
     required AssistantMessagePath path,
     required num cost,
     required AssistantMessageTokens tokens,
-    AssistantMessageErrorError? error,
+    AssistantMessageError? error,
     bool? summary,
   }) = _AssistantMessage;
 
+  Map<String, dynamic> toJson() =>
+      _$AssistantMessageToJson(this as _AssistantMessage);
   factory AssistantMessage.fromJson(Map<String, Object?> json) =>
       _$AssistantMessageFromJson(json);
+}
+
+extension AssistantMessageMergeX on AssistantMessage {
+  /// Returns a new [AssistantMessage] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  AssistantMessage merge(AssistantMessage other) {
+    return copyWith(
+      id: other.id,
+      sessionId: other.sessionId,
+      role: other.role,
+      time: other.time,
+      error: other.error,
+      system: other.system,
+      modelId: other.modelId,
+      providerId: other.providerId,
+      mode: other.mode,
+      path: other.path,
+      summary: other.summary,
+      cost: other.cost,
+      tokens: other.tokens,
+    );
+  }
 }

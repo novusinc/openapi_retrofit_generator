@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PaymentResponse {
 
- String get transactionId; PaymentResponseStatusStatus get status; double get amount; DateTime? get processedAt; PaymentResponseDetailsDetails? get details; String get currency;
+ String get transactionId; PaymentResponseStatusStatus get status; double get amount; DateTime? get processedAt; PaymentResponseDetails? get details; String get currency;
 /// Create a copy of PaymentResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,11 +48,11 @@ abstract mixin class $PaymentResponseCopyWith<$Res>  {
   factory $PaymentResponseCopyWith(PaymentResponse value, $Res Function(PaymentResponse) _then) = _$PaymentResponseCopyWithImpl;
 @useResult
 $Res call({
- String transactionId, PaymentResponseStatusStatus status, double amount, DateTime? processedAt, PaymentResponseDetailsDetails? details, String currency
+ String transactionId, PaymentResponseStatusStatus status, double amount, DateTime? processedAt, PaymentResponseDetails? details, String currency
 });
 
 
-$PaymentResponseDetailsDetailsCopyWith<$Res>? get details;
+$PaymentResponseDetailsCopyWith<$Res>? get details;
 
 }
 /// @nodoc
@@ -72,7 +72,7 @@ as String,status: null == status ? _self.status : status // ignore: cast_nullabl
 as PaymentResponseStatusStatus,amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
 as double,processedAt: freezed == processedAt ? _self.processedAt : processedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,details: freezed == details ? _self.details : details // ignore: cast_nullable_to_non_nullable
-as PaymentResponseDetailsDetails?,currency: null == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
+as PaymentResponseDetails?,currency: null == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }
@@ -80,12 +80,12 @@ as String,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$PaymentResponseDetailsDetailsCopyWith<$Res>? get details {
+$PaymentResponseDetailsCopyWith<$Res>? get details {
     if (_self.details == null) {
     return null;
   }
 
-  return $PaymentResponseDetailsDetailsCopyWith<$Res>(_self.details!, (value) {
+  return $PaymentResponseDetailsCopyWith<$Res>(_self.details!, (value) {
     return _then(_self.copyWith(details: value));
   });
 }
@@ -170,7 +170,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String transactionId,  PaymentResponseStatusStatus status,  double amount,  DateTime? processedAt,  PaymentResponseDetailsDetails? details,  String currency)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String transactionId,  PaymentResponseStatusStatus status,  double amount,  DateTime? processedAt,  PaymentResponseDetails? details,  String currency)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PaymentResponse() when $default != null:
 return $default(_that.transactionId,_that.status,_that.amount,_that.processedAt,_that.details,_that.currency);case _:
@@ -191,7 +191,7 @@ return $default(_that.transactionId,_that.status,_that.amount,_that.processedAt,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String transactionId,  PaymentResponseStatusStatus status,  double amount,  DateTime? processedAt,  PaymentResponseDetailsDetails? details,  String currency)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String transactionId,  PaymentResponseStatusStatus status,  double amount,  DateTime? processedAt,  PaymentResponseDetails? details,  String currency)  $default,) {final _that = this;
 switch (_that) {
 case _PaymentResponse():
 return $default(_that.transactionId,_that.status,_that.amount,_that.processedAt,_that.details,_that.currency);case _:
@@ -211,7 +211,7 @@ return $default(_that.transactionId,_that.status,_that.amount,_that.processedAt,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String transactionId,  PaymentResponseStatusStatus status,  double amount,  DateTime? processedAt,  PaymentResponseDetailsDetails? details,  String currency)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String transactionId,  PaymentResponseStatusStatus status,  double amount,  DateTime? processedAt,  PaymentResponseDetails? details,  String currency)?  $default,) {final _that = this;
 switch (_that) {
 case _PaymentResponse() when $default != null:
 return $default(_that.transactionId,_that.status,_that.amount,_that.processedAt,_that.details,_that.currency);case _:
@@ -233,7 +233,7 @@ class _PaymentResponse implements PaymentResponse {
 @override final  PaymentResponseStatusStatus status;
 @override final  double amount;
 @override final  DateTime? processedAt;
-@override final  PaymentResponseDetailsDetails? details;
+@override final  PaymentResponseDetails? details;
 @override@JsonKey() final  String currency;
 
 /// Create a copy of PaymentResponse
@@ -269,11 +269,11 @@ abstract mixin class _$PaymentResponseCopyWith<$Res> implements $PaymentResponse
   factory _$PaymentResponseCopyWith(_PaymentResponse value, $Res Function(_PaymentResponse) _then) = __$PaymentResponseCopyWithImpl;
 @override @useResult
 $Res call({
- String transactionId, PaymentResponseStatusStatus status, double amount, DateTime? processedAt, PaymentResponseDetailsDetails? details, String currency
+ String transactionId, PaymentResponseStatusStatus status, double amount, DateTime? processedAt, PaymentResponseDetails? details, String currency
 });
 
 
-@override $PaymentResponseDetailsDetailsCopyWith<$Res>? get details;
+@override $PaymentResponseDetailsCopyWith<$Res>? get details;
 
 }
 /// @nodoc
@@ -293,7 +293,7 @@ as String,status: null == status ? _self.status : status // ignore: cast_nullabl
 as PaymentResponseStatusStatus,amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
 as double,processedAt: freezed == processedAt ? _self.processedAt : processedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,details: freezed == details ? _self.details : details // ignore: cast_nullable_to_non_nullable
-as PaymentResponseDetailsDetails?,currency: null == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
+as PaymentResponseDetails?,currency: null == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }
@@ -302,12 +302,12 @@ as String,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$PaymentResponseDetailsDetailsCopyWith<$Res>? get details {
+$PaymentResponseDetailsCopyWith<$Res>? get details {
     if (_self.details == null) {
     return null;
   }
 
-  return $PaymentResponseDetailsDetailsCopyWith<$Res>(_self.details!, (value) {
+  return $PaymentResponseDetailsCopyWith<$Res>(_self.details!, (value) {
     return _then(_self.copyWith(details: value));
   });
 }

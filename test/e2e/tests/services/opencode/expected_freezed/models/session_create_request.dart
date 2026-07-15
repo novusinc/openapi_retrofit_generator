@@ -14,6 +14,16 @@ abstract class SessionCreateRequest with _$SessionCreateRequest {
     String? title,
   }) = _SessionCreateRequest;
 
+  Map<String, dynamic> toJson() =>
+      _$SessionCreateRequestToJson(this as _SessionCreateRequest);
   factory SessionCreateRequest.fromJson(Map<String, Object?> json) =>
       _$SessionCreateRequestFromJson(json);
+}
+
+extension SessionCreateRequestMergeX on SessionCreateRequest {
+  /// Returns a new [SessionCreateRequest] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  SessionCreateRequest merge(SessionCreateRequest other) {
+    return copyWith(parentId: other.parentId, title: other.title);
+  }
 }

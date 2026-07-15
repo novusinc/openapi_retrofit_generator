@@ -22,6 +22,22 @@ abstract class Model15 with _$Model15 {
     CommonNames? commonNames,
   }) = _Model15;
 
+  Map<String, dynamic> toJson() => _$Model15ToJson(this as _Model15);
   factory Model15.fromJson(Map<String, Object?> json) =>
       _$Model15FromJson(json);
+}
+
+extension Model15MergeX on Model15 {
+  /// Returns a new [Model15] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Model15 merge(Model15 other) {
+    return copyWith(
+      scientificNameWithoutAuthor: other.scientificNameWithoutAuthor,
+      scientificNameAuthorship: other.scientificNameAuthorship,
+      scientificName: other.scientificName,
+      genus: other.genus,
+      family: other.family,
+      commonNames: other.commonNames,
+    );
+  }
 }

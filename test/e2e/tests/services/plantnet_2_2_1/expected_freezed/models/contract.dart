@@ -19,6 +19,23 @@ abstract class Contract with _$Contract {
     String? currency,
   }) = _Contract;
 
+  Map<String, dynamic> toJson() => _$ContractToJson(this as _Contract);
   factory Contract.fromJson(Map<String, Object?> json) =>
       _$ContractFromJson(json);
+}
+
+extension ContractMergeX on Contract {
+  /// Returns a new [Contract] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Contract merge(Contract other) {
+    return copyWith(
+      plan: other.plan,
+      status: other.status,
+      firstSignatureDate: other.firstSignatureDate,
+      latestSignatureDate: other.latestSignatureDate,
+      nextSignatureDate: other.nextSignatureDate,
+      indicativeYearlyQuota: other.indicativeYearlyQuota,
+      currency: other.currency,
+    );
+  }
 }

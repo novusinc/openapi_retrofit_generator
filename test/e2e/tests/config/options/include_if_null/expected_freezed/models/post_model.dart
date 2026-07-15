@@ -31,6 +31,31 @@ abstract class PostModel with _$PostModel {
     @JsonKey(includeIfNull: false) DateTime? updatedAt,
   }) = _PostModel;
 
+  Map<String, dynamic> toJson() => _$PostModelToJson(this as _PostModel);
   factory PostModel.fromJson(Map<String, Object?> json) =>
       _$PostModelFromJson(json);
+}
+
+extension PostModelMergeX on PostModel {
+  /// Returns a new [PostModel] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  PostModel merge(PostModel other) {
+    return copyWith(
+      id: other.id,
+      title: other.title,
+      content: other.content,
+      excerpt: other.excerpt,
+      authorId: other.authorId,
+      author: other.author,
+      status: other.status,
+      tags: other.tags,
+      categories: other.categories,
+      publishedAt: other.publishedAt,
+      viewCount: other.viewCount,
+      likeCount: other.likeCount,
+      metadata: other.metadata,
+      createdAt: other.createdAt,
+      updatedAt: other.updatedAt,
+    );
+  }
 }

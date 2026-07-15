@@ -10,10 +10,7 @@ _SessionPromptRequest _$SessionPromptRequestFromJson(
   Map<String, dynamic> json,
 ) => _SessionPromptRequest(
   parts: (json['parts'] as List<dynamic>)
-      .map(
-        (e) =>
-            SessionPromptRequestPartsParts.fromJson(e as Map<String, dynamic>),
-      )
+      .map((e) => SessionPromptRequestParts.fromJson(e as Map<String, dynamic>))
       .toList(),
   messageId: json['messageID'] as String?,
   model: json['model'] == null

@@ -20,6 +20,22 @@ abstract class Model34 with _$Model34 {
     @JsonKey(name: 'observation_id') String? observationId,
   }) = _Model34;
 
+  Map<String, dynamic> toJson() => _$Model34ToJson(this as _Model34);
   factory Model34.fromJson(Map<String, Object?> json) =>
       _$Model34FromJson(json);
+}
+
+extension Model34MergeX on Model34 {
+  /// Returns a new [Model34] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Model34 merge(Model34 other) {
+    return copyWith(
+      id: other.id,
+      createdAt: other.createdAt,
+      updatedAt: other.updatedAt,
+      taxon: other.taxon,
+      score: other.score,
+      observationId: other.observationId,
+    );
+  }
 }

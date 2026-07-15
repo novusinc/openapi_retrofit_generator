@@ -15,6 +15,19 @@ abstract class DraftItem with _$DraftItem {
     @JsonKey(includeIfNull: false) bool? isDraft,
   }) = _DraftItem;
 
+  Map<String, dynamic> toJson() => _$DraftItemToJson(this as _DraftItem);
   factory DraftItem.fromJson(Map<String, Object?> json) =>
       _$DraftItemFromJson(json);
+}
+
+extension DraftItemMergeX on DraftItem {
+  /// Returns a new [DraftItem] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  DraftItem merge(DraftItem other) {
+    return copyWith(
+      id: other.id,
+      content: other.content,
+      isDraft: other.isDraft,
+    );
+  }
 }

@@ -16,5 +16,19 @@ abstract class OAuth with _$OAuth {
     required num expires,
   }) = _OAuth;
 
+  Map<String, dynamic> toJson() => _$OAuthToJson(this as _OAuth);
   factory OAuth.fromJson(Map<String, Object?> json) => _$OAuthFromJson(json);
+}
+
+extension OAuthMergeX on OAuth {
+  /// Returns a new [OAuth] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  OAuth merge(OAuth other) {
+    return copyWith(
+      type: other.type,
+      refresh: other.refresh,
+      access: other.access,
+      expires: other.expires,
+    );
+  }
 }
