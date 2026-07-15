@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:openapi_retrofit_generator/src/config/custom_metadata_config.dart';
 import 'package:openapi_retrofit_generator/src/generator/config/generator_config.dart';
+import 'package:openapi_retrofit_generator/src/generator/generator/union_family_resolver.dart';
 import 'package:openapi_retrofit_generator/src/generator/model/generated_file.dart';
 import 'package:openapi_retrofit_generator/src/generator/model/json_serializer.dart';
 import 'package:openapi_retrofit_generator/src/generator/templates/dart_dart_mappable_dto_template.dart';
@@ -25,10 +26,16 @@ final class FillController {
     required this.config,
     this.info = const OpenApiInfo(schemaVersion: OAS.v3_1),
     List<UniversalDataClass> dataClasses = const [],
-  }) : _unionVariantMap = _buildUnionVariantMap(dataClasses),
+    UnionFamilyResolution unionFamilies = UnionFamilyResolution.none,
+  }) : _unionFamilies = unionFamilies,
+       _unionVariantMap = _buildUnionVariantMap(dataClasses, unionFamilies),
        _dataClassMap = {
          for (final dc in dataClasses)
            if (dc is UniversalComponentClass) dc.name.toLowerCase(): dc,
+       },
+       _enumWireTypes = {
+         for (final dc in dataClasses)
+           if (dc is UniversalEnumClass) dc.name.toPascal: dc.type.toDartType(),
        };
 
   /// Api info
@@ -37,6 +44,10 @@ final class FillController {
   /// Config
   final GeneratorConfig config;
 
+  /// Sealed-ref-union family resolution ([UnionFamilyResolution.none] when
+  /// the feature is disabled).
+  final UnionFamilyResolution _unionFamilies;
+
   /// Maps standalone schema ref names to their parent union info
   /// e.g., 'Agent' → UnionVariantInfo(parentClassName: 'Ai', factoryName: 'agent')
   final Map<String, UnionVariantInfo> _unionVariantMap;
@@ -44,12 +55,30 @@ final class FillController {
   /// Case-insensitive lookup map from class name → UniversalComponentClass
   final Map<String, UniversalComponentClass> _dataClassMap;
 
+  /// Maps generated enum class names (Pascal) to their Dart wire type
+  /// (e.g. 'PetStatus' → 'String'), so union family Unknown classes can
+  /// decode `$ref`-to-enum fields via `Enum.fromJson(raw as String)`.
+  final Map<String, String> _enumWireTypes;
+
+  /// File-base-name overrides for family members, or null when the feature is
+  /// off so legacy code paths stay byte-identical.
+  Map<String, String>? get _fileOverridesOrNull =>
+      _unionFamilies.familyMemberNames.isEmpty
+      ? null
+      : _unionFamilies.classFileOverrides;
+
+  /// Resolves the on-disk file base name for a generated model class,
+  /// following family overrides when the class was merged into a family file.
+  String _resolveModelFileBaseName(String fileBaseName) =>
+      _unionFamilies.classFileOverrides[fileBaseName] ?? fileBaseName;
+
   /// Build a mapping from standalone variant ref names to their parent union class.
   ///
   /// Iterates over all data classes with discriminators (sealed/union types) and
   /// extracts the variant-to-parent relationship from the discriminator mapping.
   static Map<String, UnionVariantInfo> _buildUnionVariantMap(
     List<UniversalDataClass> dataClasses,
+    UnionFamilyResolution unionFamilies,
   ) {
     final map = <String, UnionVariantInfo>{};
     for (final dc in dataClasses) {
@@ -58,6 +87,9 @@ final class FillController {
       if (discriminator == null) continue;
 
       final parentClassName = dc.name.toPascal;
+      // Family unions dispatch on the leaf classes themselves; legacy unions
+      // dispatch on the Freezed clone classes (`<Union><Factory>`).
+      final isFamilyUnion = unionFamilies.familyMemberNames.contains(dc.name);
       for (final entry
           in discriminator.discriminatorValueToRefMapping.entries) {
         final discriminatorValue = entry.key; // e.g., 'agent'
@@ -70,6 +102,9 @@ final class FillController {
           parentClassName: parentClassName,
           factoryName: factoryName,
           discriminatorPropertyName: discriminator.propertyName,
+          variantClassName: isFamilyUnion
+              ? refName
+              : '$parentClassName${factoryName.toPascal}',
         );
       }
     }
@@ -96,6 +131,25 @@ final class FillController {
     ),
   );
 
+  /// Return [GeneratedFile] holding one whole sealed-ref-union family:
+  /// the sealed union classes, their Unknown fallbacks, every leaf class and
+  /// the compatibility extensions — a single library named after the primary
+  /// union.
+  GeneratedFile fillUnionFamilyContent(UnionFamily family) => GeneratedFile(
+    name: 'models/${family.fileBaseName}.dart',
+    content: dartFreezedUnionFamilyTemplate(
+      family,
+      includeIfNull: config.includeIfNull,
+      unknownEnumValue: config.unknownEnumValue,
+      generateValidator: config.generateValidator,
+      customMetadata: config.customMetadata,
+      generateMergeMethod: config.generateMergeMethod,
+      customMetadataImportPath: config.converterHydratedModelPrefix,
+      classFileOverrides: _unionFamilies.classFileOverrides,
+      enumWireTypes: _enumWireTypes,
+    ),
+  );
+
   /// Return [GeneratedFile] for converter if applicable, or null
   GeneratedFile? fillConverterContent(UniversalDataClass dataClass) {
     // Only generate converters for Db* prefixed classes (database models)
@@ -115,7 +169,11 @@ final class FillController {
 
     final dbClassName = dataClass.name.toPascal;
     final hydratedModelName = dbClassName.substring(2); // Remove 'Db'
-    final hydratedModelFileName = hydratedModelName.toSnake;
+    // Follow family overrides: a hydrated model merged into a union family
+    // file lives under the family's file name, not its own.
+    final hydratedModelFileName = _resolveModelFileBaseName(
+      hydratedModelName.toSnake,
+    );
 
     // Path to the hydrated model file (relative to output directory)
     final hydratedModelPath =
@@ -144,7 +202,12 @@ final class FillController {
     }
 
     final parser = HydratedModelParser();
-    final hydratedFields = parser.parseFields(hydratedModelPath);
+    // Anchor to the class name: family files hold many factory constructors,
+    // and the unanchored parser would take the first one in the file.
+    final hydratedFields = parser.parseFields(
+      hydratedModelPath,
+      className: hydratedModelName.toPascal,
+    );
 
     // Calculate the models base path (e.g., packages/my_models/lib/src)
     // by removing the filename and subdirectory from the hydrated model path
@@ -205,7 +268,11 @@ final class FillController {
       );
     } else if (dataClass is UniversalComponentClass) {
       if (dataClass.typeDef) {
-        return dartTypeDefTemplate(dataClass, jsonSerializer: jsonSerializer);
+        return dartTypeDefTemplate(
+          dataClass,
+          jsonSerializer: jsonSerializer,
+          classFileOverrides: _fileOverridesOrNull,
+        );
       }
       return switch (jsonSerializer) {
         JsonSerializer.freezed => dartFreezedDtoTemplate(
@@ -216,6 +283,7 @@ final class FillController {
           customMetadata: customMetadata,
           generateMergeMethod: generateMergeMethod,
           customMetadataImportPath: config.converterHydratedModelPrefix,
+          classFileOverrides: _fileOverridesOrNull,
         ),
         JsonSerializer.jsonSerializable => dartJsonSerializableDtoTemplate(
           dataClass,
@@ -266,6 +334,16 @@ final class FillController {
       return null;
     }
 
+    // Family unions dispatch on the leaf classes from each side's own
+    // discriminator mapping; legacy unions dispatch on the Freezed clone
+    // classes (`<Union><Factory>`).
+    final dbIsFamily = _unionFamilies.familyMemberNames.contains(
+      dataClass.name,
+    );
+    final hydratedIsFamily = _unionFamilies.familyMemberNames.contains(
+      hydratedUnionClass.name,
+    );
+
     final variants = <UnionVariantConverterInfo>[];
 
     for (final entry
@@ -277,11 +355,19 @@ final class FillController {
       final factoryName =
           discriminatorValue.toCamel; // e.g., 'audio', 'urlPreview'
 
-      // Freezed variant class = parent + factory suffix in PascalCase
-      final dbVariantFreezedClass =
-          '$dbUnionClassName${factoryName.toPascal}'; // e.g., 'DbFileAudio'
+      // Variant class dispatched on the DB side: the leaf itself for family
+      // unions ('DbAudioFile'), otherwise the clone ('DbFileAudio').
+      final dbVariantFreezedClass = dbIsFamily
+          ? dbRefName
+          : '$dbUnionClassName${factoryName.toPascal}';
+      final hydratedRefName = hydratedUnionClass
+          .discriminator!
+          .discriminatorValueToRefMapping[discriminatorValue];
       final hydratedVariantFreezedClass =
-          '$hydratedUnionClassName${factoryName.toPascal}'; // e.g., 'FileAudio'
+          (hydratedIsFamily && hydratedRefName != null)
+          ? hydratedRefName
+                .toPascal // e.g., 'AudioFile'
+          : '$hydratedUnionClassName${factoryName.toPascal}'; // e.g., 'FileAudio'
 
       // Converter class name follows the schema name, e.g., 'DbAudioFileConverter'
       final converterClassName = '${dbRefName}Converter';
@@ -326,6 +412,12 @@ final class FillController {
         hydratedUnionClassName: hydratedUnionClassName,
         variants: variants,
         hydratedModelImport: config.converterHydratedModelPrefix!,
+        // Sealed family unions carry an Unknown fallback; pass both sides so
+        // the dispatcher round-trips unknown variants instead of throwing.
+        hydratedUnknownClass: hydratedIsFamily
+            ? '${hydratedUnionClassName}Unknown'
+            : null,
+        dbUnknownClass: dbIsFamily ? '${dbUnionClassName}Unknown' : null,
       ),
     );
   }
@@ -341,13 +433,18 @@ final class FillController {
     UniversalComponentClass dbVariantClass,
     String hydratedModelName,
   ) {
-    final hydratedModelFileName = hydratedModelName.toSnake;
+    final hydratedModelFileName = _resolveModelFileBaseName(
+      hydratedModelName.toSnake,
+    );
     final hydratedModelPath =
         '${config.outputDirectory}/${config.converterHydratedModelsDirectory}/$hydratedModelFileName.dart';
 
     if (!File(hydratedModelPath).existsSync()) return const [];
 
-    final hydratedFields = HydratedModelParser().parseFields(hydratedModelPath);
+    final hydratedFields = HydratedModelParser().parseFields(
+      hydratedModelPath,
+      className: hydratedModelName.toPascal,
+    );
     return detectVariantHydratedParams(
       dbVariantClass.parameters.toList(),
       hydratedFields,
@@ -375,6 +472,7 @@ final class FillController {
         originalHttpResponse: config.originalHttpResponse,
         generatePathConstants: config.generatePathConstants,
         fileName: fileName,
+        classFileOverrides: _fileOverridesOrNull,
       ),
     );
   }

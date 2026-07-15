@@ -18,6 +18,7 @@ String dartRetrofitClientTemplate({
   bool mergeClients = false,
   bool generatePathConstants = false,
   String? fileName,
+  Map<String, String>? classFileOverrides,
 }) {
   final dioImport = "import 'package:dio/dio.dart' hide Headers;";
 
@@ -33,7 +34,7 @@ String dartRetrofitClientTemplate({
   final sb = StringBuffer('''
 ${_convertImport(restClient)}$dioImport
 $retrofitImports
-${dartImports(imports: restClient.imports, pathPrefix: '../models/')}
+${dartImports(imports: restClient.imports, pathPrefix: '../models/', fileOverrides: classFileOverrides)}
 part '${fileName ?? name.toSnake}.g.dart';
 
 @RestApi()
