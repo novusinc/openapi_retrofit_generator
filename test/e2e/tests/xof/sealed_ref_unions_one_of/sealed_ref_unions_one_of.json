@@ -1,0 +1,204 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Sealed Ref Unions API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/pets": {
+      "get": {
+        "tags": ["pets"],
+        "operationId": "getPet",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pet"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pet-house": {
+      "get": {
+        "tags": ["pets"],
+        "operationId": "getPetHouse",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PetHouse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Pet": {
+        "description": "A discriminated union over existing top-level leaf schemas.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/Cat"
+          },
+          {
+            "$ref": "#/components/schemas/Dog"
+          },
+          {
+            "$ref": "#/components/schemas/Robot"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "cat": "#/components/schemas/Cat",
+            "dog": "#/components/schemas/Dog",
+            "robot": "#/components/schemas/Robot"
+          }
+        }
+      },
+      "PetStatus": {
+        "type": "string",
+        "enum": ["available", "adopted"]
+      },
+      "Toy": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": ["name"]
+      },
+      "Cat": {
+        "type": "object",
+        "description": "A cat.",
+        "properties": {
+          "type": {
+            "type": "string",
+            "default": "cat"
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "schema_version": {
+            "type": "integer",
+            "default": 1
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PetStatus"
+          },
+          "mew_count": {
+            "type": "integer",
+            "default": 0
+          },
+          "friend": {
+            "$ref": "#/components/schemas/Pet"
+          }
+        },
+        "required": ["id", "created_at"]
+      },
+      "Dog": {
+        "type": "object",
+        "description": "A dog.",
+        "properties": {
+          "type": {
+            "type": "string",
+            "default": "dog"
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "schema_version": {
+            "type": "integer",
+            "default": 1
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PetStatus"
+          },
+          "bark_sound": {
+            "type": "string"
+          },
+          "toy": {
+            "$ref": "#/components/schemas/Toy"
+          }
+        },
+        "required": ["id", "created_at", "bark_sound"]
+      },
+      "Robot": {
+        "type": "object",
+        "description": "A robot pet whose fields are all optional or defaulted.",
+        "properties": {
+          "type": {
+            "type": "string",
+            "default": "robot"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "schema_version": {
+            "type": "integer",
+            "default": 1
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PetStatus"
+          },
+          "battery": {
+            "type": "integer",
+            "default": 100
+          }
+        }
+      },
+      "PetHouse": {
+        "type": "object",
+        "description": "References a leaf class directly and the union itself.",
+        "properties": {
+          "occupant": {
+            "$ref": "#/components/schemas/Cat"
+          },
+          "backup": {
+            "$ref": "#/components/schemas/Pet"
+          }
+        },
+        "required": ["occupant"]
+      }
+    }
+  }
+}

@@ -22,6 +22,7 @@ class UnionVariantInfo {
     required this.parentClassName,
     required this.factoryName,
     required this.discriminatorPropertyName,
+    required this.variantClassName,
   });
 
   /// The parent sealed/union class name (e.g., "Ai")
@@ -33,6 +34,11 @@ class UnionVariantInfo {
   /// The discriminator property name (e.g., "type")
   /// This field is excluded from union factory constructors by Freezed.
   final String discriminatorPropertyName;
+
+  /// The concrete variant class converters accept/return: the Freezed clone
+  /// (e.g., "AiAgent") for legacy unions, or the leaf class itself
+  /// (e.g., "Agent") for sealed-ref-union families.
+  final String variantClassName;
 }
 
 /// Provides template for generating model converter classes
@@ -83,9 +89,8 @@ String dartConverterTemplate(
   final parentClassName = unionVariantInfo?.parentClassName;
   final unionFactoryName = unionVariantInfo?.factoryName;
   final fromDbReturnType = parentClassName ?? resolvedHydratedModelName;
-  final toDbParamType = (parentClassName != null && unionFactoryName != null)
-      ? '$parentClassName${unionFactoryName.toPascal}'
-      : resolvedHydratedModelName;
+  final toDbParamType =
+      unionVariantInfo?.variantClassName ?? resolvedHydratedModelName;
 
   // DB side union info (e.g., DbAgent is a variant of Dbai)
   //   toDb returns Dbai (parent type) via Dbai.agent() factory
@@ -93,9 +98,8 @@ String dartConverterTemplate(
   final dbParentClassName = dbUnionVariantInfo?.parentClassName;
   final dbUnionFactoryName = dbUnionVariantInfo?.factoryName;
   final toDbReturnType = dbParentClassName ?? dbClassName;
-  final fromDbParamType = (dbParentClassName != null && dbUnionFactoryName != null)
-      ? '$dbParentClassName${dbUnionFactoryName.toPascal}'
-      : dbClassName;
+  final fromDbParamType =
+      dbUnionVariantInfo?.variantClassName ?? dbClassName;
 
   final fields = dataClass.parameters.toList();
   
@@ -966,6 +970,8 @@ String dartUnionConverterTemplate({
   required String hydratedUnionClassName,
   required List<UnionVariantConverterInfo> variants,
   required String hydratedModelImport,
+  String? hydratedUnknownClass,
+  String? dbUnknownClass,
 }) {
   final converterClassName = '${dbUnionClassName}Converter';
 
@@ -984,26 +990,38 @@ String dartUnionConverterTemplate({
       .map((v) => '  static const ${v.staticFieldName} = ${v.converterClassName}();')
       .join('\n');
 
-  // toDb() switch arms — all variants must be covered for exhaustiveness
-  final toDbArms = variants
-      .map(
-        (v) =>
-            '    models.${v.hydratedVariantFreezedClass} s => ${v.staticFieldName}.toDb(s),',
-      )
-      .join('\n');
+  // toDb() switch arms — all variants must be covered for exhaustiveness.
+  // Sealed family unions additionally carry an Unknown fallback variant:
+  // when both sides are families, unknown payloads pass through losslessly.
+  final toDbArms = [
+    ...variants.map(
+      (v) =>
+          '    models.${v.hydratedVariantFreezedClass} s => ${v.staticFieldName}.toDb(s),',
+    ),
+    if (hydratedUnknownClass != null)
+      dbUnknownClass != null
+          ? '    models.$hydratedUnknownClass s => models.$dbUnknownClass(s.json),'
+          : "    models.$hydratedUnknownClass s => throw UnsupportedError('Cannot convert an unknown $hydratedUnionClassName variant to $dbUnionClassName'),",
+  ].join('\n');
 
   // fromDb() switch arms — forward only the params that variant needs
-  final fromDbArms = variants.map((v) {
-    if (v.fromDbParams.isEmpty) {
-      return '    models.${v.dbVariantFreezedClass} s => ${v.staticFieldName}.fromDb(s),';
-    }
-    final passedArgs = v.fromDbParams.map((p) {
-      // The union-level param is nullable; add ! when the variant requires it
-      final needsAssertion = !p.type.endsWith('?');
-      return '${p.name}: ${p.name}${needsAssertion ? '!' : ''}';
-    }).join(', ');
-    return '    models.${v.dbVariantFreezedClass} s => ${v.staticFieldName}.fromDb(s, $passedArgs),';
-  }).join('\n');
+  final fromDbArms = [
+    ...variants.map((v) {
+      if (v.fromDbParams.isEmpty) {
+        return '    models.${v.dbVariantFreezedClass} s => ${v.staticFieldName}.fromDb(s),';
+      }
+      final passedArgs = v.fromDbParams.map((p) {
+        // The union-level param is nullable; add ! when the variant requires it
+        final needsAssertion = !p.type.endsWith('?');
+        return '${p.name}: ${p.name}${needsAssertion ? '!' : ''}';
+      }).join(', ');
+      return '    models.${v.dbVariantFreezedClass} s => ${v.staticFieldName}.fromDb(s, $passedArgs),';
+    }),
+    if (dbUnknownClass != null)
+      hydratedUnknownClass != null
+          ? '    models.$dbUnknownClass s => models.$hydratedUnknownClass(s.json),'
+          : "    models.$dbUnknownClass s => throw UnsupportedError('Cannot convert an unknown $dbUnionClassName variant to $hydratedUnionClassName'),",
+  ].join('\n');
 
   // fromDb() method signature
   final String fromDbSignature;

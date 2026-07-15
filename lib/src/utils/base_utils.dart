@@ -15,7 +15,15 @@ const _primitiveTypes = {
 };
 
 /// Provides imports as String from list of imports
-String dartImports({required Set<String> imports, String? pathPrefix}) {
+///
+/// [fileOverrides] remaps snake-case file base names for classes whose file
+/// moved (e.g. sealed-ref-union family members generated into the family
+/// file); mapped duplicates are emitted once.
+String dartImports({
+  required Set<String> imports,
+  String? pathPrefix,
+  Map<String, String>? fileOverrides,
+}) {
   if (imports.isEmpty) {
     return '';
   }
@@ -25,7 +33,18 @@ String dartImports({required Set<String> imports, String? pathPrefix}) {
   if (filteredImports.isEmpty) {
     return '';
   }
-  return '\n${filteredImports.map((import) => "import '${pathPrefix ?? ''}${import.toSnake}.dart';").join('\n')}\n';
+  final Iterable<String> fileBaseNames;
+  if (fileOverrides == null) {
+    fileBaseNames = filteredImports.map((import) => import.toSnake);
+  } else {
+    final seen = <String>{};
+    fileBaseNames = [
+      for (final import in filteredImports)
+        if (seen.add(fileOverrides[import.toSnake] ?? import.toSnake))
+          fileOverrides[import.toSnake] ?? import.toSnake,
+    ];
+  }
+  return '\n${fileBaseNames.map((base) => "import '${pathPrefix ?? ''}$base.dart';").join('\n')}\n';
 }
 
 String indentation(int length) => ' ' * length;

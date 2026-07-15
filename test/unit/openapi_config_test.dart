@@ -1098,4 +1098,87 @@ void main() {
       });
     });
   });
+
+  group('sealed_ref_unions configuration', () {
+    test('defaults to false', () {
+      const config = OpenApiConfig(outputDirectory: 'lib/api');
+      expect(config.sealedRefUnions, isFalse);
+
+      final fromYaml = OpenApiConfig.fromYaml(
+        YamlMap.wrap({
+          'schema_path': 'api/openapi.json',
+          'output_directory': 'lib/api',
+        }),
+      );
+      expect(fromYaml.sealedRefUnions, isFalse);
+    });
+
+    test('parses sealed_ref_unions with the freezed serializer', () {
+      final config = OpenApiConfig.fromYaml(
+        YamlMap.wrap({
+          'schema_path': 'api/openapi.json',
+          'output_directory': 'lib/api',
+          'json_serializer': 'freezed',
+          'sealed_ref_unions': true,
+        }),
+      );
+
+      expect(config.sealedRefUnions, isTrue);
+      expect(config.toGeneratorConfig().effectiveSealedRefUnions, isTrue);
+    });
+
+    test('is inherited from the root config', () {
+      final rootConfig = OpenApiConfig.fromYaml(
+        YamlMap.wrap({
+          'output_directory': 'lib/api',
+          'json_serializer': 'freezed',
+          'sealed_ref_unions': true,
+        }),
+        isRootConfig: true,
+      );
+      final config = OpenApiConfig.fromYaml(
+        YamlMap.wrap({'schema_path': 'api/openapi.json'}),
+        rootConfig: rootConfig,
+      );
+
+      expect(config.sealedRefUnions, isTrue);
+    });
+
+    test('is retained but ineffective for non-freezed serializers', () {
+      final config = OpenApiConfig.fromYaml(
+        YamlMap.wrap({
+          'schema_path': 'api/openapi.json',
+          'output_directory': 'lib/api',
+          'json_serializer': 'json_serializable',
+          'sealed_ref_unions': true,
+        }),
+      );
+
+      // The flag survives parsing (warn-and-ignore), but the generator gate
+      // stays closed for non-freezed serializers.
+      expect(config.sealedRefUnions, isTrue);
+      expect(config.toGeneratorConfig().effectiveSealedRefUnions, isFalse);
+    });
+
+    test('rejects the merge_outputs combination', () {
+      expect(
+        () => OpenApiConfig.fromYaml(
+          YamlMap.wrap({
+            'schema_path': 'api/openapi.json',
+            'output_directory': 'lib/api',
+            'json_serializer': 'freezed',
+            'sealed_ref_unions': true,
+            'merge_outputs': true,
+          }),
+        ),
+        throwsA(
+          isA<ConfigException>().having(
+            (e) => e.message,
+            'message',
+            contains('sealed_ref_unions'),
+          ),
+        ),
+      );
+    });
+  });
 }

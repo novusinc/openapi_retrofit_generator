@@ -201,5 +201,39 @@ void main() {
         buildFolder: buildFolder,
       );
     });
+
+    // sealed_ref_unions only affects the freezed serializer; the json and
+    // mappable goldens intentionally show the unchanged legacy emission.
+    test('sealed_ref_unions_one_of', () async {
+      await e2eTest(
+        'xof/sealed_ref_unions_one_of',
+        (outputDirectory, schemaPath, serializer) => OpenApiConfig(
+          outputDirectory: outputDirectory,
+          schemaPath: schemaPath,
+          jsonSerializer: serializer,
+          putClientsInFolder: true,
+          includeIfNull: true,
+          sealedRefUnions: true,
+        ),
+        schemaFileName: 'sealed_ref_unions_one_of.json',
+        buildFolder: buildFolder,
+      );
+    });
+
+    test('sealed_ref_unions_shared_leaves', () async {
+      await e2eTest(
+        'xof/sealed_ref_unions_shared_leaves',
+        (outputDirectory, schemaPath, serializer) => OpenApiConfig(
+          outputDirectory: outputDirectory,
+          schemaPath: schemaPath,
+          jsonSerializer: serializer,
+          putClientsInFolder: true,
+          includeIfNull: true,
+          sealedRefUnions: true,
+        ),
+        schemaFileName: 'sealed_ref_unions_shared_leaves.json',
+        buildFolder: buildFolder,
+      );
+    });
   });
 }

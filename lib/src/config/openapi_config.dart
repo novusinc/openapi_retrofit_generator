@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:args/args.dart';
 import 'package:openapi_retrofit_generator/src/config/config_exception.dart';
 import 'package:openapi_retrofit_generator/src/config/custom_metadata_config.dart';
@@ -32,6 +34,7 @@ class OpenApiConfig {
     this.generateValidator = false,
     this.useXNullable = true,
     this.fallbackUnion,
+    this.sealedRefUnions = false,
     this.excludeTags = const <String>[],
     this.includeTags = const <String>[],
     this.defaultClient = 'api',
@@ -77,6 +80,7 @@ class OpenApiConfig {
     required this.includeIfNull,
     required this.generateConverters,
     required this.generateDefaults,
+    required this.sealedRefUnions,
     this.fallbackUnion,
     this.converterHydratedModelPrefix,
     this.converterHydratedModelsDirectory = 'hydrated_models',
@@ -202,6 +206,9 @@ class OpenApiConfig {
     final fallbackUnion =
         yamlMap['fallback_union'] as String? ?? rootConfig?.fallbackUnion;
 
+    final sealedRefUnions =
+        yamlMap['sealed_ref_unions'] as bool? ?? rootConfig?.sealedRefUnions;
+
     final excludedTagsYaml = yamlMap['exclude_tags'] as YamlList?;
     List<String>? excludedTags;
     if (excludedTagsYaml != null) {
@@ -295,6 +302,26 @@ class OpenApiConfig {
     // Default config
     final dc = OpenApiConfig(name: name, outputDirectory: outputDirectory);
 
+    // sealed_ref_unions only affects the freezed serializer. Warn (instead of
+    // failing) so a shared config can enable it while some schemas use another
+    // serializer; the generator ignores the flag for non-freezed output.
+    final effectiveJsonSerializer = jsonSerializer ?? dc.jsonSerializer;
+    final effectiveSealedRefUnions = sealedRefUnions ?? dc.sealedRefUnions;
+    if (effectiveSealedRefUnions &&
+        effectiveJsonSerializer != JsonSerializer.freezed) {
+      stderr.writeln(
+        "Warning: 'sealed_ref_unions' is only supported with "
+        "'json_serializer: freezed' and is ignored for "
+        "'${effectiveJsonSerializer.name}'.",
+      );
+    }
+    if (effectiveSealedRefUnions && (mergeOutputs ?? dc.mergeOutputs)) {
+      throw const ConfigException(
+        "Config parameters 'sealed_ref_unions' and 'merge_outputs' cannot be "
+        'combined: union family files rely on per-file part directives.',
+      );
+    }
+
     return OpenApiConfig._(
       schemaPath: schemaPath,
       schemaUrl: schemaUrl,
@@ -320,6 +347,7 @@ class OpenApiConfig {
       generateValidator: generateValidator ?? dc.generateValidator,
       useXNullable: useXNullable ?? dc.useXNullable,
       fallbackUnion: fallbackUnion,
+      sealedRefUnions: effectiveSealedRefUnions,
       mergeOutputs: mergeOutputs ?? dc.mergeOutputs,
       excludeTags: excludedTags ?? dc.excludeTags,
       includeTags: includedTags ?? dc.includeTags,
@@ -600,6 +628,32 @@ class OpenApiConfig {
   /// Default: null (no fallback union)
   final String? fallbackUnion;
 
+  /// Emit discriminated all-`$ref` unions as plain `sealed` supertypes over the
+  /// existing referenced leaf classes instead of cloning every variant's fields
+  /// into Freezed union factories.
+  ///
+  /// When true, each eligible union (discriminated oneOf/anyOf whose mapping
+  /// refs are all existing top-level non-union components) is generated as:
+  /// - a plain `sealed class X` with redirecting factory constructors per
+  ///   variant (`X.human(...) = HumanLeaf`), a hand-rolled `fromJson` switch on
+  ///   the discriminator, and abstract getters for fields common to all leaves
+  /// - the leaf classes themselves (still Freezed) implementing the supertype,
+  ///   merged into ONE file per union family (Dart requires all subtypes of a
+  ///   sealed class in the same library)
+  /// - a `XUnknown` fallback carrying the raw JSON for unknown discriminator
+  ///   values (supersedes [fallbackUnion] for eligible unions)
+  /// - `copyWith`/`map`-style compatibility extensions on the supertype
+  ///
+  /// Ineligible unions (inline variants, missing refs, undiscriminated) keep
+  /// the legacy clone emission.
+  ///
+  /// Only applicable with [jsonSerializer] set to [JsonSerializer.freezed];
+  /// ignored (with a warning) for other serializers. Incompatible with
+  /// [mergeOutputs].
+  ///
+  /// Default: false
+  final bool sealedRefUnions;
+
   /// Exclude endpoints with specific OpenAPI tags.
   ///
   /// Endpoints tagged with these values will NOT be generated.
@@ -788,6 +842,7 @@ class OpenApiConfig {
       originalHttpResponse: originalHttpResponse,
       generateValidator: generateValidator,
       fallbackUnion: fallbackUnion,
+      sealedRefUnions: sealedRefUnions,
       mergeOutputs: mergeOutputs,
       includeIfNull: includeIfNull,
       generateConverters: generateConverters,
