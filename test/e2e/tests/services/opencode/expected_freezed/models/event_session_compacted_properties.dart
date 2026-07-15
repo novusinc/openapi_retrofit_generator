@@ -14,6 +14,18 @@ abstract class EventSessionCompactedProperties
     @JsonKey(name: 'sessionID') required String sessionId,
   }) = _EventSessionCompactedProperties;
 
+  Map<String, dynamic> toJson() => _$EventSessionCompactedPropertiesToJson(
+    this as _EventSessionCompactedProperties,
+  );
   factory EventSessionCompactedProperties.fromJson(Map<String, Object?> json) =>
       _$EventSessionCompactedPropertiesFromJson(json);
+}
+
+extension EventSessionCompactedPropertiesMergeX
+    on EventSessionCompactedProperties {
+  /// Returns a new [EventSessionCompactedProperties] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventSessionCompactedProperties merge(EventSessionCompactedProperties other) {
+    return copyWith(sessionId: other.sessionId);
+  }
 }

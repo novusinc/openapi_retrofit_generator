@@ -11,6 +11,15 @@ part 'partner_id.g.dart';
 abstract class PartnerId with _$PartnerId {
   const factory PartnerId({required String id}) = _PartnerId;
 
+  Map<String, dynamic> toJson() => _$PartnerIdToJson(this as _PartnerId);
   factory PartnerId.fromJson(Map<String, Object?> json) =>
       _$PartnerIdFromJson(json);
+}
+
+extension PartnerIdMergeX on PartnerId {
+  /// Returns a new [PartnerId] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  PartnerId merge(PartnerId other) {
+    return copyWith(id: other.id);
+  }
 }

@@ -20,6 +20,22 @@ abstract class FileContent with _$FileContent {
     String? mimeType,
   }) = _FileContent;
 
+  Map<String, dynamic> toJson() => _$FileContentToJson(this as _FileContent);
   factory FileContent.fromJson(Map<String, Object?> json) =>
       _$FileContentFromJson(json);
+}
+
+extension FileContentMergeX on FileContent {
+  /// Returns a new [FileContent] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  FileContent merge(FileContent other) {
+    return copyWith(
+      type: other.type,
+      content: other.content,
+      diff: other.diff,
+      patch: other.patch,
+      encoding: other.encoding,
+      mimeType: other.mimeType,
+    );
+  }
 }

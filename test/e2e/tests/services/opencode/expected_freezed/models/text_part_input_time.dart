@@ -12,6 +12,16 @@ abstract class TextPartInputTime with _$TextPartInputTime {
   const factory TextPartInputTime({required num start, num? end}) =
       _TextPartInputTime;
 
+  Map<String, dynamic> toJson() =>
+      _$TextPartInputTimeToJson(this as _TextPartInputTime);
   factory TextPartInputTime.fromJson(Map<String, Object?> json) =>
       _$TextPartInputTimeFromJson(json);
+}
+
+extension TextPartInputTimeMergeX on TextPartInputTime {
+  /// Returns a new [TextPartInputTime] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  TextPartInputTime merge(TextPartInputTime other) {
+    return copyWith(start: other.start, end: other.end);
+  }
 }

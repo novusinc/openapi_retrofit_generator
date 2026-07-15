@@ -15,6 +15,20 @@ abstract class Test2Response with _$Test2Response {
     @JsonKey(includeIfNull: false) String? lastname,
   }) = _Test2Response;
 
+  Map<String, dynamic> toJson() =>
+      _$Test2ResponseToJson(this as _Test2Response);
   factory Test2Response.fromJson(Map<String, Object?> json) =>
       _$Test2ResponseFromJson(json);
+}
+
+extension Test2ResponseMergeX on Test2Response {
+  /// Returns a new [Test2Response] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Test2Response merge(Test2Response other) {
+    return copyWith(
+      list: other.list,
+      name: other.name,
+      lastname: other.lastname,
+    );
+  }
 }

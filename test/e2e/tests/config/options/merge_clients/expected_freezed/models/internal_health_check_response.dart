@@ -15,6 +15,16 @@ abstract class InternalHealthCheckResponse with _$InternalHealthCheckResponse {
     InternalHealthCheckResponseStatusStatus? status,
   }) = _InternalHealthCheckResponse;
 
+  Map<String, dynamic> toJson() =>
+      _$InternalHealthCheckResponseToJson(this as _InternalHealthCheckResponse);
   factory InternalHealthCheckResponse.fromJson(Map<String, Object?> json) =>
       _$InternalHealthCheckResponseFromJson(json);
+}
+
+extension InternalHealthCheckResponseMergeX on InternalHealthCheckResponse {
+  /// Returns a new [InternalHealthCheckResponse] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  InternalHealthCheckResponse merge(InternalHealthCheckResponse other) {
+    return copyWith(status: other.status);
+  }
 }

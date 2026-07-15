@@ -25,6 +25,26 @@ abstract class PersonEntity with _$PersonEntity {
     Map<String, String>? socialProfiles,
   }) = _PersonEntity;
 
+  Map<String, dynamic> toJson() => _$PersonEntityToJson(this as _PersonEntity);
   factory PersonEntity.fromJson(Map<String, Object?> json) =>
       _$PersonEntityFromJson(json);
+}
+
+extension PersonEntityMergeX on PersonEntity {
+  /// Returns a new [PersonEntity] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  PersonEntity merge(PersonEntity other) {
+    return copyWith(
+      id: other.id,
+      entityType: other.entityType,
+      name: other.name,
+      description: other.description,
+      createdAt: other.createdAt,
+      updatedAt: other.updatedAt,
+      dateOfBirth: other.dateOfBirth,
+      nationality: other.nationality,
+      occupation: other.occupation,
+      socialProfiles: other.socialProfiles,
+    );
+  }
 }

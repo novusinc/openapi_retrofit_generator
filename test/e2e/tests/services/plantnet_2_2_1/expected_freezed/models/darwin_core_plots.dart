@@ -22,6 +22,24 @@ abstract class DarwinCorePlots with _$DarwinCorePlots {
     num? startTime,
   }) = _DarwinCorePlots;
 
+  Map<String, dynamic> toJson() =>
+      _$DarwinCorePlotsToJson(this as _DarwinCorePlots);
   factory DarwinCorePlots.fromJson(Map<String, Object?> json) =>
       _$DarwinCorePlotsFromJson(json);
+}
+
+extension DarwinCorePlotsMergeX on DarwinCorePlots {
+  /// Returns a new [DarwinCorePlots] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  DarwinCorePlots merge(DarwinCorePlots other) {
+    return copyWith(
+      results: other.results,
+      offset: other.offset,
+      limit: other.limit,
+      endOfRecords: other.endOfRecords,
+      count: other.count,
+      facets: other.facets,
+      startTime: other.startTime,
+    );
+  }
 }

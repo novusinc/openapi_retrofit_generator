@@ -18,5 +18,19 @@ abstract class File with _$File {
     required FileStatusStatus status,
   }) = _File;
 
+  Map<String, dynamic> toJson() => _$FileToJson(this as _File);
   factory File.fromJson(Map<String, Object?> json) => _$FileFromJson(json);
+}
+
+extension FileMergeX on File {
+  /// Returns a new [File] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  File merge(File other) {
+    return copyWith(
+      path: other.path,
+      added: other.added,
+      removed: other.removed,
+      status: other.status,
+    );
+  }
 }

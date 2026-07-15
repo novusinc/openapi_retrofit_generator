@@ -14,6 +14,16 @@ abstract class FiltersDateRange with _$FiltersDateRange {
     @JsonKey(includeIfNull: false) DateTime? to,
   }) = _FiltersDateRange;
 
+  Map<String, dynamic> toJson() =>
+      _$FiltersDateRangeToJson(this as _FiltersDateRange);
   factory FiltersDateRange.fromJson(Map<String, Object?> json) =>
       _$FiltersDateRangeFromJson(json);
+}
+
+extension FiltersDateRangeMergeX on FiltersDateRange {
+  /// Returns a new [FiltersDateRange] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  FiltersDateRange merge(FiltersDateRange other) {
+    return copyWith(from: other.from, to: other.to);
+  }
 }

@@ -15,6 +15,20 @@ abstract class ListPostsResponsePagination with _$ListPostsResponsePagination {
     @JsonKey(includeIfNull: false) bool? hasNext,
   }) = _ListPostsResponsePagination;
 
+  Map<String, dynamic> toJson() =>
+      _$ListPostsResponsePaginationToJson(this as _ListPostsResponsePagination);
   factory ListPostsResponsePagination.fromJson(Map<String, Object?> json) =>
       _$ListPostsResponsePaginationFromJson(json);
+}
+
+extension ListPostsResponsePaginationMergeX on ListPostsResponsePagination {
+  /// Returns a new [ListPostsResponsePagination] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ListPostsResponsePagination merge(ListPostsResponsePagination other) {
+    return copyWith(
+      page: other.page,
+      total: other.total,
+      hasNext: other.hasNext,
+    );
+  }
 }

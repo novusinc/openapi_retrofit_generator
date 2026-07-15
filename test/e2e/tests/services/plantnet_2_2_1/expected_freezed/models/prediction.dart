@@ -29,6 +29,27 @@ abstract class Prediction with _$Prediction {
     bool? observed,
   }) = _Prediction;
 
+  Map<String, dynamic> toJson() => _$PredictionToJson(this as _Prediction);
   factory Prediction.fromJson(Map<String, Object?> json) =>
       _$PredictionFromJson(json);
+}
+
+extension PredictionMergeX on Prediction {
+  /// Returns a new [Prediction] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Prediction merge(Prediction other) {
+    return copyWith(
+      name: other.name,
+      author: other.author,
+      family: other.family,
+      genus: other.genus,
+      gbif: other.gbif,
+      iucn: other.iucn,
+      commonNames: other.commonNames,
+      images: other.images,
+      observationsCount: other.observationsCount,
+      observed: other.observed,
+      prediction: other.prediction,
+    );
+  }
 }

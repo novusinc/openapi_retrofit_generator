@@ -14,7 +14,22 @@ abstract class ApiV1CategoryListRequestIncludedNested
     @JsonKey(includeIfNull: false) String? includedInner,
   }) = _ApiV1CategoryListRequestIncludedNested;
 
+  Map<String, dynamic> toJson() =>
+      _$ApiV1CategoryListRequestIncludedNestedToJson(
+        this as _ApiV1CategoryListRequestIncludedNested,
+      );
   factory ApiV1CategoryListRequestIncludedNested.fromJson(
     Map<String, Object?> json,
   ) => _$ApiV1CategoryListRequestIncludedNestedFromJson(json);
+}
+
+extension ApiV1CategoryListRequestIncludedNestedMergeX
+    on ApiV1CategoryListRequestIncludedNested {
+  /// Returns a new [ApiV1CategoryListRequestIncludedNested] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ApiV1CategoryListRequestIncludedNested merge(
+    ApiV1CategoryListRequestIncludedNested other,
+  ) {
+    return copyWith(includedInner: other.includedInner);
+  }
 }

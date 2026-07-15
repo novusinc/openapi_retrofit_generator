@@ -21,6 +21,23 @@ abstract class Provider with _$Provider {
     Map<String, dynamic>? options,
   }) = _Provider;
 
+  Map<String, dynamic> toJson() => _$ProviderToJson(this as _Provider);
   factory Provider.fromJson(Map<String, Object?> json) =>
       _$ProviderFromJson(json);
+}
+
+extension ProviderMergeX on Provider {
+  /// Returns a new [Provider] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Provider merge(Provider other) {
+    return copyWith(
+      api: other.api,
+      name: other.name,
+      env: other.env,
+      id: other.id,
+      npm: other.npm,
+      models: other.models,
+      options: other.options,
+    );
+  }
 }

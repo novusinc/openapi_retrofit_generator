@@ -13,6 +13,15 @@ part 'model10.g.dart';
 abstract class Model10 with _$Model10 {
   const factory Model10({Indicators? indicators, num? total}) = _Model10;
 
+  Map<String, dynamic> toJson() => _$Model10ToJson(this as _Model10);
   factory Model10.fromJson(Map<String, Object?> json) =>
       _$Model10FromJson(json);
+}
+
+extension Model10MergeX on Model10 {
+  /// Returns a new [Model10] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Model10 merge(Model10 other) {
+    return copyWith(indicators: other.indicators, total: other.total);
+  }
 }

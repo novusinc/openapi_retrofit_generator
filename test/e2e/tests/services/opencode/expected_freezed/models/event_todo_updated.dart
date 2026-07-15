@@ -16,6 +16,16 @@ abstract class EventTodoUpdated with _$EventTodoUpdated {
     required EventTodoUpdatedProperties properties,
   }) = _EventTodoUpdated;
 
+  Map<String, dynamic> toJson() =>
+      _$EventTodoUpdatedToJson(this as _EventTodoUpdated);
   factory EventTodoUpdated.fromJson(Map<String, Object?> json) =>
       _$EventTodoUpdatedFromJson(json);
+}
+
+extension EventTodoUpdatedMergeX on EventTodoUpdated {
+  /// Returns a new [EventTodoUpdated] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventTodoUpdated merge(EventTodoUpdated other) {
+    return copyWith(type: other.type, properties: other.properties);
+  }
 }

@@ -13,6 +13,16 @@ abstract class GetNoTagsResponse with _$GetNoTagsResponse {
     @JsonKey(includeIfNull: false) String? result,
   }) = _GetNoTagsResponse;
 
+  Map<String, dynamic> toJson() =>
+      _$GetNoTagsResponseToJson(this as _GetNoTagsResponse);
   factory GetNoTagsResponse.fromJson(Map<String, Object?> json) =>
       _$GetNoTagsResponseFromJson(json);
+}
+
+extension GetNoTagsResponseMergeX on GetNoTagsResponse {
+  /// Returns a new [GetNoTagsResponse] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  GetNoTagsResponse merge(GetNoTagsResponse other) {
+    return copyWith(result: other.result);
+  }
 }

@@ -18,6 +18,22 @@ abstract class PatchPart with _$PatchPart {
     required List<String> files,
   }) = _PatchPart;
 
+  Map<String, dynamic> toJson() => _$PatchPartToJson(this as _PatchPart);
   factory PatchPart.fromJson(Map<String, Object?> json) =>
       _$PatchPartFromJson(json);
+}
+
+extension PatchPartMergeX on PatchPart {
+  /// Returns a new [PatchPart] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  PatchPart merge(PatchPart other) {
+    return copyWith(
+      id: other.id,
+      sessionId: other.sessionId,
+      messageId: other.messageId,
+      type: other.type,
+      hash: other.hash,
+      files: other.files,
+    );
+  }
 }

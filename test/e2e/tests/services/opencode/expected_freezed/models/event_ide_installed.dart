@@ -16,6 +16,16 @@ abstract class EventIdeInstalled with _$EventIdeInstalled {
     required EventIdeInstalledProperties properties,
   }) = _EventIdeInstalled;
 
+  Map<String, dynamic> toJson() =>
+      _$EventIdeInstalledToJson(this as _EventIdeInstalled);
   factory EventIdeInstalled.fromJson(Map<String, Object?> json) =>
       _$EventIdeInstalledFromJson(json);
+}
+
+extension EventIdeInstalledMergeX on EventIdeInstalled {
+  /// Returns a new [EventIdeInstalled] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventIdeInstalled merge(EventIdeInstalled other) {
+    return copyWith(type: other.type, properties: other.properties);
+  }
 }

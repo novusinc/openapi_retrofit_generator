@@ -18,6 +18,20 @@ abstract class Account with _$Account {
     String? created,
   }) = _Account;
 
+  Map<String, dynamic> toJson() => _$AccountToJson(this as _Account);
   factory Account.fromJson(Map<String, Object?> json) =>
       _$AccountFromJson(json);
+}
+
+extension AccountMergeX on Account {
+  /// Returns a new [Account] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Account merge(Account other) {
+    return copyWith(
+      id: other.id,
+      username: other.username,
+      name: other.name,
+      created: other.created,
+    );
+  }
 }

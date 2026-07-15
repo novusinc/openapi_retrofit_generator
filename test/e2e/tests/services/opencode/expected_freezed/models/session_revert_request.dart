@@ -14,6 +14,16 @@ abstract class SessionRevertRequest with _$SessionRevertRequest {
     @JsonKey(name: 'partID') String? partId,
   }) = _SessionRevertRequest;
 
+  Map<String, dynamic> toJson() =>
+      _$SessionRevertRequestToJson(this as _SessionRevertRequest);
   factory SessionRevertRequest.fromJson(Map<String, Object?> json) =>
       _$SessionRevertRequestFromJson(json);
+}
+
+extension SessionRevertRequestMergeX on SessionRevertRequest {
+  /// Returns a new [SessionRevertRequest] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  SessionRevertRequest merge(SessionRevertRequest other) {
+    return copyWith(messageId: other.messageId, partId: other.partId);
+  }
 }

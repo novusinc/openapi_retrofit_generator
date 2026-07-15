@@ -16,6 +16,16 @@ abstract class EventInstallationUpdated with _$EventInstallationUpdated {
     required EventInstallationUpdatedProperties properties,
   }) = _EventInstallationUpdated;
 
+  Map<String, dynamic> toJson() =>
+      _$EventInstallationUpdatedToJson(this as _EventInstallationUpdated);
   factory EventInstallationUpdated.fromJson(Map<String, Object?> json) =>
       _$EventInstallationUpdatedFromJson(json);
+}
+
+extension EventInstallationUpdatedMergeX on EventInstallationUpdated {
+  /// Returns a new [EventInstallationUpdated] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventInstallationUpdated merge(EventInstallationUpdated other) {
+    return copyWith(type: other.type, properties: other.properties);
+  }
 }

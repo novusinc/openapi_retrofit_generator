@@ -18,6 +18,20 @@ abstract class Partner with _$Partner {
     String? avatar,
   }) = _Partner;
 
+  Map<String, dynamic> toJson() => _$PartnerToJson(this as _Partner);
   factory Partner.fromJson(Map<String, Object?> json) =>
       _$PartnerFromJson(json);
+}
+
+extension PartnerMergeX on Partner {
+  /// Returns a new [Partner] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Partner merge(Partner other) {
+    return copyWith(
+      author: other.author,
+      id: other.id,
+      observationId: other.observationId,
+      avatar: other.avatar,
+    );
+  }
 }

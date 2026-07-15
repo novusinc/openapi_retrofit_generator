@@ -15,6 +15,20 @@ abstract class BadRequestError with _$BadRequestError {
     required bool success,
   }) = _BadRequestError;
 
+  Map<String, dynamic> toJson() =>
+      _$BadRequestErrorToJson(this as _BadRequestError);
   factory BadRequestError.fromJson(Map<String, Object?> json) =>
       _$BadRequestErrorFromJson(json);
+}
+
+extension BadRequestErrorMergeX on BadRequestError {
+  /// Returns a new [BadRequestError] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  BadRequestError merge(BadRequestError other) {
+    return copyWith(
+      data: other.data,
+      errors: other.errors,
+      success: other.success,
+    );
+  }
 }

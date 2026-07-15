@@ -18,6 +18,21 @@ abstract class StepFinishPartTokens with _$StepFinishPartTokens {
     required StepFinishPartTokensCache cache,
   }) = _StepFinishPartTokens;
 
+  Map<String, dynamic> toJson() =>
+      _$StepFinishPartTokensToJson(this as _StepFinishPartTokens);
   factory StepFinishPartTokens.fromJson(Map<String, Object?> json) =>
       _$StepFinishPartTokensFromJson(json);
+}
+
+extension StepFinishPartTokensMergeX on StepFinishPartTokens {
+  /// Returns a new [StepFinishPartTokens] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  StepFinishPartTokens merge(StepFinishPartTokens other) {
+    return copyWith(
+      input: other.input,
+      output: other.output,
+      reasoning: other.reasoning,
+      cache: other.cache,
+    );
+  }
 }

@@ -16,6 +16,16 @@ abstract class EventMessagePartUpdated with _$EventMessagePartUpdated {
     required EventMessagePartUpdatedProperties properties,
   }) = _EventMessagePartUpdated;
 
+  Map<String, dynamic> toJson() =>
+      _$EventMessagePartUpdatedToJson(this as _EventMessagePartUpdated);
   factory EventMessagePartUpdated.fromJson(Map<String, Object?> json) =>
       _$EventMessagePartUpdatedFromJson(json);
+}
+
+extension EventMessagePartUpdatedMergeX on EventMessagePartUpdated {
+  /// Returns a new [EventMessagePartUpdated] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventMessagePartUpdated merge(EventMessagePartUpdated other) {
+    return copyWith(type: other.type, properties: other.properties);
+  }
 }

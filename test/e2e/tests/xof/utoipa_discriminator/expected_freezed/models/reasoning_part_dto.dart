@@ -16,6 +16,16 @@ abstract class ReasoningPartDto with _$ReasoningPartDto {
     required String reasoning,
   }) = _ReasoningPartDto;
 
+  Map<String, dynamic> toJson() =>
+      _$ReasoningPartDtoToJson(this as _ReasoningPartDto);
   factory ReasoningPartDto.fromJson(Map<String, Object?> json) =>
       _$ReasoningPartDtoFromJson(json);
+}
+
+extension ReasoningPartDtoMergeX on ReasoningPartDto {
+  /// Returns a new [ReasoningPartDto] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ReasoningPartDto merge(ReasoningPartDto other) {
+    return copyWith(reasoning: other.reasoning);
+  }
 }

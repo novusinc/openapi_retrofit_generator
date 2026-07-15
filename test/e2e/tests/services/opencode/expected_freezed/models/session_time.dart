@@ -15,6 +15,19 @@ abstract class SessionTime with _$SessionTime {
     num? compacting,
   }) = _SessionTime;
 
+  Map<String, dynamic> toJson() => _$SessionTimeToJson(this as _SessionTime);
   factory SessionTime.fromJson(Map<String, Object?> json) =>
       _$SessionTimeFromJson(json);
+}
+
+extension SessionTimeMergeX on SessionTime {
+  /// Returns a new [SessionTime] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  SessionTime merge(SessionTime other) {
+    return copyWith(
+      created: other.created,
+      updated: other.updated,
+      compacting: other.compacting,
+    );
+  }
 }

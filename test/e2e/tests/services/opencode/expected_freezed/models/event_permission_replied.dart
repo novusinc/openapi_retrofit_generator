@@ -16,6 +16,16 @@ abstract class EventPermissionReplied with _$EventPermissionReplied {
     required EventPermissionRepliedProperties properties,
   }) = _EventPermissionReplied;
 
+  Map<String, dynamic> toJson() =>
+      _$EventPermissionRepliedToJson(this as _EventPermissionReplied);
   factory EventPermissionReplied.fromJson(Map<String, Object?> json) =>
       _$EventPermissionRepliedFromJson(json);
+}
+
+extension EventPermissionRepliedMergeX on EventPermissionReplied {
+  /// Returns a new [EventPermissionReplied] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventPermissionReplied merge(EventPermissionReplied other) {
+    return copyWith(type: other.type, properties: other.properties);
+  }
 }

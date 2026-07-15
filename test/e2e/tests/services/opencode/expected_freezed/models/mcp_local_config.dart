@@ -23,6 +23,21 @@ abstract class McpLocalConfig with _$McpLocalConfig {
     bool? enabled,
   }) = _McpLocalConfig;
 
+  Map<String, dynamic> toJson() =>
+      _$McpLocalConfigToJson(this as _McpLocalConfig);
   factory McpLocalConfig.fromJson(Map<String, Object?> json) =>
       _$McpLocalConfigFromJson(json);
+}
+
+extension McpLocalConfigMergeX on McpLocalConfig {
+  /// Returns a new [McpLocalConfig] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  McpLocalConfig merge(McpLocalConfig other) {
+    return copyWith(
+      type: other.type,
+      command: other.command,
+      environment: other.environment,
+      enabled: other.enabled,
+    );
+  }
 }

@@ -16,6 +16,16 @@ abstract class NotFoundError with _$NotFoundError {
     required NotFoundErrorData data,
   }) = _NotFoundError;
 
+  Map<String, dynamic> toJson() =>
+      _$NotFoundErrorToJson(this as _NotFoundError);
   factory NotFoundError.fromJson(Map<String, Object?> json) =>
       _$NotFoundErrorFromJson(json);
+}
+
+extension NotFoundErrorMergeX on NotFoundError {
+  /// Returns a new [NotFoundError] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  NotFoundError merge(NotFoundError other) {
+    return copyWith(name: other.name, data: other.data);
+  }
 }

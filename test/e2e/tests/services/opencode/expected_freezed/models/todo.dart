@@ -23,5 +23,19 @@ abstract class Todo with _$Todo {
     required String id,
   }) = _Todo;
 
+  Map<String, dynamic> toJson() => _$TodoToJson(this as _Todo);
   factory Todo.fromJson(Map<String, Object?> json) => _$TodoFromJson(json);
+}
+
+extension TodoMergeX on Todo {
+  /// Returns a new [Todo] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Todo merge(Todo other) {
+    return copyWith(
+      content: other.content,
+      status: other.status,
+      priority: other.priority,
+      id: other.id,
+    );
+  }
 }

@@ -15,7 +15,21 @@ abstract class SessionPromptRequestAcpConnection
     required String sessionId,
   }) = _SessionPromptRequestAcpConnection;
 
+  Map<String, dynamic> toJson() => _$SessionPromptRequestAcpConnectionToJson(
+    this as _SessionPromptRequestAcpConnection,
+  );
   factory SessionPromptRequestAcpConnection.fromJson(
     Map<String, Object?> json,
   ) => _$SessionPromptRequestAcpConnectionFromJson(json);
+}
+
+extension SessionPromptRequestAcpConnectionMergeX
+    on SessionPromptRequestAcpConnection {
+  /// Returns a new [SessionPromptRequestAcpConnection] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  SessionPromptRequestAcpConnection merge(
+    SessionPromptRequestAcpConnection other,
+  ) {
+    return copyWith(connection: other.connection, sessionId: other.sessionId);
+  }
 }

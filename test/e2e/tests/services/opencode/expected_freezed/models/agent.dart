@@ -26,5 +26,26 @@ abstract class Agent with _$Agent {
     String? prompt,
   }) = _Agent;
 
+  Map<String, dynamic> toJson() => _$AgentToJson(this as _Agent);
   factory Agent.fromJson(Map<String, Object?> json) => _$AgentFromJson(json);
+}
+
+extension AgentMergeX on Agent {
+  /// Returns a new [Agent] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Agent merge(Agent other) {
+    return copyWith(
+      name: other.name,
+      description: other.description,
+      mode: other.mode,
+      builtIn: other.builtIn,
+      topP: other.topP,
+      temperature: other.temperature,
+      permission: other.permission,
+      model: other.model,
+      prompt: other.prompt,
+      tools: other.tools,
+      options: other.options,
+    );
+  }
 }

@@ -11,5 +11,14 @@ part 'count.g.dart';
 abstract class Count with _$Count {
   const factory Count({num? identify}) = _Count;
 
+  Map<String, dynamic> toJson() => _$CountToJson(this as _Count);
   factory Count.fromJson(Map<String, Object?> json) => _$CountFromJson(json);
+}
+
+extension CountMergeX on Count {
+  /// Returns a new [Count] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Count merge(Count other) {
+    return copyWith(identify: other.identify);
+  }
 }

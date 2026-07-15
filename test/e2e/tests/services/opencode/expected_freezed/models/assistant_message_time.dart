@@ -12,6 +12,16 @@ abstract class AssistantMessageTime with _$AssistantMessageTime {
   const factory AssistantMessageTime({required num created, num? completed}) =
       _AssistantMessageTime;
 
+  Map<String, dynamic> toJson() =>
+      _$AssistantMessageTimeToJson(this as _AssistantMessageTime);
   factory AssistantMessageTime.fromJson(Map<String, Object?> json) =>
       _$AssistantMessageTimeFromJson(json);
+}
+
+extension AssistantMessageTimeMergeX on AssistantMessageTime {
+  /// Returns a new [AssistantMessageTime] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  AssistantMessageTime merge(AssistantMessageTime other) {
+    return copyWith(created: other.created, completed: other.completed);
+  }
 }

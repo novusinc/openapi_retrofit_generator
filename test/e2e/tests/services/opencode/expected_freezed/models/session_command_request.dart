@@ -17,6 +17,22 @@ abstract class SessionCommandRequest with _$SessionCommandRequest {
     String? model,
   }) = _SessionCommandRequest;
 
+  Map<String, dynamic> toJson() =>
+      _$SessionCommandRequestToJson(this as _SessionCommandRequest);
   factory SessionCommandRequest.fromJson(Map<String, Object?> json) =>
       _$SessionCommandRequestFromJson(json);
+}
+
+extension SessionCommandRequestMergeX on SessionCommandRequest {
+  /// Returns a new [SessionCommandRequest] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  SessionCommandRequest merge(SessionCommandRequest other) {
+    return copyWith(
+      messageId: other.messageId,
+      agent: other.agent,
+      model: other.model,
+      arguments: other.arguments,
+      command: other.command,
+    );
+  }
 }

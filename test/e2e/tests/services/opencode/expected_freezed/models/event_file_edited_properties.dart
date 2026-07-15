@@ -12,6 +12,16 @@ abstract class EventFileEditedProperties with _$EventFileEditedProperties {
   const factory EventFileEditedProperties({required String file}) =
       _EventFileEditedProperties;
 
+  Map<String, dynamic> toJson() =>
+      _$EventFileEditedPropertiesToJson(this as _EventFileEditedProperties);
   factory EventFileEditedProperties.fromJson(Map<String, Object?> json) =>
       _$EventFileEditedPropertiesFromJson(json);
+}
+
+extension EventFileEditedPropertiesMergeX on EventFileEditedProperties {
+  /// Returns a new [EventFileEditedProperties] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventFileEditedProperties merge(EventFileEditedProperties other) {
+    return copyWith(file: other.file);
+  }
 }

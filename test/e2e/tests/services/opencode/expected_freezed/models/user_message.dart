@@ -18,6 +18,20 @@ abstract class UserMessage with _$UserMessage {
     required UserMessageTime time,
   }) = _UserMessage;
 
+  Map<String, dynamic> toJson() => _$UserMessageToJson(this as _UserMessage);
   factory UserMessage.fromJson(Map<String, Object?> json) =>
       _$UserMessageFromJson(json);
+}
+
+extension UserMessageMergeX on UserMessage {
+  /// Returns a new [UserMessage] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  UserMessage merge(UserMessage other) {
+    return copyWith(
+      id: other.id,
+      sessionId: other.sessionId,
+      role: other.role,
+      time: other.time,
+    );
+  }
 }

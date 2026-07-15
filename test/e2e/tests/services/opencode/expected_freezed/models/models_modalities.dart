@@ -17,6 +17,16 @@ abstract class ModelsModalities with _$ModelsModalities {
     required List<ModelsModalitiesOutputOutput> output,
   }) = _ModelsModalities;
 
+  Map<String, dynamic> toJson() =>
+      _$ModelsModalitiesToJson(this as _ModelsModalities);
   factory ModelsModalities.fromJson(Map<String, Object?> json) =>
       _$ModelsModalitiesFromJson(json);
+}
+
+extension ModelsModalitiesMergeX on ModelsModalities {
+  /// Returns a new [ModelsModalities] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ModelsModalities merge(ModelsModalities other) {
+    return copyWith(input: other.input, output: other.output);
+  }
 }

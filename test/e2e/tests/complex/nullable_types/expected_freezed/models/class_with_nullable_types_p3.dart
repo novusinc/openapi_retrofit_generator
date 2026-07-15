@@ -14,6 +14,16 @@ abstract class ClassWithNullableTypesP3 with _$ClassWithNullableTypesP3 {
     required List<String> p2,
   }) = _ClassWithNullableTypesP3;
 
+  Map<String, dynamic> toJson() =>
+      _$ClassWithNullableTypesP3ToJson(this as _ClassWithNullableTypesP3);
   factory ClassWithNullableTypesP3.fromJson(Map<String, Object?> json) =>
       _$ClassWithNullableTypesP3FromJson(json);
+}
+
+extension ClassWithNullableTypesP3MergeX on ClassWithNullableTypesP3 {
+  /// Returns a new [ClassWithNullableTypesP3] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ClassWithNullableTypesP3 merge(ClassWithNullableTypesP3 other) {
+    return copyWith(p1: other.p1, p2: other.p2);
+  }
 }

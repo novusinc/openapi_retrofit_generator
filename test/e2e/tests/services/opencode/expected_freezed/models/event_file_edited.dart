@@ -16,6 +16,16 @@ abstract class EventFileEdited with _$EventFileEdited {
     required EventFileEditedProperties properties,
   }) = _EventFileEdited;
 
+  Map<String, dynamic> toJson() =>
+      _$EventFileEditedToJson(this as _EventFileEdited);
   factory EventFileEdited.fromJson(Map<String, Object?> json) =>
       _$EventFileEditedFromJson(json);
+}
+
+extension EventFileEditedMergeX on EventFileEdited {
+  /// Returns a new [EventFileEdited] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventFileEdited merge(EventFileEdited other) {
+    return copyWith(type: other.type, properties: other.properties);
+  }
 }

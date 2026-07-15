@@ -17,6 +17,21 @@ abstract class FileDiff with _$FileDiff {
     required num deletions,
   }) = _FileDiff;
 
+  Map<String, dynamic> toJson() => _$FileDiffToJson(this as _FileDiff);
   factory FileDiff.fromJson(Map<String, Object?> json) =>
       _$FileDiffFromJson(json);
+}
+
+extension FileDiffMergeX on FileDiff {
+  /// Returns a new [FileDiff] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  FileDiff merge(FileDiff other) {
+    return copyWith(
+      file: other.file,
+      before: other.before,
+      after: other.after,
+      additions: other.additions,
+      deletions: other.deletions,
+    );
+  }
 }

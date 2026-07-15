@@ -17,6 +17,22 @@ abstract class StepStartPart with _$StepStartPart {
     String? snapshot,
   }) = _StepStartPart;
 
+  Map<String, dynamic> toJson() =>
+      _$StepStartPartToJson(this as _StepStartPart);
   factory StepStartPart.fromJson(Map<String, Object?> json) =>
       _$StepStartPartFromJson(json);
+}
+
+extension StepStartPartMergeX on StepStartPart {
+  /// Returns a new [StepStartPart] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  StepStartPart merge(StepStartPart other) {
+    return copyWith(
+      id: other.id,
+      sessionId: other.sessionId,
+      messageId: other.messageId,
+      type: other.type,
+      snapshot: other.snapshot,
+    );
+  }
 }

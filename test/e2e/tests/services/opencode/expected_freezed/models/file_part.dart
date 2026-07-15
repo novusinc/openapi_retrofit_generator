@@ -22,6 +22,24 @@ abstract class FilePart with _$FilePart {
     FilePartSource? source,
   }) = _FilePart;
 
+  Map<String, dynamic> toJson() => _$FilePartToJson(this as _FilePart);
   factory FilePart.fromJson(Map<String, Object?> json) =>
       _$FilePartFromJson(json);
+}
+
+extension FilePartMergeX on FilePart {
+  /// Returns a new [FilePart] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  FilePart merge(FilePart other) {
+    return copyWith(
+      id: other.id,
+      sessionId: other.sessionId,
+      messageId: other.messageId,
+      type: other.type,
+      mime: other.mime,
+      filename: other.filename,
+      url: other.url,
+      source: other.source,
+    );
+  }
 }

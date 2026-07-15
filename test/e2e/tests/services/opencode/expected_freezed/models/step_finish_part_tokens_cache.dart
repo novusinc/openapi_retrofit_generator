@@ -14,6 +14,16 @@ abstract class StepFinishPartTokensCache with _$StepFinishPartTokensCache {
     required num write,
   }) = _StepFinishPartTokensCache;
 
+  Map<String, dynamic> toJson() =>
+      _$StepFinishPartTokensCacheToJson(this as _StepFinishPartTokensCache);
   factory StepFinishPartTokensCache.fromJson(Map<String, Object?> json) =>
       _$StepFinishPartTokensCacheFromJson(json);
+}
+
+extension StepFinishPartTokensCacheMergeX on StepFinishPartTokensCache {
+  /// Returns a new [StepFinishPartTokensCache] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  StepFinishPartTokensCache merge(StepFinishPartTokensCache other) {
+    return copyWith(read: other.read, write: other.write);
+  }
 }

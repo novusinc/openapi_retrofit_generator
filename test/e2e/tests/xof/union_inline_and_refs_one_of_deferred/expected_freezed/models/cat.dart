@@ -14,5 +14,14 @@ abstract class Cat with _$Cat {
     required int mewCount,
   }) = _Cat;
 
+  Map<String, dynamic> toJson() => _$CatToJson(this as _Cat);
   factory Cat.fromJson(Map<String, Object?> json) => _$CatFromJson(json);
+}
+
+extension CatMergeX on Cat {
+  /// Returns a new [Cat] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Cat merge(Cat other) {
+    return copyWith(mewCount: other.mewCount);
+  }
 }

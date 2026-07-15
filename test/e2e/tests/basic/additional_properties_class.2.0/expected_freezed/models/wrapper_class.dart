@@ -14,6 +14,15 @@ abstract class WrapperClass with _$WrapperClass {
   const factory WrapperClass({required Map<String, ValueClass> map}) =
       _WrapperClass;
 
+  Map<String, dynamic> toJson() => _$WrapperClassToJson(this as _WrapperClass);
   factory WrapperClass.fromJson(Map<String, Object?> json) =>
       _$WrapperClassFromJson(json);
+}
+
+extension WrapperClassMergeX on WrapperClass {
+  /// Returns a new [WrapperClass] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  WrapperClass merge(WrapperClass other) {
+    return copyWith(map: other.map);
+  }
 }

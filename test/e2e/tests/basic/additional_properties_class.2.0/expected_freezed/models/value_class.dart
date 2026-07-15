@@ -14,6 +14,15 @@ abstract class ValueClass with _$ValueClass {
     required String testProp,
   }) = _ValueClass;
 
+  Map<String, dynamic> toJson() => _$ValueClassToJson(this as _ValueClass);
   factory ValueClass.fromJson(Map<String, Object?> json) =>
       _$ValueClassFromJson(json);
+}
+
+extension ValueClassMergeX on ValueClass {
+  /// Returns a new [ValueClass] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ValueClass merge(ValueClass other) {
+    return copyWith(testProp: other.testProp);
+  }
 }

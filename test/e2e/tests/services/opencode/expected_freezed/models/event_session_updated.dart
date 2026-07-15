@@ -16,6 +16,16 @@ abstract class EventSessionUpdated with _$EventSessionUpdated {
     required EventSessionUpdatedProperties properties,
   }) = _EventSessionUpdated;
 
+  Map<String, dynamic> toJson() =>
+      _$EventSessionUpdatedToJson(this as _EventSessionUpdated);
   factory EventSessionUpdated.fromJson(Map<String, Object?> json) =>
       _$EventSessionUpdatedFromJson(json);
+}
+
+extension EventSessionUpdatedMergeX on EventSessionUpdated {
+  /// Returns a new [EventSessionUpdated] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventSessionUpdated merge(EventSessionUpdated other) {
+    return copyWith(type: other.type, properties: other.properties);
+  }
 }

@@ -14,6 +14,15 @@ part 'other_results.g.dart';
 abstract class OtherResults with _$OtherResults {
   const factory OtherResults({Model19? genus, Model22? family}) = _OtherResults;
 
+  Map<String, dynamic> toJson() => _$OtherResultsToJson(this as _OtherResults);
   factory OtherResults.fromJson(Map<String, Object?> json) =>
       _$OtherResultsFromJson(json);
+}
+
+extension OtherResultsMergeX on OtherResults {
+  /// Returns a new [OtherResults] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  OtherResults merge(OtherResults other) {
+    return copyWith(genus: other.genus, family: other.family);
+  }
 }

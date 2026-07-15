@@ -14,6 +14,16 @@ abstract class SessionPromptRequestModel with _$SessionPromptRequestModel {
     @JsonKey(name: 'modelID') required String modelId,
   }) = _SessionPromptRequestModel;
 
+  Map<String, dynamic> toJson() =>
+      _$SessionPromptRequestModelToJson(this as _SessionPromptRequestModel);
   factory SessionPromptRequestModel.fromJson(Map<String, Object?> json) =>
       _$SessionPromptRequestModelFromJson(json);
+}
+
+extension SessionPromptRequestModelMergeX on SessionPromptRequestModel {
+  /// Returns a new [SessionPromptRequestModel] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  SessionPromptRequestModel merge(SessionPromptRequestModel other) {
+    return copyWith(providerId: other.providerId, modelId: other.modelId);
+  }
 }

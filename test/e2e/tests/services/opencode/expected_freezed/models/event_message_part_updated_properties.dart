@@ -16,7 +16,21 @@ abstract class EventMessagePartUpdatedProperties
     @JsonKey(name: 'part') required PartModel partField,
   }) = _EventMessagePartUpdatedProperties;
 
+  Map<String, dynamic> toJson() => _$EventMessagePartUpdatedPropertiesToJson(
+    this as _EventMessagePartUpdatedProperties,
+  );
   factory EventMessagePartUpdatedProperties.fromJson(
     Map<String, Object?> json,
   ) => _$EventMessagePartUpdatedPropertiesFromJson(json);
+}
+
+extension EventMessagePartUpdatedPropertiesMergeX
+    on EventMessagePartUpdatedProperties {
+  /// Returns a new [EventMessagePartUpdatedProperties] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventMessagePartUpdatedProperties merge(
+    EventMessagePartUpdatedProperties other,
+  ) {
+    return copyWith(partField: other.partField);
+  }
 }

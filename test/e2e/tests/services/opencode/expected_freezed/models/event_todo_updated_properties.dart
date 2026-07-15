@@ -16,6 +16,16 @@ abstract class EventTodoUpdatedProperties with _$EventTodoUpdatedProperties {
     required List<Todo> todos,
   }) = _EventTodoUpdatedProperties;
 
+  Map<String, dynamic> toJson() =>
+      _$EventTodoUpdatedPropertiesToJson(this as _EventTodoUpdatedProperties);
   factory EventTodoUpdatedProperties.fromJson(Map<String, Object?> json) =>
       _$EventTodoUpdatedPropertiesFromJson(json);
+}
+
+extension EventTodoUpdatedPropertiesMergeX on EventTodoUpdatedProperties {
+  /// Returns a new [EventTodoUpdatedProperties] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventTodoUpdatedProperties merge(EventTodoUpdatedProperties other) {
+    return copyWith(sessionId: other.sessionId, todos: other.todos);
+  }
 }

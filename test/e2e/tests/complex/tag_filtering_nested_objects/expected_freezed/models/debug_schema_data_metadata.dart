@@ -14,6 +14,16 @@ abstract class DebugSchemaDataMetadata with _$DebugSchemaDataMetadata {
     @JsonKey(includeIfNull: false) String? updatedBy,
   }) = _DebugSchemaDataMetadata;
 
+  Map<String, dynamic> toJson() =>
+      _$DebugSchemaDataMetadataToJson(this as _DebugSchemaDataMetadata);
   factory DebugSchemaDataMetadata.fromJson(Map<String, Object?> json) =>
       _$DebugSchemaDataMetadataFromJson(json);
+}
+
+extension DebugSchemaDataMetadataMergeX on DebugSchemaDataMetadata {
+  /// Returns a new [DebugSchemaDataMetadata] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  DebugSchemaDataMetadata merge(DebugSchemaDataMetadata other) {
+    return copyWith(createdAt: other.createdAt, updatedBy: other.updatedBy);
+  }
 }

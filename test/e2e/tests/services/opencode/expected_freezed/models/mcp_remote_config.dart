@@ -23,6 +23,21 @@ abstract class McpRemoteConfig with _$McpRemoteConfig {
     Map<String, String>? headers,
   }) = _McpRemoteConfig;
 
+  Map<String, dynamic> toJson() =>
+      _$McpRemoteConfigToJson(this as _McpRemoteConfig);
   factory McpRemoteConfig.fromJson(Map<String, Object?> json) =>
       _$McpRemoteConfigFromJson(json);
+}
+
+extension McpRemoteConfigMergeX on McpRemoteConfig {
+  /// Returns a new [McpRemoteConfig] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  McpRemoteConfig merge(McpRemoteConfig other) {
+    return copyWith(
+      type: other.type,
+      url: other.url,
+      enabled: other.enabled,
+      headers: other.headers,
+    );
+  }
 }

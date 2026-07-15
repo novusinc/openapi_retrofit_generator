@@ -19,6 +19,21 @@ abstract class Model59 with _$Model59 {
     Model58? location,
   }) = _Model59;
 
+  Map<String, dynamic> toJson() => _$Model59ToJson(this as _Model59);
   factory Model59.fromJson(Map<String, Object?> json) =>
       _$Model59FromJson(json);
+}
+
+extension Model59MergeX on Model59 {
+  /// Returns a new [Model59] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Model59 merge(Model59 other) {
+    return copyWith(
+      name: other.name,
+      coverage: other.coverage,
+      maxScore: other.maxScore,
+      count: other.count,
+      location: other.location,
+    );
+  }
 }

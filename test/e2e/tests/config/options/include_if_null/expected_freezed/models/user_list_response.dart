@@ -18,6 +18,21 @@ abstract class UserListResponse with _$UserListResponse {
     @JsonKey(includeIfNull: false) int? limit,
   }) = _UserListResponse;
 
+  Map<String, dynamic> toJson() =>
+      _$UserListResponseToJson(this as _UserListResponse);
   factory UserListResponse.fromJson(Map<String, Object?> json) =>
       _$UserListResponseFromJson(json);
+}
+
+extension UserListResponseMergeX on UserListResponse {
+  /// Returns a new [UserListResponse] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  UserListResponse merge(UserListResponse other) {
+    return copyWith(
+      users: other.users,
+      total: other.total,
+      page: other.page,
+      limit: other.limit,
+    );
+  }
 }

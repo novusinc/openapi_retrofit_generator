@@ -16,6 +16,15 @@ abstract class DataClass2 with _$DataClass2 {
     @JsonKey(includeIfNull: false) String? title,
   }) = _DataClass2;
 
+  Map<String, dynamic> toJson() => _$DataClass2ToJson(this as _DataClass2);
   factory DataClass2.fromJson(Map<String, Object?> json) =>
       _$DataClass2FromJson(json);
+}
+
+extension DataClass2MergeX on DataClass2 {
+  /// Returns a new [DataClass2] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  DataClass2 merge(DataClass2 other) {
+    return copyWith(title: other.title, errors: other.errors);
+  }
 }

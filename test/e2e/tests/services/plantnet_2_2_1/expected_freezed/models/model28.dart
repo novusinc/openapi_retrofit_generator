@@ -18,6 +18,20 @@ abstract class Model28 with _$Model28 {
     bool? selected,
   }) = _Model28;
 
+  Map<String, dynamic> toJson() => _$Model28ToJson(this as _Model28);
   factory Model28.fromJson(Map<String, Object?> json) =>
       _$Model28FromJson(json);
+}
+
+extension Model28MergeX on Model28 {
+  /// Returns a new [Model28] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Model28 merge(Model28 other) {
+    return copyWith(
+      name: other.name,
+      count: other.count,
+      score: other.score,
+      selected: other.selected,
+    );
+  }
 }

@@ -15,6 +15,17 @@ abstract class EventMessageRemovedProperties
     @JsonKey(name: 'messageID') required String messageId,
   }) = _EventMessageRemovedProperties;
 
+  Map<String, dynamic> toJson() => _$EventMessageRemovedPropertiesToJson(
+    this as _EventMessageRemovedProperties,
+  );
   factory EventMessageRemovedProperties.fromJson(Map<String, Object?> json) =>
       _$EventMessageRemovedPropertiesFromJson(json);
+}
+
+extension EventMessageRemovedPropertiesMergeX on EventMessageRemovedProperties {
+  /// Returns a new [EventMessageRemovedProperties] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventMessageRemovedProperties merge(EventMessageRemovedProperties other) {
+    return copyWith(sessionId: other.sessionId, messageId: other.messageId);
+  }
 }

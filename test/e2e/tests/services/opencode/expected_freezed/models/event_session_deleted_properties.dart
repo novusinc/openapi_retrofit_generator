@@ -15,6 +15,17 @@ abstract class EventSessionDeletedProperties
   const factory EventSessionDeletedProperties({required Session info}) =
       _EventSessionDeletedProperties;
 
+  Map<String, dynamic> toJson() => _$EventSessionDeletedPropertiesToJson(
+    this as _EventSessionDeletedProperties,
+  );
   factory EventSessionDeletedProperties.fromJson(Map<String, Object?> json) =>
       _$EventSessionDeletedPropertiesFromJson(json);
+}
+
+extension EventSessionDeletedPropertiesMergeX on EventSessionDeletedProperties {
+  /// Returns a new [EventSessionDeletedProperties] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventSessionDeletedProperties merge(EventSessionDeletedProperties other) {
+    return copyWith(info: other.info);
+  }
 }

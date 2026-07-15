@@ -16,6 +16,16 @@ abstract class EventLspClientDiagnostics with _$EventLspClientDiagnostics {
     required EventLspClientDiagnosticsProperties properties,
   }) = _EventLspClientDiagnostics;
 
+  Map<String, dynamic> toJson() =>
+      _$EventLspClientDiagnosticsToJson(this as _EventLspClientDiagnostics);
   factory EventLspClientDiagnostics.fromJson(Map<String, Object?> json) =>
       _$EventLspClientDiagnosticsFromJson(json);
+}
+
+extension EventLspClientDiagnosticsMergeX on EventLspClientDiagnostics {
+  /// Returns a new [EventLspClientDiagnostics] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventLspClientDiagnostics merge(EventLspClientDiagnostics other) {
+    return copyWith(type: other.type, properties: other.properties);
+  }
 }

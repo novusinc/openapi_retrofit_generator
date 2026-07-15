@@ -16,6 +16,8 @@ abstract class CreateCommentRequest with _$CreateCommentRequest {
     String? parentId,
   }) = _CreateCommentRequest;
 
+  Map<String, dynamic> toJson() =>
+      _$CreateCommentRequestToJson(this as _CreateCommentRequest);
   factory CreateCommentRequest.fromJson(Map<String, Object?> json) =>
       _$CreateCommentRequestFromJson(json);
   static const int contentMinLength = 1;
@@ -39,5 +41,18 @@ extension CreateCommentRequestValidationX on CreateCommentRequest {
       return false;
     }
     return true;
+  }
+}
+
+extension CreateCommentRequestMergeX on CreateCommentRequest {
+  /// Returns a new [CreateCommentRequest] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  CreateCommentRequest merge(CreateCommentRequest other) {
+    return copyWith(
+      content: other.content,
+      authorId: other.authorId,
+      postId: other.postId,
+      parentId: other.parentId,
+    );
   }
 }

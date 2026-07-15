@@ -14,6 +14,19 @@ abstract class CursorPaginatedDto with _$CursorPaginatedDto {
     @JsonKey(includeIfNull: true) required String? previousCursor,
   }) = _CursorPaginatedDto;
 
+  Map<String, dynamic> toJson() =>
+      _$CursorPaginatedDtoToJson(this as _CursorPaginatedDto);
   factory CursorPaginatedDto.fromJson(Map<String, Object?> json) =>
       _$CursorPaginatedDtoFromJson(json);
+}
+
+extension CursorPaginatedDtoMergeX on CursorPaginatedDto {
+  /// Returns a new [CursorPaginatedDto] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  CursorPaginatedDto merge(CursorPaginatedDto other) {
+    return copyWith(
+      nextCursor: other.nextCursor,
+      previousCursor: other.previousCursor,
+    );
+  }
 }

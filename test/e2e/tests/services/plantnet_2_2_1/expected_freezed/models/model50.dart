@@ -18,6 +18,20 @@ abstract class Model50 with _$Model50 {
     String? organ,
   }) = _Model50;
 
+  Map<String, dynamic> toJson() => _$Model50ToJson(this as _Model50);
   factory Model50.fromJson(Map<String, Object?> json) =>
       _$Model50FromJson(json);
+}
+
+extension Model50MergeX on Model50 {
+  /// Returns a new [Model50] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Model50 merge(Model50 other) {
+    return copyWith(
+      center: other.center,
+      size: other.size,
+      score: other.score,
+      organ: other.organ,
+    );
+  }
 }

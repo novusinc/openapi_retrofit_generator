@@ -15,6 +15,20 @@ abstract class ToolStateCompletedTime with _$ToolStateCompletedTime {
     num? compacted,
   }) = _ToolStateCompletedTime;
 
+  Map<String, dynamic> toJson() =>
+      _$ToolStateCompletedTimeToJson(this as _ToolStateCompletedTime);
   factory ToolStateCompletedTime.fromJson(Map<String, Object?> json) =>
       _$ToolStateCompletedTimeFromJson(json);
+}
+
+extension ToolStateCompletedTimeMergeX on ToolStateCompletedTime {
+  /// Returns a new [ToolStateCompletedTime] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ToolStateCompletedTime merge(ToolStateCompletedTime other) {
+    return copyWith(
+      start: other.start,
+      end: other.end,
+      compacted: other.compacted,
+    );
+  }
 }

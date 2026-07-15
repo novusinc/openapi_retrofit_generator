@@ -15,6 +15,16 @@ abstract class WellKnownAuth with _$WellKnownAuth {
     required String token,
   }) = _WellKnownAuth;
 
+  Map<String, dynamic> toJson() =>
+      _$WellKnownAuthToJson(this as _WellKnownAuth);
   factory WellKnownAuth.fromJson(Map<String, Object?> json) =>
       _$WellKnownAuthFromJson(json);
+}
+
+extension WellKnownAuthMergeX on WellKnownAuth {
+  /// Returns a new [WellKnownAuth] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  WellKnownAuth merge(WellKnownAuth other) {
+    return copyWith(type: other.type, key: other.key, token: other.token);
+  }
 }

@@ -15,5 +15,18 @@ abstract class Family with _$Family {
     String? scientificName,
   }) = _Family;
 
+  Map<String, dynamic> toJson() => _$FamilyToJson(this as _Family);
   factory Family.fromJson(Map<String, Object?> json) => _$FamilyFromJson(json);
+}
+
+extension FamilyMergeX on Family {
+  /// Returns a new [Family] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Family merge(Family other) {
+    return copyWith(
+      scientificNameWithoutAuthor: other.scientificNameWithoutAuthor,
+      scientificNameAuthorship: other.scientificNameAuthorship,
+      scientificName: other.scientificName,
+    );
+  }
 }

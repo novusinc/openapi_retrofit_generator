@@ -14,6 +14,15 @@ abstract class Category with _$Category {
     @JsonKey(includeIfNull: false) String? name,
   }) = _Category;
 
+  Map<String, dynamic> toJson() => _$CategoryToJson(this as _Category);
   factory Category.fromJson(Map<String, Object?> json) =>
       _$CategoryFromJson(json);
+}
+
+extension CategoryMergeX on Category {
+  /// Returns a new [Category] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Category merge(Category other) {
+    return copyWith(id: other.id, name: other.name);
+  }
 }

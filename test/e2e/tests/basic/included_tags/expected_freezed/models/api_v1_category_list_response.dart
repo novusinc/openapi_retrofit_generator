@@ -17,6 +17,19 @@ abstract class ApiV1CategoryListResponse with _$ApiV1CategoryListResponse {
     ApiV1CategoryListResponseIncludedData? includedData,
   }) = _ApiV1CategoryListResponse;
 
+  Map<String, dynamic> toJson() =>
+      _$ApiV1CategoryListResponseToJson(this as _ApiV1CategoryListResponse);
   factory ApiV1CategoryListResponse.fromJson(Map<String, Object?> json) =>
       _$ApiV1CategoryListResponseFromJson(json);
+}
+
+extension ApiV1CategoryListResponseMergeX on ApiV1CategoryListResponse {
+  /// Returns a new [ApiV1CategoryListResponse] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ApiV1CategoryListResponse merge(ApiV1CategoryListResponse other) {
+    return copyWith(
+      includedResponse: other.includedResponse,
+      includedData: other.includedData,
+    );
+  }
 }

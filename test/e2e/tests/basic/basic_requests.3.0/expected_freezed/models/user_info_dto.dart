@@ -15,6 +15,15 @@ abstract class UserInfoDto with _$UserInfoDto {
     required String phone,
   }) = _UserInfoDto;
 
+  Map<String, dynamic> toJson() => _$UserInfoDtoToJson(this as _UserInfoDto);
   factory UserInfoDto.fromJson(Map<String, Object?> json) =>
       _$UserInfoDtoFromJson(json);
+}
+
+extension UserInfoDtoMergeX on UserInfoDto {
+  /// Returns a new [UserInfoDto] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  UserInfoDto merge(UserInfoDto other) {
+    return copyWith(email: other.email, name: other.name, phone: other.phone);
+  }
 }

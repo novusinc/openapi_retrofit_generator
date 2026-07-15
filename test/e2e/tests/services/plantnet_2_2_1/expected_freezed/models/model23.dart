@@ -24,6 +24,25 @@ abstract class Model23 with _$Model23 {
     String? gbifId,
   }) = _Model23;
 
+  Map<String, dynamic> toJson() => _$Model23ToJson(this as _Model23);
   factory Model23.fromJson(Map<String, Object?> json) =>
       _$Model23FromJson(json);
+}
+
+extension Model23MergeX on Model23 {
+  /// Returns a new [Model23] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Model23 merge(Model23 other) {
+    return copyWith(
+      name: other.name,
+      author: other.author,
+      commonNames: other.commonNames,
+      secondaryCommonNames: other.secondaryCommonNames,
+      project: other.project,
+      family: other.family,
+      genus: other.genus,
+      powoId: other.powoId,
+      gbifId: other.gbifId,
+    );
+  }
 }

@@ -11,6 +11,16 @@ part 'permission_time.g.dart';
 abstract class PermissionTime with _$PermissionTime {
   const factory PermissionTime({required num created}) = _PermissionTime;
 
+  Map<String, dynamic> toJson() =>
+      _$PermissionTimeToJson(this as _PermissionTime);
   factory PermissionTime.fromJson(Map<String, Object?> json) =>
       _$PermissionTimeFromJson(json);
+}
+
+extension PermissionTimeMergeX on PermissionTime {
+  /// Returns a new [PermissionTime] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  PermissionTime merge(PermissionTime other) {
+    return copyWith(created: other.created);
+  }
 }

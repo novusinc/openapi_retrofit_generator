@@ -4,7 +4,7 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
-import 'assistant_message_error_error.dart';
+import 'assistant_message_error.dart';
 import 'assistant_message_path.dart';
 import 'assistant_message_time.dart';
 import 'assistant_message_tokens.dart';
@@ -54,7 +54,7 @@ class MessageAssistantMessage {
   final String sessionId;
   final String role;
   final AssistantMessageTime time;
-  final AssistantMessageErrorError? error;
+  final AssistantMessageError? error;
   final List<String> system;
   @JsonKey(name: 'modelID')
   final String modelId;

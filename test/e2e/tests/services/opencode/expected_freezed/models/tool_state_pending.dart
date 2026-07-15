@@ -11,6 +11,16 @@ part 'tool_state_pending.g.dart';
 abstract class ToolStatePending with _$ToolStatePending {
   const factory ToolStatePending({required String status}) = _ToolStatePending;
 
+  Map<String, dynamic> toJson() =>
+      _$ToolStatePendingToJson(this as _ToolStatePending);
   factory ToolStatePending.fromJson(Map<String, Object?> json) =>
       _$ToolStatePendingFromJson(json);
+}
+
+extension ToolStatePendingMergeX on ToolStatePending {
+  /// Returns a new [ToolStatePending] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ToolStatePending merge(ToolStatePending other) {
+    return copyWith(status: other.status);
+  }
 }

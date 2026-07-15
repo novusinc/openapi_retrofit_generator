@@ -13,6 +13,15 @@ part 'model89.g.dart';
 abstract class Model89 with _$Model89 {
   const factory Model89({required Point point}) = _Model89;
 
+  Map<String, dynamic> toJson() => _$Model89ToJson(this as _Model89);
   factory Model89.fromJson(Map<String, Object?> json) =>
       _$Model89FromJson(json);
+}
+
+extension Model89MergeX on Model89 {
+  /// Returns a new [Model89] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Model89 merge(Model89 other) {
+    return copyWith(point: other.point);
+  }
 }

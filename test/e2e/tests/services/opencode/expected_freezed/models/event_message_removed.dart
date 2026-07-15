@@ -16,6 +16,16 @@ abstract class EventMessageRemoved with _$EventMessageRemoved {
     required EventMessageRemovedProperties properties,
   }) = _EventMessageRemoved;
 
+  Map<String, dynamic> toJson() =>
+      _$EventMessageRemovedToJson(this as _EventMessageRemoved);
   factory EventMessageRemoved.fromJson(Map<String, Object?> json) =>
       _$EventMessageRemovedFromJson(json);
+}
+
+extension EventMessageRemovedMergeX on EventMessageRemoved {
+  /// Returns a new [EventMessageRemoved] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventMessageRemoved merge(EventMessageRemoved other) {
+    return copyWith(type: other.type, properties: other.properties);
+  }
 }

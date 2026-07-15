@@ -31,6 +31,30 @@ abstract class OneOfElement with _$OneOfElement {
     @JsonKey(includeIfNull: false) List<int?>? nullableListNullableItems,
   }) = _OneOfElement;
 
+  Map<String, dynamic> toJson() => _$OneOfElementToJson(this as _OneOfElement);
   factory OneOfElement.fromJson(Map<String, Object?> json) =>
       _$OneOfElementFromJson(json);
+}
+
+extension OneOfElementMergeX on OneOfElement {
+  /// Returns a new [OneOfElement] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  OneOfElement merge(OneOfElement other) {
+    return copyWith(
+      allClass: other.allClass,
+      anyClass: other.anyClass,
+      oneClass: other.oneClass,
+      allType: other.allType,
+      anyType: other.anyType,
+      oneType: other.oneType,
+      nullableButRequiredClass: other.nullableButRequiredClass,
+      nullableClass: other.nullableClass,
+      nullableType: other.nullableType,
+      nullableListNonNullItems: other.nullableListNonNullItems,
+      requiredNullableListNonNullItems: other.requiredNullableListNonNullItems,
+      nullableListNullableItems: other.nullableListNullableItems,
+      requiredNullableListNullableItems:
+          other.requiredNullableListNullableItems,
+    );
+  }
 }

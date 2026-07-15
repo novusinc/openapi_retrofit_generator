@@ -18,6 +18,15 @@ abstract class Model70 with _$Model70 {
     @JsonKey(name: 'exact_match') @Default(false) bool exactMatch,
   }) = _Model70;
 
+  Map<String, dynamic> toJson() => _$Model70ToJson(this as _Model70);
   factory Model70.fromJson(Map<String, Object?> json) =>
       _$Model70FromJson(json);
+}
+
+extension Model70MergeX on Model70 {
+  /// Returns a new [Model70] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Model70 merge(Model70 other) {
+    return copyWith(extent: other.extent, exactMatch: other.exactMatch);
+  }
 }

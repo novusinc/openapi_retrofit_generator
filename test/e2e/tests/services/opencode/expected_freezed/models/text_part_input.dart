@@ -20,6 +20,23 @@ abstract class TextPartInput with _$TextPartInput {
     Map<String, dynamic>? metadata,
   }) = _TextPartInput;
 
+  Map<String, dynamic> toJson() =>
+      _$TextPartInputToJson(this as _TextPartInput);
   factory TextPartInput.fromJson(Map<String, Object?> json) =>
       _$TextPartInputFromJson(json);
+}
+
+extension TextPartInputMergeX on TextPartInput {
+  /// Returns a new [TextPartInput] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  TextPartInput merge(TextPartInput other) {
+    return copyWith(
+      id: other.id,
+      type: other.type,
+      text: other.text,
+      synthetic: other.synthetic,
+      time: other.time,
+      metadata: other.metadata,
+    );
+  }
 }

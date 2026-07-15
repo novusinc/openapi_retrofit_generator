@@ -16,7 +16,25 @@ abstract class ApiParcelPendingBuildingSettings
     @JsonKey(includeIfNull: false) String? externalBuildingName,
   }) = _ApiParcelPendingBuildingSettings;
 
+  Map<String, dynamic> toJson() => _$ApiParcelPendingBuildingSettingsToJson(
+    this as _ApiParcelPendingBuildingSettings,
+  );
   factory ApiParcelPendingBuildingSettings.fromJson(
     Map<String, Object?> json,
   ) => _$ApiParcelPendingBuildingSettingsFromJson(json);
+}
+
+extension ApiParcelPendingBuildingSettingsMergeX
+    on ApiParcelPendingBuildingSettings {
+  /// Returns a new [ApiParcelPendingBuildingSettings] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ApiParcelPendingBuildingSettings merge(
+    ApiParcelPendingBuildingSettings other,
+  ) {
+    return copyWith(
+      isDellaManaged: other.isDellaManaged,
+      externalPropertyId: other.externalPropertyId,
+      externalBuildingName: other.externalBuildingName,
+    );
+  }
 }

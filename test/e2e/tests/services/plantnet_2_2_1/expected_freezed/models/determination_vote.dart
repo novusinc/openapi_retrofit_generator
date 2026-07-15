@@ -17,6 +17,16 @@ abstract class DeterminationVote with _$DeterminationVote {
     required num score,
   }) = _DeterminationVote;
 
+  Map<String, dynamic> toJson() =>
+      _$DeterminationVoteToJson(this as _DeterminationVote);
   factory DeterminationVote.fromJson(Map<String, Object?> json) =>
       _$DeterminationVoteFromJson(json);
+}
+
+extension DeterminationVoteMergeX on DeterminationVote {
+  /// Returns a new [DeterminationVote] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  DeterminationVote merge(DeterminationVote other) {
+    return copyWith(name: other.name, score: other.score);
+  }
 }

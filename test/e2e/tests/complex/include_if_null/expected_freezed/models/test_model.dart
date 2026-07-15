@@ -16,6 +16,20 @@ abstract class TestModel with _$TestModel {
     @JsonKey(includeIfNull: false) String? optionalNullableField,
   }) = _TestModel;
 
+  Map<String, dynamic> toJson() => _$TestModelToJson(this as _TestModel);
   factory TestModel.fromJson(Map<String, Object?> json) =>
       _$TestModelFromJson(json);
+}
+
+extension TestModelMergeX on TestModel {
+  /// Returns a new [TestModel] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  TestModel merge(TestModel other) {
+    return copyWith(
+      id: other.id,
+      name: other.name,
+      requiredNullableField: other.requiredNullableField,
+      optionalNullableField: other.optionalNullableField,
+    );
+  }
 }

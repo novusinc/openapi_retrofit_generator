@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$GetDuplicateResponseMetadata {
 
-@JsonKey(includeIfNull: false) GetDuplicateResponseMetadataData? get data;
+@JsonKey(includeIfNull: false) String? get id;@JsonKey(includeIfNull: false) int? get value;
 /// Create a copy of GetDuplicateResponseMetadata
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $GetDuplicateResponseMetadataCopyWith<GetDuplicateResponseMetadata> get copyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GetDuplicateResponseMetadata&&(identical(other.data, data) || other.data == data));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GetDuplicateResponseMetadata&&(identical(other.id, id) || other.id == id)&&(identical(other.value, value) || other.value == value));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,data);
+int get hashCode => Object.hash(runtimeType,id,value);
 
 @override
 String toString() {
-  return 'GetDuplicateResponseMetadata(data: $data)';
+  return 'GetDuplicateResponseMetadata(id: $id, value: $value)';
 }
 
 
@@ -48,11 +48,11 @@ abstract mixin class $GetDuplicateResponseMetadataCopyWith<$Res>  {
   factory $GetDuplicateResponseMetadataCopyWith(GetDuplicateResponseMetadata value, $Res Function(GetDuplicateResponseMetadata) _then) = _$GetDuplicateResponseMetadataCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(includeIfNull: false) GetDuplicateResponseMetadataData? data
+@JsonKey(includeIfNull: false) String? id,@JsonKey(includeIfNull: false) int? value
 });
 
 
-$GetDuplicateResponseMetadataDataCopyWith<$Res>? get data;
+
 
 }
 /// @nodoc
@@ -65,25 +65,14 @@ class _$GetDuplicateResponseMetadataCopyWithImpl<$Res>
 
 /// Create a copy of GetDuplicateResponseMetadata
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? data = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? value = freezed,}) {
   return _then(_self.copyWith(
-data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
-as GetDuplicateResponseMetadataData?,
+id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,value: freezed == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
-/// Create a copy of GetDuplicateResponseMetadata
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$GetDuplicateResponseMetadataDataCopyWith<$Res>? get data {
-    if (_self.data == null) {
-    return null;
-  }
 
-  return $GetDuplicateResponseMetadataDataCopyWith<$Res>(_self.data!, (value) {
-    return _then(_self.copyWith(data: value));
-  });
-}
 }
 
 
@@ -165,10 +154,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeIfNull: false)  GetDuplicateResponseMetadataData? data)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeIfNull: false)  String? id, @JsonKey(includeIfNull: false)  int? value)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _GetDuplicateResponseMetadata() when $default != null:
-return $default(_that.data);case _:
+return $default(_that.id,_that.value);case _:
   return orElse();
 
 }
@@ -186,10 +175,10 @@ return $default(_that.data);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeIfNull: false)  GetDuplicateResponseMetadataData? data)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeIfNull: false)  String? id, @JsonKey(includeIfNull: false)  int? value)  $default,) {final _that = this;
 switch (_that) {
 case _GetDuplicateResponseMetadata():
-return $default(_that.data);case _:
+return $default(_that.id,_that.value);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -206,10 +195,10 @@ return $default(_that.data);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeIfNull: false)  GetDuplicateResponseMetadataData? data)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeIfNull: false)  String? id, @JsonKey(includeIfNull: false)  int? value)?  $default,) {final _that = this;
 switch (_that) {
 case _GetDuplicateResponseMetadata() when $default != null:
-return $default(_that.data);case _:
+return $default(_that.id,_that.value);case _:
   return null;
 
 }
@@ -221,10 +210,11 @@ return $default(_that.data);case _:
 @JsonSerializable()
 
 class _GetDuplicateResponseMetadata implements GetDuplicateResponseMetadata {
-  const _GetDuplicateResponseMetadata({@JsonKey(includeIfNull: false) this.data});
+  const _GetDuplicateResponseMetadata({@JsonKey(includeIfNull: false) this.id, @JsonKey(includeIfNull: false) this.value});
   factory _GetDuplicateResponseMetadata.fromJson(Map<String, dynamic> json) => _$GetDuplicateResponseMetadataFromJson(json);
 
-@override@JsonKey(includeIfNull: false) final  GetDuplicateResponseMetadataData? data;
+@override@JsonKey(includeIfNull: false) final  String? id;
+@override@JsonKey(includeIfNull: false) final  int? value;
 
 /// Create a copy of GetDuplicateResponseMetadata
 /// with the given fields replaced by the non-null parameter values.
@@ -239,16 +229,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GetDuplicateResponseMetadata&&(identical(other.data, data) || other.data == data));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GetDuplicateResponseMetadata&&(identical(other.id, id) || other.id == id)&&(identical(other.value, value) || other.value == value));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,data);
+int get hashCode => Object.hash(runtimeType,id,value);
 
 @override
 String toString() {
-  return 'GetDuplicateResponseMetadata(data: $data)';
+  return 'GetDuplicateResponseMetadata(id: $id, value: $value)';
 }
 
 
@@ -259,11 +249,11 @@ abstract mixin class _$GetDuplicateResponseMetadataCopyWith<$Res> implements $Ge
   factory _$GetDuplicateResponseMetadataCopyWith(_GetDuplicateResponseMetadata value, $Res Function(_GetDuplicateResponseMetadata) _then) = __$GetDuplicateResponseMetadataCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(includeIfNull: false) GetDuplicateResponseMetadataData? data
+@JsonKey(includeIfNull: false) String? id,@JsonKey(includeIfNull: false) int? value
 });
 
 
-@override $GetDuplicateResponseMetadataDataCopyWith<$Res>? get data;
+
 
 }
 /// @nodoc
@@ -276,26 +266,15 @@ class __$GetDuplicateResponseMetadataCopyWithImpl<$Res>
 
 /// Create a copy of GetDuplicateResponseMetadata
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? data = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? value = freezed,}) {
   return _then(_GetDuplicateResponseMetadata(
-data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
-as GetDuplicateResponseMetadataData?,
+id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,value: freezed == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 
-/// Create a copy of GetDuplicateResponseMetadata
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$GetDuplicateResponseMetadataDataCopyWith<$Res>? get data {
-    if (_self.data == null) {
-    return null;
-  }
 
-  return $GetDuplicateResponseMetadataDataCopyWith<$Res>(_self.data!, (value) {
-    return _then(_self.copyWith(data: value));
-  });
-}
 }
 
 // dart format on

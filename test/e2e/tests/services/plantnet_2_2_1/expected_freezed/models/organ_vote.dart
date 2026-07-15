@@ -18,6 +18,15 @@ abstract class OrganVote with _$OrganVote {
     required num score,
   }) = _OrganVote;
 
+  Map<String, dynamic> toJson() => _$OrganVoteToJson(this as _OrganVote);
   factory OrganVote.fromJson(Map<String, Object?> json) =>
       _$OrganVoteFromJson(json);
+}
+
+extension OrganVoteMergeX on OrganVote {
+  /// Returns a new [OrganVote] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  OrganVote merge(OrganVote other) {
+    return copyWith(organ: other.organ, score: other.score);
+  }
 }

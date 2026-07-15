@@ -17,6 +17,16 @@ abstract class SessionMessagesResponse with _$SessionMessagesResponse {
     required List<PartModel> parts,
   }) = _SessionMessagesResponse;
 
+  Map<String, dynamic> toJson() =>
+      _$SessionMessagesResponseToJson(this as _SessionMessagesResponse);
   factory SessionMessagesResponse.fromJson(Map<String, Object?> json) =>
       _$SessionMessagesResponseFromJson(json);
+}
+
+extension SessionMessagesResponseMergeX on SessionMessagesResponse {
+  /// Returns a new [SessionMessagesResponse] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  SessionMessagesResponse merge(SessionMessagesResponse other) {
+    return copyWith(info: other.info, parts: other.parts);
+  }
 }

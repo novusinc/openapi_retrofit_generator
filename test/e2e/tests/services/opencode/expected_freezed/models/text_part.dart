@@ -22,6 +22,24 @@ abstract class TextPart with _$TextPart {
     Map<String, dynamic>? metadata,
   }) = _TextPart;
 
+  Map<String, dynamic> toJson() => _$TextPartToJson(this as _TextPart);
   factory TextPart.fromJson(Map<String, Object?> json) =>
       _$TextPartFromJson(json);
+}
+
+extension TextPartMergeX on TextPart {
+  /// Returns a new [TextPart] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  TextPart merge(TextPart other) {
+    return copyWith(
+      id: other.id,
+      sessionId: other.sessionId,
+      messageId: other.messageId,
+      type: other.type,
+      text: other.text,
+      synthetic: other.synthetic,
+      time: other.time,
+      metadata: other.metadata,
+    );
+  }
 }

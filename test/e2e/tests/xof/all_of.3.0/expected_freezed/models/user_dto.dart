@@ -17,6 +17,15 @@ abstract class UserDto with _$UserDto {
     @JsonKey(includeIfNull: true) required String? username,
   }) = _UserDto;
 
+  Map<String, dynamic> toJson() => _$UserDtoToJson(this as _UserDto);
   factory UserDto.fromJson(Map<String, Object?> json) =>
       _$UserDtoFromJson(json);
+}
+
+extension UserDtoMergeX on UserDto {
+  /// Returns a new [UserDto] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  UserDto merge(UserDto other) {
+    return copyWith(id: other.id, username: other.username);
+  }
 }

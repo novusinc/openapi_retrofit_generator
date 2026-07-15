@@ -16,6 +16,15 @@ abstract class UnknownError with _$UnknownError {
     required UnknownErrorData data,
   }) = _UnknownError;
 
+  Map<String, dynamic> toJson() => _$UnknownErrorToJson(this as _UnknownError);
   factory UnknownError.fromJson(Map<String, Object?> json) =>
       _$UnknownErrorFromJson(json);
+}
+
+extension UnknownErrorMergeX on UnknownError {
+  /// Returns a new [UnknownError] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  UnknownError merge(UnknownError other) {
+    return copyWith(name: other.name, data: other.data);
+  }
 }

@@ -11,5 +11,14 @@ part 'powo.g.dart';
 abstract class Powo with _$Powo {
   const factory Powo({required String id}) = _Powo;
 
+  Map<String, dynamic> toJson() => _$PowoToJson(this as _Powo);
   factory Powo.fromJson(Map<String, Object?> json) => _$PowoFromJson(json);
+}
+
+extension PowoMergeX on Powo {
+  /// Returns a new [Powo] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Powo merge(Powo other) {
+    return copyWith(id: other.id);
+  }
 }

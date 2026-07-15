@@ -16,6 +16,16 @@ abstract class EventPermissionUpdated with _$EventPermissionUpdated {
     required Permission properties,
   }) = _EventPermissionUpdated;
 
+  Map<String, dynamic> toJson() =>
+      _$EventPermissionUpdatedToJson(this as _EventPermissionUpdated);
   factory EventPermissionUpdated.fromJson(Map<String, Object?> json) =>
       _$EventPermissionUpdatedFromJson(json);
+}
+
+extension EventPermissionUpdatedMergeX on EventPermissionUpdated {
+  /// Returns a new [EventPermissionUpdated] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventPermissionUpdated merge(EventPermissionUpdated other) {
+    return copyWith(type: other.type, properties: other.properties);
+  }
 }

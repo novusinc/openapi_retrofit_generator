@@ -4,7 +4,7 @@
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import 'event_session_error_properties_error_error.dart';
+import 'event_session_error_properties_error.dart';
 
 part 'event_session_error_properties.freezed.dart';
 part 'event_session_error_properties.g.dart';
@@ -13,9 +13,19 @@ part 'event_session_error_properties.g.dart';
 abstract class EventSessionErrorProperties with _$EventSessionErrorProperties {
   const factory EventSessionErrorProperties({
     @JsonKey(name: 'sessionID') String? sessionId,
-    EventSessionErrorPropertiesErrorError? error,
+    EventSessionErrorPropertiesError? error,
   }) = _EventSessionErrorProperties;
 
+  Map<String, dynamic> toJson() =>
+      _$EventSessionErrorPropertiesToJson(this as _EventSessionErrorProperties);
   factory EventSessionErrorProperties.fromJson(Map<String, Object?> json) =>
       _$EventSessionErrorPropertiesFromJson(json);
+}
+
+extension EventSessionErrorPropertiesMergeX on EventSessionErrorProperties {
+  /// Returns a new [EventSessionErrorProperties] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventSessionErrorProperties merge(EventSessionErrorProperties other) {
+    return copyWith(sessionId: other.sessionId, error: other.error);
+  }
 }

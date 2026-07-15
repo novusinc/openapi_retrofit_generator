@@ -13,6 +13,18 @@ abstract class FindTextResponseSubmatchesMatch
   const factory FindTextResponseSubmatchesMatch({required String text}) =
       _FindTextResponseSubmatchesMatch;
 
+  Map<String, dynamic> toJson() => _$FindTextResponseSubmatchesMatchToJson(
+    this as _FindTextResponseSubmatchesMatch,
+  );
   factory FindTextResponseSubmatchesMatch.fromJson(Map<String, Object?> json) =>
       _$FindTextResponseSubmatchesMatchFromJson(json);
+}
+
+extension FindTextResponseSubmatchesMatchMergeX
+    on FindTextResponseSubmatchesMatch {
+  /// Returns a new [FindTextResponseSubmatchesMatch] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  FindTextResponseSubmatchesMatch merge(FindTextResponseSubmatchesMatch other) {
+    return copyWith(text: other.text);
+  }
 }

@@ -16,6 +16,16 @@ abstract class MessageAbortedError with _$MessageAbortedError {
     required MessageAbortedErrorData data,
   }) = _MessageAbortedError;
 
+  Map<String, dynamic> toJson() =>
+      _$MessageAbortedErrorToJson(this as _MessageAbortedError);
   factory MessageAbortedError.fromJson(Map<String, Object?> json) =>
       _$MessageAbortedErrorFromJson(json);
+}
+
+extension MessageAbortedErrorMergeX on MessageAbortedError {
+  /// Returns a new [MessageAbortedError] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  MessageAbortedError merge(MessageAbortedError other) {
+    return copyWith(name: other.name, data: other.data);
+  }
 }

@@ -17,6 +17,15 @@ abstract class FileSource with _$FileSource {
     required String path,
   }) = _FileSource;
 
+  Map<String, dynamic> toJson() => _$FileSourceToJson(this as _FileSource);
   factory FileSource.fromJson(Map<String, Object?> json) =>
       _$FileSourceFromJson(json);
+}
+
+extension FileSourceMergeX on FileSource {
+  /// Returns a new [FileSource] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  FileSource merge(FileSource other) {
+    return copyWith(text: other.text, type: other.type, path: other.path);
+  }
 }

@@ -44,6 +44,40 @@ abstract class PartnerObservation with _$PartnerObservation {
     Votes? votes,
   }) = _PartnerObservation;
 
+  Map<String, dynamic> toJson() =>
+      _$PartnerObservationToJson(this as _PartnerObservation);
   factory PartnerObservation.fromJson(Map<String, Object?> json) =>
       _$PartnerObservationFromJson(json);
+}
+
+extension PartnerObservationMergeX on PartnerObservation {
+  /// Returns a new [PartnerObservation] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  PartnerObservation merge(PartnerObservation other) {
+    return copyWith(
+      id: other.id,
+      license: other.license,
+      licenseUrl: other.licenseUrl,
+      currentName: other.currentName,
+      submittedName: other.submittedName,
+      species: other.species,
+      geo: other.geo,
+      project: other.project,
+      isValid: other.isValid,
+      isRevised: other.isRevised,
+      deleted: other.deleted,
+      identificationResults: other.identificationResults,
+      groups: other.groups,
+      author: other.author,
+      dateObs: other.dateObs,
+      dateUpdated: other.dateUpdated,
+      dateUpdatedRemote: other.dateUpdatedRemote,
+      dateCreated: other.dateCreated,
+      partner: other.partner,
+      sharedId: other.sharedId,
+      images: other.images,
+      censored: other.censored,
+      votes: other.votes,
+    );
+  }
 }

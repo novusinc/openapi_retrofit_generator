@@ -14,6 +14,16 @@ abstract class MessageOutputLengthError with _$MessageOutputLengthError {
     required dynamic data,
   }) = _MessageOutputLengthError;
 
+  Map<String, dynamic> toJson() =>
+      _$MessageOutputLengthErrorToJson(this as _MessageOutputLengthError);
   factory MessageOutputLengthError.fromJson(Map<String, Object?> json) =>
       _$MessageOutputLengthErrorFromJson(json);
+}
+
+extension MessageOutputLengthErrorMergeX on MessageOutputLengthError {
+  /// Returns a new [MessageOutputLengthError] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  MessageOutputLengthError merge(MessageOutputLengthError other) {
+    return copyWith(name: other.name, data: other.data);
+  }
 }

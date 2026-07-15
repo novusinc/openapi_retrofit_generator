@@ -32,5 +32,29 @@ abstract class Model with _$Model {
     ModelProvider? provider,
   }) = _Model;
 
+  Map<String, dynamic> toJson() => _$ModelToJson(this as _Model);
   factory Model.fromJson(Map<String, Object?> json) => _$ModelFromJson(json);
+}
+
+extension ModelMergeX on Model {
+  /// Returns a new [Model] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Model merge(Model other) {
+    return copyWith(
+      id: other.id,
+      name: other.name,
+      releaseDate: other.releaseDate,
+      attachment: other.attachment,
+      reasoning: other.reasoning,
+      temperature: other.temperature,
+      toolCall: other.toolCall,
+      cost: other.cost,
+      limit: other.limit,
+      modalities: other.modalities,
+      experimental: other.experimental,
+      status: other.status,
+      options: other.options,
+      provider: other.provider,
+    );
+  }
 }

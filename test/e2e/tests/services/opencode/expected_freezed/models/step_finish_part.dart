@@ -21,6 +21,24 @@ abstract class StepFinishPart with _$StepFinishPart {
     String? snapshot,
   }) = _StepFinishPart;
 
+  Map<String, dynamic> toJson() =>
+      _$StepFinishPartToJson(this as _StepFinishPart);
   factory StepFinishPart.fromJson(Map<String, Object?> json) =>
       _$StepFinishPartFromJson(json);
+}
+
+extension StepFinishPartMergeX on StepFinishPart {
+  /// Returns a new [StepFinishPart] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  StepFinishPart merge(StepFinishPart other) {
+    return copyWith(
+      id: other.id,
+      sessionId: other.sessionId,
+      messageId: other.messageId,
+      type: other.type,
+      snapshot: other.snapshot,
+      cost: other.cost,
+      tokens: other.tokens,
+    );
+  }
 }

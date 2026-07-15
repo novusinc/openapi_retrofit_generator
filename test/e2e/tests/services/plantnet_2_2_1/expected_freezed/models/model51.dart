@@ -26,6 +26,28 @@ abstract class Model51 with _$Model51 {
     String? reject,
   }) = _Model51;
 
+  Map<String, dynamic> toJson() => _$Model51ToJson(this as _Model51);
   factory Model51.fromJson(Map<String, Object?> json) =>
       _$Model51FromJson(json);
+}
+
+extension Model51MergeX on Model51 {
+  /// Returns a new [Model51] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Model51 merge(Model51 other) {
+    return copyWith(
+      name: other.name,
+      id: other.id,
+      gbifId: other.gbifId,
+      binomial: other.binomial,
+      author: other.author,
+      genus: other.genus,
+      family: other.family,
+      coverage: other.coverage,
+      maxScore: other.maxScore,
+      count: other.count,
+      location: other.location,
+      reject: other.reject,
+    );
+  }
 }

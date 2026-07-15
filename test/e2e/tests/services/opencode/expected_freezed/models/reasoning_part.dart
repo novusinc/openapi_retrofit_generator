@@ -21,6 +21,24 @@ abstract class ReasoningPart with _$ReasoningPart {
     Map<String, dynamic>? metadata,
   }) = _ReasoningPart;
 
+  Map<String, dynamic> toJson() =>
+      _$ReasoningPartToJson(this as _ReasoningPart);
   factory ReasoningPart.fromJson(Map<String, Object?> json) =>
       _$ReasoningPartFromJson(json);
+}
+
+extension ReasoningPartMergeX on ReasoningPart {
+  /// Returns a new [ReasoningPart] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ReasoningPart merge(ReasoningPart other) {
+    return copyWith(
+      id: other.id,
+      sessionId: other.sessionId,
+      messageId: other.messageId,
+      type: other.type,
+      text: other.text,
+      metadata: other.metadata,
+      time: other.time,
+    );
+  }
 }

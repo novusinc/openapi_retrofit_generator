@@ -17,6 +17,16 @@ abstract class SessionCommandResponse with _$SessionCommandResponse {
     required List<PartModel> parts,
   }) = _SessionCommandResponse;
 
+  Map<String, dynamic> toJson() =>
+      _$SessionCommandResponseToJson(this as _SessionCommandResponse);
   factory SessionCommandResponse.fromJson(Map<String, Object?> json) =>
       _$SessionCommandResponseFromJson(json);
+}
+
+extension SessionCommandResponseMergeX on SessionCommandResponse {
+  /// Returns a new [SessionCommandResponse] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  SessionCommandResponse merge(SessionCommandResponse other) {
+    return copyWith(info: other.info, parts: other.parts);
+  }
 }

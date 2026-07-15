@@ -15,6 +15,17 @@ abstract class EventMessageUpdatedProperties
   const factory EventMessageUpdatedProperties({required Message info}) =
       _EventMessageUpdatedProperties;
 
+  Map<String, dynamic> toJson() => _$EventMessageUpdatedPropertiesToJson(
+    this as _EventMessageUpdatedProperties,
+  );
   factory EventMessageUpdatedProperties.fromJson(Map<String, Object?> json) =>
       _$EventMessageUpdatedPropertiesFromJson(json);
+}
+
+extension EventMessageUpdatedPropertiesMergeX on EventMessageUpdatedProperties {
+  /// Returns a new [EventMessageUpdatedProperties] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  EventMessageUpdatedProperties merge(EventMessageUpdatedProperties other) {
+    return copyWith(info: other.info);
+  }
 }

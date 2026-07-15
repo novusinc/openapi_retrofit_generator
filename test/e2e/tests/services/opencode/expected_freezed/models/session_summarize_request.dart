@@ -14,6 +14,16 @@ abstract class SessionSummarizeRequest with _$SessionSummarizeRequest {
     @JsonKey(name: 'modelID') required String modelId,
   }) = _SessionSummarizeRequest;
 
+  Map<String, dynamic> toJson() =>
+      _$SessionSummarizeRequestToJson(this as _SessionSummarizeRequest);
   factory SessionSummarizeRequest.fromJson(Map<String, Object?> json) =>
       _$SessionSummarizeRequestFromJson(json);
+}
+
+extension SessionSummarizeRequestMergeX on SessionSummarizeRequest {
+  /// Returns a new [SessionSummarizeRequest] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  SessionSummarizeRequest merge(SessionSummarizeRequest other) {
+    return copyWith(providerId: other.providerId, modelId: other.modelId);
+  }
 }

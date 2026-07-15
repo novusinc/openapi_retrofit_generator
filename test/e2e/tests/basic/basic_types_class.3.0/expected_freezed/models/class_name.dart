@@ -32,8 +32,32 @@ abstract class ClassName with _$ClassName {
     @Default(const []) List<String> arrayWithDefault,
   }) = _ClassName;
 
+  Map<String, dynamic> toJson() => _$ClassNameToJson(this as _ClassName);
   factory ClassName.fromJson(Map<String, Object?> json) =>
       _$ClassNameFromJson(json);
+}
+
+extension ClassNameMergeX on ClassName {
+  /// Returns a new [ClassName] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ClassName merge(ClassName other) {
+    return copyWith(
+      integer1: other.integer1,
+      float1: other.float1,
+      double1: other.double1,
+      string1: other.string1,
+      number1: other.number1,
+      string2: other.string2,
+      string3: other.string3,
+      string4: other.string4,
+      string5: other.string5,
+      bool1: other.bool1,
+      object1: other.object1,
+      array1: other.array1,
+      array2: other.array2,
+      arrayWithDefault: other.arrayWithDefault,
+    );
+  }
 }
 
 class _Base64Converter implements JsonConverter<Uint8List, String> {

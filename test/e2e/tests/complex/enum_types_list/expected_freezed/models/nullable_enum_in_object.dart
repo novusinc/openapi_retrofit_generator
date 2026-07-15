@@ -15,6 +15,16 @@ abstract class NullableEnumInObject with _$NullableEnumInObject {
     @JsonKey(includeIfNull: false) NullableEnumInObjectFruitsFruits? fruits,
   }) = _NullableEnumInObject;
 
+  Map<String, dynamic> toJson() =>
+      _$NullableEnumInObjectToJson(this as _NullableEnumInObject);
   factory NullableEnumInObject.fromJson(Map<String, Object?> json) =>
       _$NullableEnumInObjectFromJson(json);
+}
+
+extension NullableEnumInObjectMergeX on NullableEnumInObject {
+  /// Returns a new [NullableEnumInObject] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  NullableEnumInObject merge(NullableEnumInObject other) {
+    return copyWith(fruits: other.fruits);
+  }
 }

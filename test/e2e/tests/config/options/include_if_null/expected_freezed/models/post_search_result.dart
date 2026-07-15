@@ -20,6 +20,21 @@ abstract class PostSearchResult with _$PostSearchResult {
     @JsonKey(includeIfNull: false) List<String>? highlights,
   }) = _PostSearchResult;
 
+  Map<String, dynamic> toJson() =>
+      _$PostSearchResultToJson(this as _PostSearchResult);
   factory PostSearchResult.fromJson(Map<String, Object?> json) =>
       _$PostSearchResultFromJson(json);
+}
+
+extension PostSearchResultMergeX on PostSearchResult {
+  /// Returns a new [PostSearchResult] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  PostSearchResult merge(PostSearchResult other) {
+    return copyWith(
+      type: other.type,
+      post: other.post,
+      score: other.score,
+      highlights: other.highlights,
+    );
+  }
 }

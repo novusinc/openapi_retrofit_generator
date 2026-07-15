@@ -43,5 +43,6 @@ sealed class Entity with _$Entity {
 
   const factory Entity.unknown() = EntityUnknown;
 
+  Map<String, dynamic> toJson() => throw UnimplementedError();
   factory Entity.fromJson(Map<String, Object?> json) => _$EntityFromJson(json);
 }

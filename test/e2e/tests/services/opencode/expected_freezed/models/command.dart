@@ -17,6 +17,21 @@ abstract class Command with _$Command {
     bool? subtask,
   }) = _Command;
 
+  Map<String, dynamic> toJson() => _$CommandToJson(this as _Command);
   factory Command.fromJson(Map<String, Object?> json) =>
       _$CommandFromJson(json);
+}
+
+extension CommandMergeX on Command {
+  /// Returns a new [Command] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Command merge(Command other) {
+    return copyWith(
+      template: other.template,
+      description: other.description,
+      agent: other.agent,
+      model: other.model,
+      subtask: other.subtask,
+    );
+  }
 }

@@ -46,6 +46,7 @@ sealed class PaymentRequest with _$PaymentRequest {
 
   const factory PaymentRequest.unknown() = PaymentRequestUnknown;
 
+  Map<String, dynamic> toJson() => throw UnimplementedError();
   factory PaymentRequest.fromJson(Map<String, Object?> json) =>
       _$PaymentRequestFromJson(json);
 }

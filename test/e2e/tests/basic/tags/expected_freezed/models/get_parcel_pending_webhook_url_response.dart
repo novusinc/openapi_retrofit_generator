@@ -14,7 +14,21 @@ abstract class GetParcelPendingWebhookUrlResponse
     @JsonKey(includeIfNull: false, name: 'webhookURL') String? webhookUrl,
   }) = _GetParcelPendingWebhookUrlResponse;
 
+  Map<String, dynamic> toJson() => _$GetParcelPendingWebhookUrlResponseToJson(
+    this as _GetParcelPendingWebhookUrlResponse,
+  );
   factory GetParcelPendingWebhookUrlResponse.fromJson(
     Map<String, Object?> json,
   ) => _$GetParcelPendingWebhookUrlResponseFromJson(json);
+}
+
+extension GetParcelPendingWebhookUrlResponseMergeX
+    on GetParcelPendingWebhookUrlResponse {
+  /// Returns a new [GetParcelPendingWebhookUrlResponse] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  GetParcelPendingWebhookUrlResponse merge(
+    GetParcelPendingWebhookUrlResponse other,
+  ) {
+    return copyWith(webhookUrl: other.webhookUrl);
+  }
 }

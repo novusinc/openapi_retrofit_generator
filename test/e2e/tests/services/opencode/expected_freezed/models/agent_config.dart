@@ -25,6 +25,25 @@ abstract class AgentConfig with _$AgentConfig {
     AgentConfigPermission? permission,
   }) = _AgentConfig;
 
+  Map<String, dynamic> toJson() => _$AgentConfigToJson(this as _AgentConfig);
   factory AgentConfig.fromJson(Map<String, Object?> json) =>
       _$AgentConfigFromJson(json);
+}
+
+extension AgentConfigMergeX on AgentConfig {
+  /// Returns a new [AgentConfig] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  AgentConfig merge(AgentConfig other) {
+    return copyWith(
+      model: other.model,
+      temperature: other.temperature,
+      topP: other.topP,
+      prompt: other.prompt,
+      tools: other.tools,
+      disable: other.disable,
+      description: other.description,
+      mode: other.mode,
+      permission: other.permission,
+    );
+  }
 }

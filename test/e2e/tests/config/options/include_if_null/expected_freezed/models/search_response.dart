@@ -15,6 +15,16 @@ abstract class SearchResponse with _$SearchResponse {
     @JsonKey(includeIfNull: false) List<SearchResult>? results,
   }) = _SearchResponse;
 
+  Map<String, dynamic> toJson() =>
+      _$SearchResponseToJson(this as _SearchResponse);
   factory SearchResponse.fromJson(Map<String, Object?> json) =>
       _$SearchResponseFromJson(json);
+}
+
+extension SearchResponseMergeX on SearchResponse {
+  /// Returns a new [SearchResponse] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  SearchResponse merge(SearchResponse other) {
+    return copyWith(results: other.results);
+  }
 }

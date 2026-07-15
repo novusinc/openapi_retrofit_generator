@@ -20,6 +20,22 @@ abstract class AgentPart with _$AgentPart {
     AgentPartSource? source,
   }) = _AgentPart;
 
+  Map<String, dynamic> toJson() => _$AgentPartToJson(this as _AgentPart);
   factory AgentPart.fromJson(Map<String, Object?> json) =>
       _$AgentPartFromJson(json);
+}
+
+extension AgentPartMergeX on AgentPart {
+  /// Returns a new [AgentPart] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  AgentPart merge(AgentPart other) {
+    return copyWith(
+      id: other.id,
+      sessionId: other.sessionId,
+      messageId: other.messageId,
+      type: other.type,
+      name: other.name,
+      source: other.source,
+    );
+  }
 }

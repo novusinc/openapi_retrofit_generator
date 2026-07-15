@@ -17,5 +17,14 @@ abstract class Data with _$Data {
     @JsonKey(includeIfNull: false) DataNested? nested,
   }) = _Data;
 
+  Map<String, dynamic> toJson() => _$DataToJson(this as _Data);
   factory Data.fromJson(Map<String, Object?> json) => _$DataFromJson(json);
+}
+
+extension DataMergeX on Data {
+  /// Returns a new [Data] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Data merge(Data other) {
+    return copyWith(id: other.id, value: other.value, nested: other.nested);
+  }
 }

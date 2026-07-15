@@ -25,6 +25,21 @@ abstract class AppLogRequest with _$AppLogRequest {
     Map<String, dynamic>? extra,
   }) = _AppLogRequest;
 
+  Map<String, dynamic> toJson() =>
+      _$AppLogRequestToJson(this as _AppLogRequest);
   factory AppLogRequest.fromJson(Map<String, Object?> json) =>
       _$AppLogRequestFromJson(json);
+}
+
+extension AppLogRequestMergeX on AppLogRequest {
+  /// Returns a new [AppLogRequest] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  AppLogRequest merge(AppLogRequest other) {
+    return copyWith(
+      service: other.service,
+      level: other.level,
+      message: other.message,
+      extra: other.extra,
+    );
+  }
 }

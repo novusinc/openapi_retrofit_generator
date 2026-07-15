@@ -15,6 +15,19 @@ abstract class ToolListItem with _$ToolListItem {
     required dynamic parameters,
   }) = _ToolListItem;
 
+  Map<String, dynamic> toJson() => _$ToolListItemToJson(this as _ToolListItem);
   factory ToolListItem.fromJson(Map<String, Object?> json) =>
       _$ToolListItemFromJson(json);
+}
+
+extension ToolListItemMergeX on ToolListItem {
+  /// Returns a new [ToolListItem] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ToolListItem merge(ToolListItem other) {
+    return copyWith(
+      id: other.id,
+      description: other.description,
+      parameters: other.parameters,
+    );
+  }
 }

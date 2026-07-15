@@ -15,6 +15,20 @@ abstract class AgentConfigPermission with _$AgentConfigPermission {
     dynamic webfetch,
   }) = _AgentConfigPermission;
 
+  Map<String, dynamic> toJson() =>
+      _$AgentConfigPermissionToJson(this as _AgentConfigPermission);
   factory AgentConfigPermission.fromJson(Map<String, Object?> json) =>
       _$AgentConfigPermissionFromJson(json);
+}
+
+extension AgentConfigPermissionMergeX on AgentConfigPermission {
+  /// Returns a new [AgentConfigPermission] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  AgentConfigPermission merge(AgentConfigPermission other) {
+    return copyWith(
+      edit: other.edit,
+      bash: other.bash,
+      webfetch: other.webfetch,
+    );
+  }
 }

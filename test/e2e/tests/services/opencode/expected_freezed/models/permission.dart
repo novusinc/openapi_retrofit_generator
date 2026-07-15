@@ -23,6 +23,25 @@ abstract class Permission with _$Permission {
     @JsonKey(name: 'callID') String? callId,
   }) = _Permission;
 
+  Map<String, dynamic> toJson() => _$PermissionToJson(this as _Permission);
   factory Permission.fromJson(Map<String, Object?> json) =>
       _$PermissionFromJson(json);
+}
+
+extension PermissionMergeX on Permission {
+  /// Returns a new [Permission] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  Permission merge(Permission other) {
+    return copyWith(
+      id: other.id,
+      type: other.type,
+      pattern: other.pattern,
+      sessionId: other.sessionId,
+      messageId: other.messageId,
+      callId: other.callId,
+      title: other.title,
+      metadata: other.metadata,
+      time: other.time,
+    );
+  }
 }

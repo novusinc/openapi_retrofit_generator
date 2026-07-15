@@ -14,6 +14,16 @@ abstract class ProviderAuthErrorData with _$ProviderAuthErrorData {
     required String message,
   }) = _ProviderAuthErrorData;
 
+  Map<String, dynamic> toJson() =>
+      _$ProviderAuthErrorDataToJson(this as _ProviderAuthErrorData);
   factory ProviderAuthErrorData.fromJson(Map<String, Object?> json) =>
       _$ProviderAuthErrorDataFromJson(json);
+}
+
+extension ProviderAuthErrorDataMergeX on ProviderAuthErrorData {
+  /// Returns a new [ProviderAuthErrorData] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ProviderAuthErrorData merge(ProviderAuthErrorData other) {
+    return copyWith(providerId: other.providerId, message: other.message);
+  }
 }

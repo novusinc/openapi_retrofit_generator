@@ -34,6 +34,8 @@ abstract class GetPostResponse with _$GetPostResponse {
     List<Comment>? comments,
   }) = _GetPostResponse;
 
+  Map<String, dynamic> toJson() =>
+      _$GetPostResponseToJson(this as _GetPostResponse);
   factory GetPostResponse.fromJson(Map<String, Object?> json) =>
       _$GetPostResponseFromJson(json);
   static const int titleMinLength = 1;
@@ -98,5 +100,30 @@ extension GetPostResponseValidationX on GetPostResponse {
       return false;
     }
     return true;
+  }
+}
+
+extension GetPostResponseMergeX on GetPostResponse {
+  /// Returns a new [GetPostResponse] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  GetPostResponse merge(GetPostResponse other) {
+    return copyWith(
+      id: other.id,
+      title: other.title,
+      content: other.content,
+      excerpt: other.excerpt,
+      authorId: other.authorId,
+      author: other.author,
+      status: other.status,
+      tags: other.tags,
+      categories: other.categories,
+      publishedAt: other.publishedAt,
+      viewCount: other.viewCount,
+      likeCount: other.likeCount,
+      metadata: other.metadata,
+      createdAt: other.createdAt,
+      updatedAt: other.updatedAt,
+      comments: other.comments,
+    );
   }
 }

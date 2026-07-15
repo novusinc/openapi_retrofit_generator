@@ -17,7 +17,22 @@ abstract class PostSessionIdPermissionsPermissionIdRequest
     response,
   }) = _PostSessionIdPermissionsPermissionIdRequest;
 
+  Map<String, dynamic> toJson() =>
+      _$PostSessionIdPermissionsPermissionIdRequestToJson(
+        this as _PostSessionIdPermissionsPermissionIdRequest,
+      );
   factory PostSessionIdPermissionsPermissionIdRequest.fromJson(
     Map<String, Object?> json,
   ) => _$PostSessionIdPermissionsPermissionIdRequestFromJson(json);
+}
+
+extension PostSessionIdPermissionsPermissionIdRequestMergeX
+    on PostSessionIdPermissionsPermissionIdRequest {
+  /// Returns a new [PostSessionIdPermissionsPermissionIdRequest] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  PostSessionIdPermissionsPermissionIdRequest merge(
+    PostSessionIdPermissionsPermissionIdRequest other,
+  ) {
+    return copyWith(response: other.response);
+  }
 }

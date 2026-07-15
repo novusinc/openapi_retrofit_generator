@@ -16,6 +16,16 @@ abstract class ExampleParsable with _$ExampleParsable {
     required Map<String, Example> data,
   }) = _ExampleParsable;
 
+  Map<String, dynamic> toJson() =>
+      _$ExampleParsableToJson(this as _ExampleParsable);
   factory ExampleParsable.fromJson(Map<String, Object?> json) =>
       _$ExampleParsableFromJson(json);
+}
+
+extension ExampleParsableMergeX on ExampleParsable {
+  /// Returns a new [ExampleParsable] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ExampleParsable merge(ExampleParsable other) {
+    return copyWith(data: other.data);
+  }
 }

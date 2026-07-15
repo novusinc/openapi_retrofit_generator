@@ -16,6 +16,19 @@ abstract class ConfigExperimental with _$ConfigExperimental {
     @JsonKey(name: 'disable_paste_summary') bool? disablePasteSummary,
   }) = _ConfigExperimental;
 
+  Map<String, dynamic> toJson() =>
+      _$ConfigExperimentalToJson(this as _ConfigExperimental);
   factory ConfigExperimental.fromJson(Map<String, Object?> json) =>
       _$ConfigExperimentalFromJson(json);
+}
+
+extension ConfigExperimentalMergeX on ConfigExperimental {
+  /// Returns a new [ConfigExperimental] that is a combination of this instance and the
+  /// given [other] instance. All fields from [other] are copied to the new instance.
+  ConfigExperimental merge(ConfigExperimental other) {
+    return copyWith(
+      hook: other.hook,
+      disablePasteSummary: other.disablePasteSummary,
+    );
+  }
 }
