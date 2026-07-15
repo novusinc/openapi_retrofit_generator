@@ -3,6 +3,34 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:openapi_retrofit_generator/openapi_retrofit_generator.dart';
 
+/// The serializers the e2e suite exercises end-to-end (generate ->
+/// build_runner -> analyze -> golden comparison).
+///
+/// Defaults to freezed only: it is the only serializer novus uses, and each
+/// additional serializer multiplies the dominant cost of the suite (the
+/// per-case build_runner run) and the committed golden surface. The
+/// json_serializable and dart_mappable templates keep their template-level
+/// unit tests (test/unit/data_classes_test.dart).
+///
+/// Override with a comma-separated E2E_SERIALIZERS env var using the same
+/// names as openapi_generator.yaml:
+///
+///   E2E_SERIALIZERS=freezed,json_serializable,dart_mappable \
+///       ./scripts/run_e2e_tests.sh
+///
+/// A non-default serializer needs goldens first — run the regenerate script
+/// with the same E2E_SERIALIZERS value to create its expected_* folders.
+final List<JsonSerializer> e2eSerializers = () {
+  final raw = Platform.environment['E2E_SERIALIZERS'];
+  if (raw == null || raw.trim().isEmpty) {
+    return const [JsonSerializer.freezed];
+  }
+  return [
+    for (final name in raw.split(','))
+      if (name.trim().isNotEmpty) JsonSerializer.fromString(name.trim()),
+  ];
+}();
+
 String getGeneratedFolderName(JsonSerializer serializer) {
   return switch (serializer) {
     JsonSerializer.freezed => 'generated_freezed',
@@ -57,7 +85,7 @@ Future<void> generateFilesForAllSerializers({
 }) async {
   final libFolder = p.join(buildFolder, 'lib');
 
-  for (final serializer in JsonSerializer.values) {
+  for (final serializer in e2eSerializers) {
     final generatedFolder = getGeneratedFolderName(serializer);
     final buildOutputPath = p.join(libFolder, generatedFolder);
 
@@ -96,7 +124,7 @@ Future<void> runAnalyzer(
   String testName, {
   bool useExpectedFolders = false,
 }) async {
-  for (final serializer in JsonSerializer.values) {
+  for (final serializer in e2eSerializers) {
     final folderName = useExpectedFolders
         ? getExpectedFolderName(serializer)
         : getGeneratedFolderName(serializer);

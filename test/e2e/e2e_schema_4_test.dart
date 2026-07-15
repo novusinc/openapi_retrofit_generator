@@ -23,7 +23,7 @@ Future<void> schemaTest(String schemaFileName, String buildFolder) async {
   print('Schema: $schemaPath');
 
   print('\n[1/6] Cleaning generated folders...');
-  for (final serializer in JsonSerializer.values) {
+  for (final serializer in e2eSerializers) {
     final generatedFolderName = getGeneratedFolderName(serializer);
     final generatedFolder = p.join(
       'test',
@@ -64,7 +64,7 @@ Future<void> schemaTest(String schemaFileName, String buildFolder) async {
     print('  ✓ Files formatted');
 
     print('\n[5/6] Moving generated files...');
-    for (final serializer in JsonSerializer.values) {
+    for (final serializer in e2eSerializers) {
       final generatedFolderName = getGeneratedFolderName(serializer);
       final buildOutputPath = p.join(libFolder, generatedFolderName);
       final targetPath = p.join(
