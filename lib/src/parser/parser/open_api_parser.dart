@@ -2661,6 +2661,16 @@ class OpenApiParser {
           wrappingCollections: finalWrappingCollections,
           nullable: finalNullable,
           deprecated: ofType?.deprecated ?? false,
+          // Custom metadata (e.g. value_source/generated_as/immutable) lives on
+          // the OUTER property map, not the unwrapped inner variant, so it must
+          // be extracted from `map` here. Without this, every nullable property
+          // (`type: [x, "null"]` or `anyOf: [x, {type: null}]`) and every
+          // nullable `$ref` silently loses its annotations. Merge the inner
+          // type's metadata first so the outer property's keys win.
+          customMetadata: {
+            ...?ofType?.customMetadata,
+            ..._extractCustomMetadata(map),
+          },
         ),
         import: finalImport,
       );
