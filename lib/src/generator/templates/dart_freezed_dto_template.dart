@@ -86,23 +86,39 @@ $variantClasses$base64ConverterClass''';
   // concrete implementation class (_ClassName) using "implements" rather than "extends",
   // so any method added to the abstract class body would need to be re-implemented
   // in the generated class, which we cannot modify.
+  // Partial-update request types (`update_*_request`, excluding full-replace
+  // `*_full` bodies) get presence-tracking Optional<T> on their value fields —
+  // the client mass-assignment boundary. See
+  // docs/plans/client-write-path-enforcement.md G1.1.
+  final wrapOptional = !isUnion && _isPartialUpdateRequest(dataClass);
+  final optionalImport = wrapOptional
+      ? _optionalImportDirective(customMetadataImportPath)
+      : '';
+
   final mergeExtension = (generateMergeMethod && !isUnion)
-      ? _generateMergeExtension(className, dataClass.parameters)
+      ? _generateMergeExtension(
+          className,
+          dataClass.parameters,
+          wrapOptional: wrapOptional,
+        )
+      : '';
+  final patchExtension = wrapOptional
+      ? _generateToPatchExtension(className, dataClass.parameters)
       : '';
 
   return '''
 import 'package:freezed_annotation/freezed_annotation.dart';
-$dartCoreImports$customMetadataImport${dartImports(imports: _filterUnionImportsForFreezed(dataClass), fileOverrides: classFileOverrides)}
+$dartCoreImports$customMetadataImport$optionalImport${dartImports(imports: _filterUnionImportsForFreezed(dataClass), fileOverrides: classFileOverrides)}
 part '${dataClass.name.toSnake}.freezed.dart';
 part '${dataClass.name.toSnake}.g.dart';
 
 ${descriptionComment(dataClass.description)}@Freezed(${[if (discriminator != null) "unionKey: '${discriminator.propertyName}'", if (discriminator != null && fallbackUnion != null && fallbackUnion.isNotEmpty) "fallbackUnion: '$fallbackUnion'"].join(', ')})
 ${_classModifier(isUnion: isUnion)}class $className with _\$$className {
-${_factories(dataClass, className, includeIfNull, fallbackUnion, customMetadata, isUnion: isUnion)}
+${_factories(dataClass, className, includeIfNull, fallbackUnion, customMetadata, isUnion: isUnion, wrapOptional: wrapOptional)}
 ${_unionDefaultConstants(dataClass, className)}
 ${_jsonFactories(className, dataClass.undiscriminatedUnionVariants, isUnion: isUnion)}
 ${generateValidator ? dataClass.parameters.map(_validationString).nonNulls.join() : ''}}
-${generateValidator ? _validateMethod(className, dataClass.parameters) : ''}$mergeExtension$base64ConverterClass''';
+${generateValidator ? _validateMethod(className, dataClass.parameters) : ''}$mergeExtension$patchExtension$base64ConverterClass''';
 }
 
 String _classModifier({required bool isUnion}) {
@@ -848,10 +864,11 @@ String _factories(
   String? fallbackUnion,
   CustomMetadataConfig customMetadata, {
   required bool isUnion,
+  bool wrapOptional = false,
 }) {
   if (!isUnion) {
     return '''
-  const factory $className(${dataClass.parameters.isNotEmpty ? '{' : ''}${_parametersToString(dataClass.parameters, includeIfNull, customMetadata)}${dataClass.parameters.isNotEmpty ? '\n  }' : ''}) = _$className;''';
+  const factory $className(${dataClass.parameters.isNotEmpty ? '{' : ''}${_parametersToString(dataClass.parameters, includeIfNull, customMetadata, wrapOptional: wrapOptional)}${dataClass.parameters.isNotEmpty ? '\n  }' : ''}) = _$className;''';
   }
 
   if (dataClass.undiscriminatedUnionVariants case final variants?
@@ -1092,8 +1109,9 @@ String? _validationString(UniversalType type) {
 String _parametersToString(
   Set<UniversalType> parameters,
   bool includeIfNull,
-  CustomMetadataConfig customMetadata,
-) {
+  CustomMetadataConfig customMetadata, {
+  bool wrapOptional = false,
+}) {
   final sortedByRequired = Set<UniversalType>.from(
     parameters.sorted((a, b) => a.compareTo(b)),
   );
@@ -1108,10 +1126,14 @@ String _parametersToString(
 
     final description = shouldShowDescription ? e.description : null;
 
+    // Presence-tracking wrap for a value field of a partial-update request.
+    final wrap = wrapOptional && _isWrappableOptionalField(e);
+    final renderedType = wrap ? _optionalFieldType(e) : _freezedSuitableType(e);
+
     return '\n${descriptionComment(description, tab: '    ')}'
         '${_customAnnotations(e, customMetadata)}'
-        '${_jsonKey(e, includeIfNull)}    ${_required(e)}'
-        '${_freezedSuitableType(e)} ${e.name},';
+        '${_jsonKey(e, includeIfNull, wrapOptional: wrap)}    ${_required(e)}'
+        '$renderedType ${e.name},';
   }).join();
 }
 
@@ -1142,9 +1164,30 @@ String _jsonKeyForWrapper(UniversalType t) {
   return '';
 }
 
-String _jsonKey(UniversalType t, bool includeIfNull) {
+String _jsonKey(UniversalType t, bool includeIfNull, {bool wrapOptional = false}) {
   final sb = StringBuffer();
   final jsonKeyParams = <String, String?>{};
+
+  // Presence-tracked Optional<T> value field: json_serializable cannot express
+  // the absent/clear/set tri-state (null-omission collapses absent and clear)
+  // and cannot (de)serialize Optional<T> generically, so the field is fully
+  // excluded from it (includeToJson/includeFromJson: false). The generated
+  // `toPatch()` is the authoritative serializer for these fields (the client
+  // write-path patch); the freezed-generated `toJson()` carries only the
+  // operation (@Default) fields and is used solely for retrofit @Body
+  // compilation (that HTTP path is not wired). On decode, wrapped fields default
+  // to null (absent); request models are never deserialized in practice.
+  if (wrapOptional) {
+    if (t.jsonKey != null && t.name != t.jsonKey) {
+      jsonKeyParams['name'] = "'${protectJsonKey(t.jsonKey)}'";
+    }
+    jsonKeyParams['includeToJson'] = 'false';
+    jsonKeyParams['includeFromJson'] = 'false';
+    sb.write(
+      "    @JsonKey(${jsonKeyParams.entries.map((e) => '${e.key}: ${e.value}').join(',')})\n",
+    );
+    return sb.toString();
+  }
 
   if (includeIfNull) {
     if (t.isRequired && (t.nullable || t.referencedNullable)) {
@@ -1396,6 +1439,84 @@ String _customAnnotations(
   return buffer.toString();
 }
 
+/// Schema-name rule for the partial-update request types whose value fields
+/// carry presence tracking (`Optional<T>`) — the client mass-assignment boundary.
+/// Matches `update_*_request` but NOT full-replace bodies (e.g.
+/// `update_message_request_full` ends in `_full`, not `_request`) or nested
+/// value objects (`update_message_partial_request_content` ends in `_content`).
+/// See docs/plans/client-write-path-enforcement.md G1.1.
+final RegExp _partialUpdateRequestName = RegExp(r'^update_.*_request$');
+
+bool _isPartialUpdateRequest(UniversalComponentClass dataClass) =>
+    _partialUpdateRequestName.hasMatch(dataClass.name.toSnake);
+
+/// A wrappable value field of a partial-update request: optional (not required)
+/// with no schema default. Operation fields (`@Default(...)`) and required
+/// fields keep their plain type — presence tracking is meaningless for them.
+bool _isWrappableOptionalField(UniversalType t) =>
+    !t.isRequired && t.defaultValue == null;
+
+/// The non-null inner type Optional wraps (strip one trailing `?`).
+String _optionalInnerType(UniversalType t) {
+  final base = _freezedSuitableType(t);
+  return base.endsWith('?') ? base.substring(0, base.length - 1) : base;
+}
+
+/// The rendered field type for a wrapped value field: `Optional<T>?`.
+String _optionalFieldType(UniversalType t) =>
+    'Optional<${_optionalInnerType(t)}>?';
+
+/// The wire (JSON) key for a field — what the stored document and patch use.
+String _wireKey(UniversalType t) {
+  final key = t.jsonKey ?? t.name ?? '';
+  return protectJsonKey(key) ?? key;
+}
+
+/// The `show`-scoped import for the Optional value type + its json helpers,
+/// reusing the custom-metadata import path (the consumer's model barrel).
+String _optionalImportDirective(String? importPath) {
+  if (importPath == null || importPath.trim().isEmpty) {
+    throw StateError(
+      "Config parameter 'converter_hydrated_model_prefix' is required to "
+      'generate Optional<T> update-request fields.',
+    );
+  }
+  return "import '${importPath.trim()}' show Optional;\n";
+}
+
+/// Generates a `toPatch()` extension: the sparse presence patch built from the
+/// *present* Optionals only (keeping an explicit null as a clear) — the Dart
+/// analogue of `model_dump(exclude_unset=True)`, consumed by
+/// `BaseDao.applyUpdate`. Operation (`@Default`) fields are intentionally
+/// excluded: they are backend commands, not stored document fields. See
+/// docs/plans/client-write-path-enforcement.md G1.2.
+String _generateToPatchExtension(
+  String className,
+  Set<UniversalType> parameters,
+) {
+  // `this.` qualifies every field access: a bare field name (e.g. `deprecated`)
+  // can collide with a dart:core top-level constant and resolve to it instead.
+  final lines = parameters
+      .where(_isWrappableOptionalField)
+      .map(
+        (p) =>
+            "    if (this.${p.name} != null) { patch['${_wireKey(p)}'] = this.${p.name}!.value; }",
+      )
+      .join('\n');
+  return '''
+extension ${className}PatchX on $className {
+  /// The sparse update patch: only the fields explicitly set (present
+  /// Optionals), keeping an explicit null as a clear. The Dart analogue of
+  /// `model_dump(exclude_unset=True)`; consumed by `BaseDao.applyUpdate`.
+  Map<String, dynamic> toPatch() {
+    final patch = <String, dynamic>{};
+$lines
+    return patch;
+  }
+}
+''';
+}
+
 /// Generates a merge() extension method that creates a new instance by copying
 /// all fields from another instance using Freezed's copyWith().
 ///
@@ -1405,8 +1526,9 @@ String _customAnnotations(
 /// in the generated concrete class (which we cannot modify).
 String _generateMergeExtension(
   String className,
-  Set<UniversalType> parameters,
-) {
+  Set<UniversalType> parameters, {
+  bool wrapOptional = false,
+}) {
   // Freezed doesn't generate copyWith() for classes with zero fields,
   // so skip the merge extension entirely for empty classes.
   if (parameters.isEmpty) return '';
@@ -1414,6 +1536,13 @@ String _generateMergeExtension(
   final copyWithParams = parameters
       .map((param) {
         final name = param.name;
+        // Presence-aware for wrapped fields: `other` wins only where it is
+        // present (an absent Optional must not clobber this instance's value).
+        // `this.` qualifies the fallback: a bare field name (e.g. `deprecated`)
+        // can collide with a dart:core top-level constant.
+        if (wrapOptional && _isWrappableOptionalField(param)) {
+          return '      $name: other.$name ?? this.$name,';
+        }
         return '      $name: other.$name,';
       })
       .join('\n');
