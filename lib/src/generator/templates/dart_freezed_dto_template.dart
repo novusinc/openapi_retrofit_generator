@@ -1441,11 +1441,14 @@ String _customAnnotations(
 
 /// Schema-name rule for the partial-update request types whose value fields
 /// carry presence tracking (`Optional<T>`) — the client mass-assignment boundary.
-/// Matches `update_*_request` but NOT full-replace bodies (e.g.
-/// `update_message_request_full` ends in `_full`, not `_request`) or nested
+/// Matches `update_*_request` AND its managed twin `managed_update_*_request`
+/// (G1.6 — APPLICATION_MANAGED, non-immutable fields), but NOT full-replace bodies
+/// (e.g. `update_message_request_full` ends in `_full`, not `_request`) or nested
 /// value objects (`update_message_partial_request_content` ends in `_content`).
-/// See docs/plans/client-write-path-enforcement.md G1.1.
-final RegExp _partialUpdateRequestName = RegExp(r'^update_.*_request$');
+/// The `managed_` qualifier is a single optional prefix, so "is an update-shaped
+/// request" stays the one predicate.
+/// See docs/plans/client-write-path-enforcement.md G1.1 / G1.6.
+final RegExp _partialUpdateRequestName = RegExp(r'^(managed_)?update_.*_request$');
 
 bool _isPartialUpdateRequest(UniversalComponentClass dataClass) =>
     _partialUpdateRequestName.hasMatch(dataClass.name.toSnake);
