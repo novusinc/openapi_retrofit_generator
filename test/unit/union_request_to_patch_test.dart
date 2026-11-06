@@ -151,6 +151,15 @@ void main() {
       );
     });
 
+    test('dispatches toNestedPatch() through the same extension', () {
+      expect(
+        generated,
+        contains(
+          'UpdateAlphaRequest() => (this as UpdateAlphaRequest).toNestedPatch(),',
+        ),
+      );
+    });
+
     test('each leaf gets its own toPatch() extension', () {
       // Regression: the family path never emitted these, so a request type lost
       // toPatch() merely by joining a discriminated union.
@@ -170,7 +179,14 @@ void main() {
           'implements UpdateThingRequest {',
         ),
       );
-      expect(generated, contains('Map<String, dynamic> toPatch() => json;'));
+      expect(
+        generated,
+        contains("Map<String, dynamic> toPatch() => {...json}..remove('id');"),
+      );
+      expect(
+        generated,
+        contains('Map<String, dynamic> toNestedPatch() => json;'),
+      );
     });
   });
 

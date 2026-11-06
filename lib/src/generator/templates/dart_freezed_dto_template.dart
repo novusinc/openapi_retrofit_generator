@@ -645,19 +645,19 @@ String? _showableDescription(UniversalType e) {
   return shouldShowDescription ? e.description : null;
 }
 
-/// A `toPatch()` extension on a union over update-request leaves, dispatching to
-/// whichever variant it holds.
+/// `toPatch()` and `toNestedPatch()` extensions on a union over update-request
+/// leaves, dispatching to whichever variant it holds.
 ///
-/// Inside each `switch` arm the static type is the leaf, so `toPatch()` resolves to
-/// that leaf's own extension. `<Union>Unknown` declares `toPatch()` as a real instance
-/// member, and an instance member wins over an extension, so its arm resolves there.
+/// Inside each `switch` arm the static type is the leaf, so the call resolves to
+/// that leaf's own extension. `<Union>Unknown` declares both as real instance
+/// members, and an instance member wins over an extension, so its arm resolves there.
 String _unionToPatchExtension(UniversalComponentClass union) {
   final className = union.name.toPascal;
-  final arms = [
+  String arms(String method) => [
     for (final leafName
         in union.discriminator!.discriminatorValueToRefMapping.values)
-      '        ${leafName.toPascal}() => (this as ${leafName.toPascal}).toPatch(),',
-    '        ${className}Unknown() => (this as ${className}Unknown).toPatch(),',
+      '        ${leafName.toPascal}() => (this as ${leafName.toPascal}).$method(),',
+    '        ${className}Unknown() => (this as ${className}Unknown).$method(),',
   ].join('\n');
 
   return '''
@@ -665,7 +665,11 @@ String _unionToPatchExtension(UniversalComponentClass union) {
 /// Builds the sparse presence patch for whichever variant this union holds.
 extension ${className}PatchX on $className {
   Map<String, dynamic> toPatch() => switch (this) {
-$arms
+${arms('toPatch')}
+      };
+
+  Map<String, dynamic> toNestedPatch() => switch (this) {
+${arms('toNestedPatch')}
       };
 }
 ''';
@@ -688,7 +692,10 @@ String _unknownVariantClass(
       ? '\n  /// No `@override`: the sealed supertype deliberately does NOT declare\n'
             '  /// `toPatch()` (an extension cannot satisfy an abstract member), so this\n'
             '  /// is a plain instance member the union extension dispatches to.\n'
-            '  Map<String, dynamic> toPatch() => json;\n'
+            "  Map<String, dynamic> toPatch() => {...json}..remove('id');\n"
+            '\n'
+            '  /// As [toPatch], keeping `id` for a value nested inside another patch.\n'
+            '  Map<String, dynamic> toNestedPatch() => json;\n'
       : '';
 
   // The parent declares no shared getters for a patch union (see _sealedUnionClass),
@@ -1797,7 +1804,7 @@ String _optionalImportDirective(String? importPath) {
 /// `docs/plans/managed-request-superset.md` D5.
 ///
 /// *Which* converter depends on the type — see [_patchSerializer]. A nested
-/// partial-update request patches with `toPatch()`; everything else uses `toJson()`.
+/// partial-update request patches with `toNestedPatch()`; everything else uses `toJson()`.
 /// Using `toJson()` for both (the behaviour before 2026-07-26) silently wrote `{}` for
 /// the former — `docs/plans/managed-request-superset.md` D5a.
 ///
@@ -1842,15 +1849,21 @@ String _patchValueExpression(UniversalType t) {
 /// of patching it, silently and with no analyzer complaint. `toPatch()` is its
 /// authoritative serializer, for the same reason it is the enclosing request's.
 ///
+/// It uses `toNestedPatch()`, not `toPatch()`: inside a whole-list rewrite an element's
+/// `id` is that element's identity, and dropping it would regenerate list identity on
+/// every update. See [_generateToPatchExtension].
+///
 /// Everything else — a generated enum, a plain model — has a real `toJson()`.
 ///
 /// The rule keys off [_partialUpdateRequestName], the same predicate that decides
 /// which classes GET a `toPatch()`, so the two can never disagree: a type is
-/// serialized with `toPatch()` iff the generator gave it one. Nested value objects are
+/// serialized as a patch iff the generator gave it one. Nested value objects are
 /// correctly excluded — `ManagedUpdateMessageRequestState` ends in `_state`, not
 /// `_request`, and keeps its real `toJson()`.
 String _patchSerializer(String dartType) =>
-    _partialUpdateRequestName.hasMatch(dartType.toSnake) ? 'toPatch' : 'toJson';
+    _partialUpdateRequestName.hasMatch(dartType.toSnake)
+    ? 'toNestedPatch'
+    : 'toJson';
 
 /// Generates a `toPatch()` extension: the sparse presence patch built from the
 /// *present* Optionals only (keeping an explicit null as a clear) — the Dart
@@ -1858,6 +1871,13 @@ String _patchSerializer(String dartType) =>
 /// `BaseDao.applyUpdate`. Operation (`@Default`) fields are intentionally
 /// excluded: they are backend commands, not stored document fields. See
 /// docs/plans/client-write-path-enforcement.md G1.2.
+///
+/// `toPatch()` drops a top-level `id`: on a document-level request it is the
+/// **correlation key** naming the document to update, never a value to write. It is
+/// the client analogue of the server's `build_update_patch`, which strips it too.
+/// `toNestedPatch()` keeps it, because a nested request's `id` is the identity of a
+/// list element. A parent therefore serializes its children with `toNestedPatch()`.
+/// See novus docs/plans/client-write-path-enforcement.md G19.5.
 String _generateToPatchExtension(
   String className,
   Set<UniversalType> parameters,
@@ -1871,12 +1891,20 @@ String _generateToPatchExtension(
             "    if (this.${p.name} != null) { patch['${_wireKey(p)}'] = ${_patchValueExpression(p)}; }",
       )
       .join('\n');
+  final hasId = parameters
+      .where(_isWrappableOptionalField)
+      .any((p) => _wireKey(p) == 'id');
+  final dropId = hasId ? "..remove('id')" : '';
   return '''
 extension ${className}PatchX on $className {
   /// The sparse update patch: only the fields explicitly set (present
   /// Optionals), keeping an explicit null as a clear. The Dart analogue of
   /// `model_dump(exclude_unset=True)`; consumed by `BaseDao.applyUpdate`.
-  Map<String, dynamic> toPatch() {
+  Map<String, dynamic> toPatch() => toNestedPatch()$dropId;
+
+  /// As [toPatch], keeping `id` for a value nested inside another patch, where it
+  /// is the identity of a list element.
+  Map<String, dynamic> toNestedPatch() {
     final patch = <String, dynamic>{};
 $lines
     return patch;
