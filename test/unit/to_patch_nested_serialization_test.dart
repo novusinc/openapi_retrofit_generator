@@ -167,14 +167,14 @@ void main() {
   // ---------------------------------------------------------------------------
 
   test('a nested update_*_request is converted via toPatch()', () {
-    expect(patchLine('badge'), contains('this.badge!.value?.toPatch()'));
+    expect(patchLine('badge'), contains('this.badge!.value?.toNestedPatch()'));
     expect(patchLine('badge'), isNot(contains('toJson')));
   });
 
   test('a nested managed_update_*_request is converted via toPatch()', () {
     expect(
       patchLine('managed_badge'),
-      contains('this.managedBadge!.value?.toPatch()'),
+      contains('this.managedBadge!.value?.toNestedPatch()'),
     );
     expect(patchLine('managed_badge'), isNot(contains('toJson')));
   });
@@ -182,7 +182,7 @@ void main() {
   test('a list of nested update requests is toPatch()-ed element-wise', () {
     expect(
       patchLine('badges'),
-      contains('this.badges!.value?.map((e) => e.toPatch()).toList()'),
+      contains('this.badges!.value?.map((e) => e.toNestedPatch()).toList()'),
     );
   });
 
