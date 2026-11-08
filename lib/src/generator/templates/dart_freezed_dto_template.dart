@@ -116,7 +116,7 @@ ${descriptionComment(dataClass.description)}@Freezed(${[if (discriminator != nul
 ${_classModifier(isUnion: isUnion)}class $className with _\$$className {
 ${_factories(dataClass, className, includeIfNull, fallbackUnion, customMetadata, isUnion: isUnion, wrapOptional: wrapOptional)}
 ${_unionDefaultConstants(dataClass, className)}
-${_jsonFactories(className, dataClass.undiscriminatedUnionVariants, isUnion: isUnion)}
+${_jsonFactories(className, dataClass.undiscriminatedUnionVariants, isUnion: isUnion, presenceFields: wrapOptional ? dataClass.parameters : null)}
 ${generateValidator ? dataClass.parameters.map(_validationString).nonNulls.join() : ''}${_fieldMetadataConsts(dataClass)}}
 ${generateValidator ? _validateMethod(className, dataClass.parameters) : ''}$mergeExtension$patchExtension$base64ConverterClass''';
 }
@@ -508,7 +508,7 @@ String _leafClassChunk(
 ${descriptionComment(dataClass.description)}@Freezed()
 abstract class $className with _\$$className$implementsClause {
 ${_factories(dataClass, className, includeIfNull, null, customMetadata, isUnion: false, wrapOptional: _isPartialUpdateRequest(dataClass))}
-${_jsonFactories(className, null, isUnion: false)}
+${_jsonFactories(className, null, isUnion: false, presenceFields: _isPartialUpdateRequest(dataClass) ? dataClass.parameters : null)}
 ${generateValidator ? dataClass.parameters.map(_validationString).nonNulls.join() : ''}${_fieldMetadataConsts(dataClass)}}
 ${generateValidator ? _validateMethod(className, dataClass.parameters) : ''}$mergeExtension''';
 }
@@ -1236,6 +1236,7 @@ String _jsonFactories(
   String className,
   Map<String, Set<UniversalType>>? undiscriminatedUnionVariants, {
   required bool isUnion,
+  Set<UniversalType>? presenceFields,
 }) {
   if (undiscriminatedUnionVariants case final unionVariants?
       when unionVariants.isNotEmpty) {
@@ -1249,10 +1250,90 @@ String _jsonFactories(
       ? 'Map<String, dynamic> toJson() => throw UnimplementedError();'
       : 'Map<String, dynamic> toJson() => _\$${className}ToJson(this as _$className);';
 
+  final fromJson = presenceFields == null
+      ? '  factory $className.fromJson(Map<String, Object?> json) => _\$${className}FromJson(json);'
+      : _presenceFromJsonFactory(className, presenceFields);
   return '  \n'
       '  $toJsonBody\n'
-      '  factory $className.fromJson(Map<String, Object?> json) => _\$${className}FromJson(json);';
+      '$fromJson';
 }
+
+/// `fromJson` for a presence-tracked request: the inverse of `toNestedPatch()`.
+///
+/// A key present in [json] becomes `Optional(value)`, an explicit null included
+/// (`Optional(null)`, a clear); an absent key stays `null`, so it is left
+/// untouched. Keys the request doesn't declare are ignored, so the request
+/// TYPE is still the whole boundary — the Dart analogue of the server's
+/// `UpdateX.model_validate(data)` with `extra="ignore"`. This is what lets a
+/// caller turn a stored document's JSON into the update of exactly the fields
+/// the request may write: `UpdateXRequest.fromJson(model.toJson())`.
+///
+/// json_serializable can't decode `Optional<T>` (the fields are
+/// `includeFromJson: false`), so it still decodes the plain operation fields
+/// and `copyWith` adds the presence-tracked ones.
+String _presenceFromJsonFactory(
+  String className,
+  Set<UniversalType> parameters,
+) {
+  final wrapped = parameters.where(_isWrappableOptionalField).toList();
+  if (wrapped.isEmpty) {
+    return '  factory $className.fromJson(Map<String, Object?> json) => _\$${className}FromJson(json);';
+  }
+  final arguments = wrapped
+      .map((p) {
+        final key = _wireKey(p);
+        return "        ${p.name}: json.containsKey('$key') "
+            "? Optional(${_fromJsonValueExpression(p, "json['$key']")}) "
+            ': null,';
+      })
+      .join('\n');
+  return '  factory $className.fromJson(Map<String, Object?> json) =>\n'
+      '      _\$${className}FromJson(json).copyWith(\n'
+      '$arguments\n'
+      '      );';
+}
+
+/// Decodes the JSON [value] of field [t] — null stays null, so a clear survives.
+/// The inverse of [_patchValueExpression], applied through every collection
+/// wrapper.
+String _fromJsonValueExpression(UniversalType t, String value) {
+  final baseType = t.type.toDartType(format: t.format);
+
+  String decode(String v, int depth) {
+    if (depth == t.wrappingCollections.length) {
+      return _fromJsonElementExpression(baseType, v);
+    }
+    final collection = t.wrappingCollections[depth];
+    final innerNullable =
+        depth == t.wrappingCollections.length - 1 && collection.itemIsNullable;
+    final element = 'e$depth';
+    final inner = decode(element, depth + 1);
+    final item = innerNullable ? '$element == null ? null : $inner' : inner;
+    if (collection.isMap) {
+      final keyType = t.mapKeyType;
+      final key = keyType == null
+          ? 'k$depth as String'
+          : '$keyType.fromJson(k$depth as dynamic)';
+      return '($v as Map).map((k$depth, $element) => MapEntry($key, $item))';
+    }
+    return '($v as List).map(($element) => $item).toList()';
+  }
+
+  return '$value == null ? null : ${decode(value, 0)}';
+}
+
+/// Decodes one non-null element of Dart type [dartType]. A generated enum takes
+/// its wire `String` and a model or nested request its `Map`, so both are
+/// handed over as `dynamic` to the type's own `fromJson`.
+String _fromJsonElementExpression(String dartType, String value) =>
+    switch (dartType) {
+      'int' => '($value as num).toInt()',
+      'double' => '($value as num).toDouble()',
+      'DateTime' => 'DateTime.parse($value as String)',
+      'dynamic' || 'Object' => value,
+      _ when isPrimitiveTypeName(dartType) => '$value as $dartType',
+      _ => '$dartType.fromJson($value as dynamic)',
+    };
 
 String _fromJsonUndiscriminatedUnion(String className) =>
     '''
