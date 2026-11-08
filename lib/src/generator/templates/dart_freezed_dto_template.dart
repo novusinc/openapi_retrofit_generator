@@ -382,11 +382,22 @@ String dartFreezedUnionFamilyTemplate(
   // A leaf folded into a family file still needs its `toPatch()`: the single-class
   // template emits this extension, and before this the family path did not — so a
   // request type silently lost `toPatch()` merely by joining a discriminated union.
+  //
+  // A leaf's patch also carries its discriminator: a list of union elements is
+  // replaced whole, so an element written without it can't be decoded again.
+  final discriminatorKeys = {
+    for (final union in family.unions)
+      if (union.discriminator case final discriminator?)
+        discriminator.propertyName,
+  };
   final leafPatchExtensions = family.leaves
       .where(_isPartialUpdateRequest)
       .map(
-        (leaf) =>
-            _generateToPatchExtension(leaf.name.toPascal, leaf.parameters),
+        (leaf) => _generateToPatchExtension(
+          leaf.name.toPascal,
+          leaf.parameters,
+          discriminatorKeys: discriminatorKeys,
+        ),
       )
       .join();
 
@@ -1961,17 +1972,30 @@ String _patchSerializer(String dartType) =>
 /// See novus docs/plans/client-write-path-enforcement.md G19.5.
 String _generateToPatchExtension(
   String className,
-  Set<UniversalType> parameters,
-) {
+  Set<UniversalType> parameters, {
+  Set<String> discriminatorKeys = const {},
+}) {
+  // A union leaf's discriminator (`type`) is a plain defaulted field, not a
+  // presence-tracked one, so it is written unconditionally: without it a
+  // union element in the patch can't be decoded again.
+  final discriminatorLines = parameters
+      .where(
+        (p) =>
+            !_isWrappableOptionalField(p) &&
+            discriminatorKeys.contains(_wireKey(p)),
+      )
+      .map((p) => "    patch['${_wireKey(p)}'] = this.${p.name};");
   // `this.` qualifies every field access: a bare field name (e.g. `deprecated`)
   // can collide with a dart:core top-level constant and resolve to it instead.
-  final lines = parameters
-      .where(_isWrappableOptionalField)
-      .map(
-        (p) =>
-            "    if (this.${p.name} != null) { patch['${_wireKey(p)}'] = ${_patchValueExpression(p)}; }",
-      )
-      .join('\n');
+  final lines = [
+    ...discriminatorLines,
+    ...parameters
+        .where(_isWrappableOptionalField)
+        .map(
+          (p) =>
+              "    if (this.${p.name} != null) { patch['${_wireKey(p)}'] = ${_patchValueExpression(p)}; }",
+        ),
+  ].join('\n');
   final hasId = parameters
       .where(_isWrappableOptionalField)
       .any((p) => _wireKey(p) == 'id');
