@@ -1976,15 +1976,20 @@ String _generateToPatchExtension(
   Set<String> discriminatorKeys = const {},
 }) {
   // A union leaf's discriminator (`type`) is a plain defaulted field, not a
-  // presence-tracked one, so it is written unconditionally: without it a
-  // union element in the patch can't be decoded again.
-  final discriminatorLines = parameters
+  // presence-tracked one, so the nested patch writes it unconditionally:
+  // without it a union element in a replaced list can't be decoded again. The
+  // document-level `toPatch()` drops it, like `id`: the stored document already
+  // says what it is, and a mismatched request must not change that.
+  final discriminatorFields = parameters
       .where(
         (p) =>
             !_isWrappableOptionalField(p) &&
             discriminatorKeys.contains(_wireKey(p)),
       )
-      .map((p) => "    patch['${_wireKey(p)}'] = this.${p.name};");
+      .toList();
+  final discriminatorLines = discriminatorFields.map(
+    (p) => "    patch['${_wireKey(p)}'] = this.${p.name};",
+  );
   // `this.` qualifies every field access: a bare field name (e.g. `deprecated`)
   // can collide with a dart:core top-level constant and resolve to it instead.
   final lines = [
@@ -1999,7 +2004,10 @@ String _generateToPatchExtension(
   final hasId = parameters
       .where(_isWrappableOptionalField)
       .any((p) => _wireKey(p) == 'id');
-  final dropId = hasId ? "..remove('id')" : '';
+  final dropId = [
+    if (hasId) "..remove('id')",
+    for (final p in discriminatorFields) "..remove('${_wireKey(p)}')",
+  ].join();
   return '''
 extension ${className}PatchX on $className {
   /// The sparse update patch: only the fields explicitly set (present

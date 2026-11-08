@@ -2,13 +2,15 @@ import 'package:openapi_retrofit_generator/openapi_retrofit_generator.dart';
 import 'package:openapi_retrofit_generator/src/generator/templates/dart_freezed_dto_template.dart';
 import 'package:test/test.dart';
 
-/// A union leaf's patch carries its discriminator.
+/// A union leaf's nested patch carries its discriminator; its document-level
+/// patch doesn't.
 ///
 /// A leaf whose discriminator has a schema default (`"type": "text"`) keeps it as
 /// a plain `@Default` field, not a presence-tracked one, and `toNestedPatch()`
 /// used to emit only presence-tracked fields. A list of union elements is
 /// replaced whole, so each element went into the stored document without its
-/// `type` and decoded as the union's Unknown variant from then on.
+/// `type` and decoded as the union's Unknown variant from then on. At document
+/// level the stored document already says what it is, so `toPatch()` drops it.
 void main() {
   const spec = r'''
 {
@@ -90,6 +92,15 @@ void main() {
     expect(
       nestedPatch('UpdateImagePartRequest'),
       contains("patch['type'] = this.type;"),
+    );
+  });
+
+  test('the document-level toPatch() drops it, like id', () {
+    expect(
+      generated,
+      contains(
+        "Map<String, dynamic> toPatch() => toNestedPatch()..remove('type');",
+      ),
     );
   });
 
