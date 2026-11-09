@@ -102,6 +102,10 @@ class OpenApiParser {
   static const _versionConst = 'version';
   static const _xNullableConst = 'x-nullable';
 
+  /// Marks a component schema as a partial-update request: its value fields
+  /// are presence-tracked (`Optional<T>`) and it gets a sparse `toPatch()`.
+  static const _xPartialUpdateConst = 'x-partial-update';
+
   /// Extract custom metadata from a property map based on configuration
   Map<String, dynamic> _extractCustomMetadata(Map<String, dynamic> map) {
     if (!config.customMetadata.isActive) {
@@ -1201,6 +1205,7 @@ class OpenApiParser {
               : null,
           description: value[_descriptionConst]?.toString(),
           discriminator: discriminator,
+          partialUpdate: value[_xPartialUpdateConst] == true,
         );
         dataClasses.add(componentClass);
         _typeRegistry.registerClass(schemaName);

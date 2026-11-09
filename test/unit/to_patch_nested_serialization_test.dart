@@ -1,5 +1,6 @@
 import 'package:openapi_retrofit_generator/openapi_retrofit_generator.dart';
 import 'package:openapi_retrofit_generator/src/generator/templates/dart_freezed_dto_template.dart';
+import 'package:openapi_retrofit_generator/src/generator/utils/partial_update_classes.dart';
 import 'package:test/test.dart';
 
 /// Regression test: `toPatch()` emitted the raw field value for EVERY field, so a
@@ -31,10 +32,12 @@ void main() {
         "enum": ["calm", "urgent"]
       },
       "UpdateBadgeRequest": {
+        "x-partial-update": true,
         "type": "object",
         "properties": {"label": {"type": "string"}}
       },
       "ManagedUpdateBadgeRequest": {
+        "x-partial-update": true,
         "type": "object",
         "properties": {"label": {"type": "string"}}
       },
@@ -43,6 +46,7 @@ void main() {
         "properties": {"phase": {"type": "string"}}
       },
       "UpdateThingRequest": {
+        "x-partial-update": true,
         "type": "object",
         "properties": {
           "title": {"type": "string"},
@@ -98,6 +102,7 @@ void main() {
       request,
       includeIfNull: false,
       customMetadataImportPath: 'package:novus_models/novus_models.dart',
+      partialUpdateClasses: resolvePartialUpdateClasses(classes),
     );
   });
 

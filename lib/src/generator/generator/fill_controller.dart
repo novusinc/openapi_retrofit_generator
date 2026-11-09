@@ -15,6 +15,7 @@ import 'package:openapi_retrofit_generator/src/generator/templates/dart_typedef_
 import 'package:openapi_retrofit_generator/src/generator/templates/dart_converter_template.dart';
 import 'package:openapi_retrofit_generator/src/generator/templates/dart_defaults_template.dart';
 import 'package:openapi_retrofit_generator/src/generator/utils/hydrated_model_parser.dart';
+import 'package:openapi_retrofit_generator/src/generator/utils/partial_update_classes.dart';
 import 'package:openapi_retrofit_generator/src/parser/model/normalized_identifier.dart';
 import 'package:openapi_retrofit_generator/src/parser/openapi_parser_core.dart';
 import 'package:openapi_retrofit_generator/src/utils/base_utils.dart';
@@ -29,6 +30,7 @@ final class FillController {
     UnionFamilyResolution unionFamilies = UnionFamilyResolution.none,
   }) : _unionFamilies = unionFamilies,
        _unionVariantMap = _buildUnionVariantMap(dataClasses, unionFamilies),
+       _partialUpdateClasses = resolvePartialUpdateClasses(dataClasses),
        _dataClassMap = {
          for (final dc in dataClasses)
            if (dc is UniversalComponentClass) dc.name.toLowerCase(): dc,
@@ -51,6 +53,10 @@ final class FillController {
   /// Maps standalone schema ref names to their parent union info
   /// e.g., 'Agent' → UnionVariantInfo(parentClassName: 'Ai', factoryName: 'agent')
   final Map<String, UnionVariantInfo> _unionVariantMap;
+
+  /// Pascal-case names of the partial-update request classes, unions over them
+  /// included. See [resolvePartialUpdateClasses].
+  final Set<String> _partialUpdateClasses;
 
   /// Case-insensitive lookup map from class name → UniversalComponentClass
   final Map<String, UniversalComponentClass> _dataClassMap;
@@ -145,6 +151,7 @@ final class FillController {
       customMetadata: config.customMetadata,
       generateMergeMethod: config.generateMergeMethod,
       customMetadataImportPath: config.converterHydratedModelPrefix,
+      partialUpdateClasses: _partialUpdateClasses,
       classFileOverrides: _unionFamilies.classFileOverrides,
       enumWireTypes: _enumWireTypes,
     ),
@@ -283,6 +290,7 @@ final class FillController {
           customMetadata: customMetadata,
           generateMergeMethod: generateMergeMethod,
           customMetadataImportPath: config.converterHydratedModelPrefix,
+          partialUpdateClasses: _partialUpdateClasses,
           classFileOverrides: _fileOverridesOrNull,
         ),
         JsonSerializer.jsonSerializable => dartJsonSerializableDtoTemplate(

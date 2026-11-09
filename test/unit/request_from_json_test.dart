@@ -1,5 +1,6 @@
 import 'package:openapi_retrofit_generator/openapi_retrofit_generator.dart';
 import 'package:openapi_retrofit_generator/src/generator/templates/dart_freezed_dto_template.dart';
+import 'package:openapi_retrofit_generator/src/generator/utils/partial_update_classes.dart';
 import 'package:test/test.dart';
 
 /// A presence-tracked request's `fromJson` is the inverse of `toNestedPatch()`.
@@ -23,10 +24,12 @@ void main() {
     "schemas": {
       "Tone": {"type": "string", "enum": ["calm", "urgent"]},
       "UpdateBadgeRequest": {
+        "x-partial-update": true,
         "type": "object",
         "properties": {"label": {"type": "string"}}
       },
       "UpdateThingRequest": {
+        "x-partial-update": true,
         "type": "object",
         "properties": {
           "skip_push": {"type": "boolean", "default": false},
@@ -68,6 +71,7 @@ void main() {
     classes.firstWhere((c) => c.name == name),
     includeIfNull: false,
     customMetadataImportPath: 'package:novus_models/novus_models.dart',
+    partialUpdateClasses: resolvePartialUpdateClasses(classes),
   );
 
   setUpAll(() {

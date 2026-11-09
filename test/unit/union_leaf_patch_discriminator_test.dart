@@ -1,5 +1,6 @@
 import 'package:openapi_retrofit_generator/openapi_retrofit_generator.dart';
 import 'package:openapi_retrofit_generator/src/generator/templates/dart_freezed_dto_template.dart';
+import 'package:openapi_retrofit_generator/src/generator/utils/partial_update_classes.dart';
 import 'package:test/test.dart';
 
 /// A union leaf's nested patch carries its discriminator; its document-level
@@ -20,6 +21,7 @@ void main() {
   "components": {
     "schemas": {
       "UpdateTextPartRequest": {
+        "x-partial-update": true,
         "type": "object",
         "required": ["type"],
         "properties": {
@@ -28,6 +30,7 @@ void main() {
         }
       },
       "UpdateImagePartRequest": {
+        "x-partial-update": true,
         "type": "object",
         "required": ["type"],
         "properties": {
@@ -72,6 +75,7 @@ void main() {
       ),
       includeIfNull: false,
       customMetadataImportPath: 'package:novus_models/novus_models.dart',
+      partialUpdateClasses: resolvePartialUpdateClasses(classes),
       classFileOverrides: const {},
       unknownEnumValue: true,
     );

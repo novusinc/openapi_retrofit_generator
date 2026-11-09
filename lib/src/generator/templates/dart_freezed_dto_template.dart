@@ -12,6 +12,7 @@ String dartFreezedDtoTemplate(
   UniversalComponentClass dataClass, {
   required bool includeIfNull,
   required String? customMetadataImportPath,
+  required Set<String> partialUpdateClasses,
   bool generateValidator = false,
   String? fallbackUnion,
   CustomMetadataConfig customMetadata = const CustomMetadataConfig(),
@@ -86,11 +87,10 @@ $variantClasses$base64ConverterClass''';
   // concrete implementation class (_ClassName) using "implements" rather than "extends",
   // so any method added to the abstract class body would need to be re-implemented
   // in the generated class, which we cannot modify.
-  // Partial-update request types (`update_*_request`, excluding full-replace
-  // `*_full` bodies) get presence-tracking Optional<T> on their value fields —
-  // the client mass-assignment boundary. See
-  // docs/plans/client-write-path-enforcement.md G1.1.
-  final wrapOptional = !isUnion && _isPartialUpdateRequest(dataClass);
+  // Partial-update requests (schemas marked `"x-partial-update": true`) get
+  // presence-tracking Optional<T> on their value fields — the client
+  // mass-assignment boundary. See [resolvePartialUpdateClasses].
+  final wrapOptional = !isUnion && partialUpdateClasses.contains(className);
   final optionalImport = wrapOptional
       ? _optionalImportDirective(customMetadataImportPath)
       : '';
@@ -103,7 +103,11 @@ $variantClasses$base64ConverterClass''';
         )
       : '';
   final patchExtension = wrapOptional
-      ? _generateToPatchExtension(className, dataClass.parameters)
+      ? _generateToPatchExtension(
+          className,
+          dataClass.parameters,
+          partialUpdateClasses: partialUpdateClasses,
+        )
       : '';
 
   return '''
@@ -306,6 +310,7 @@ String dartFreezedUnionFamilyTemplate(
   UnionFamily family, {
   required bool includeIfNull,
   required String? customMetadataImportPath,
+  required Set<String> partialUpdateClasses,
   required Map<String, String> classFileOverrides,
   required bool unknownEnumValue,
   Map<String, String> enumWireTypes = const {},
@@ -340,9 +345,12 @@ String dartFreezedUnionFamilyTemplate(
         )
       : '';
 
+  bool isPartialUpdate(UniversalComponentClass c) =>
+      partialUpdateClasses.contains(c.name.toPascal);
+
   // Any request leaf now carries `Optional<T>` fields, so the family file needs the
   // same import the single-class path adds.
-  final familyOptionalImport = family.leaves.any(_isPartialUpdateRequest)
+  final familyOptionalImport = family.leaves.any(isPartialUpdate)
       ? _optionalImportDirective(customMetadataImportPath)
       : '';
 
@@ -354,7 +362,11 @@ String dartFreezedUnionFamilyTemplate(
 
   final sealedClasses = family.unions
       .map(
-        (union) => _sealedUnionClass(union, commonFieldsByUnion[union.name]!),
+        (union) => _sealedUnionClass(
+          union,
+          commonFieldsByUnion[union.name]!,
+          isPatchUnion: isPartialUpdate(union),
+        ),
       )
       .join('\n');
   final unknownClasses = family.unions
@@ -362,6 +374,7 @@ String dartFreezedUnionFamilyTemplate(
         (union) => _unknownVariantClass(
           union,
           commonFieldsByUnion[union.name]!,
+          isPatchUnion: isPartialUpdate(union),
           unknownEnumValue: unknownEnumValue,
           enumWireTypes: enumWireTypes,
         ),
@@ -372,6 +385,7 @@ String dartFreezedUnionFamilyTemplate(
         (leaf) => _leafClassChunk(
           leaf,
           implementsClause: _implementsClause(leaf, family),
+          isPartialUpdate: isPartialUpdate(leaf),
           includeIfNull: includeIfNull,
           customMetadata: customMetadata,
           generateMergeMethod: generateMergeMethod,
@@ -391,11 +405,12 @@ String dartFreezedUnionFamilyTemplate(
         discriminator.propertyName,
   };
   final leafPatchExtensions = family.leaves
-      .where(_isPartialUpdateRequest)
+      .where(isPartialUpdate)
       .map(
         (leaf) => _generateToPatchExtension(
           leaf.name.toPascal,
           leaf.parameters,
+          partialUpdateClasses: partialUpdateClasses,
           discriminatorKeys: discriminatorKeys,
         ),
       )
@@ -409,14 +424,14 @@ String dartFreezedUnionFamilyTemplate(
   // interface member — declaring it on the supertype makes every freezed impl class
   // fail with `non_abstract_class_inherits_abstract_member`.
   final unionPatchExtensions = family.unions
-      .where(_isPartialUpdateRequest)
+      .where(isPartialUpdate)
       .map((union) => _unionToPatchExtension(union))
       .join();
 
   // Same reasoning as the factories/getters: `copyWith`/`map` over a patch union
   // assume plain data-model field types, and you would copyWith the LEAF anyway.
   final compatExtensions = family.unions
-      .where((union) => !_isPartialUpdateRequest(union))
+      .where((union) => !isPartialUpdate(union))
       .map(
         (union) =>
             _unionCompatExtensions(union, commonFieldsByUnion[union.name]!),
@@ -506,6 +521,7 @@ String _implementsClause(UniversalComponentClass leaf, UnionFamily family) {
 String _leafClassChunk(
   UniversalComponentClass dataClass, {
   required String implementsClause,
+  required bool isPartialUpdate,
   required bool includeIfNull,
   required CustomMetadataConfig customMetadata,
   required bool generateMergeMethod,
@@ -518,8 +534,8 @@ String _leafClassChunk(
   return '''
 ${descriptionComment(dataClass.description)}@Freezed()
 abstract class $className with _\$$className$implementsClause {
-${_factories(dataClass, className, includeIfNull, null, customMetadata, isUnion: false, wrapOptional: _isPartialUpdateRequest(dataClass))}
-${_jsonFactories(className, null, isUnion: false, presenceFields: _isPartialUpdateRequest(dataClass) ? dataClass.parameters : null)}
+${_factories(dataClass, className, includeIfNull, null, customMetadata, isUnion: false, wrapOptional: isPartialUpdate)}
+${_jsonFactories(className, null, isUnion: false, presenceFields: isPartialUpdate ? dataClass.parameters : null)}
 ${generateValidator ? dataClass.parameters.map(_validationString).nonNulls.join() : ''}${_fieldMetadataConsts(dataClass)}}
 ${generateValidator ? _validateMethod(className, dataClass.parameters) : ''}$mergeExtension''';
 }
@@ -528,15 +544,16 @@ ${generateValidator ? _validateMethod(className, dataClass.parameters) : ''}$mer
 /// `fromJson` dispatch, common-field getters and abstract `toJson`.
 String _sealedUnionClass(
   UniversalComponentClass union,
-  List<UniversalType> commonFields,
-) {
+  List<UniversalType> commonFields, {
+  required bool isPatchUnion,
+}) {
   final className = union.name.toPascal;
   final discriminator = union.discriminator!;
   final discriminatorPropertyName = discriminator.propertyName;
 
-  // See the note below _sealedUnionClass's return: a patch-request union is a
-  // DISPATCH type, so it emits no factories, constants, or shared getters.
-  final isPatchUnion = _isPartialUpdateRequest(union);
+  // See the note below _sealedUnionClass's return: a patch-request union
+  // ([isPatchUnion]) is a DISPATCH type, so it emits no factories, constants, or
+  // shared getters.
 
   // A union OVER update-request leaves is itself an update request: every leaf
   // already emits `toPatch()`, so declaring it here is what lets a caller hold
@@ -691,6 +708,7 @@ ${arms('toNestedPatch')}
 String _unknownVariantClass(
   UniversalComponentClass union,
   List<UniversalType> commonFields, {
+  required bool isPatchUnion,
   required bool unknownEnumValue,
   required Map<String, String> enumWireTypes,
 }) {
@@ -699,7 +717,7 @@ String _unknownVariantClass(
 
   // Mirrors [toJson]: an unrecognized variant round-trips its raw payload rather
   // than silently patching nothing.
-  final patchImpl = _isPartialUpdateRequest(union)
+  final patchImpl = isPatchUnion
       ? '\n  /// No `@override`: the sealed supertype deliberately does NOT declare\n'
             '  /// `toPatch()` (an extension cannot satisfy an abstract member), so this\n'
             '  /// is a plain instance member the union extension dispatches to.\n'
@@ -712,7 +730,7 @@ String _unknownVariantClass(
   // The parent declares no shared getters for a patch union (see _sealedUnionClass),
   // so Unknown must not emit `@override` versions of them either.
   final getters =
-      (_isPartialUpdateRequest(union) ? const <UniversalType>[] : commonFields)
+      (isPatchUnion ? const <UniversalType>[] : commonFields)
           .map(
             (param) =>
                 '  @override\n'
@@ -1837,22 +1855,6 @@ String _customAnnotations(
   return buffer.toString();
 }
 
-/// Schema-name rule for the partial-update request types whose value fields
-/// carry presence tracking (`Optional<T>`) — the client mass-assignment boundary.
-/// Matches `update_*_request` AND its managed twin `managed_update_*_request`
-/// (G1.6 — APPLICATION_MANAGED, non-immutable fields), but NOT full-replace bodies
-/// (e.g. `update_message_request_full` ends in `_full`, not `_request`) or nested
-/// value objects (`update_message_partial_request_content` ends in `_content`).
-/// The `managed_` qualifier is a single optional prefix, so "is an update-shaped
-/// request" stays the one predicate.
-/// See docs/plans/client-write-path-enforcement.md G1.1 / G1.6.
-final RegExp _partialUpdateRequestName = RegExp(
-  r'^(managed_)?update_.*_request$',
-);
-
-bool _isPartialUpdateRequest(UniversalComponentClass dataClass) =>
-    _partialUpdateRequestName.hasMatch(dataClass.name.toSnake);
-
 /// A wrappable value field of a partial-update request: optional (not required)
 /// with no schema default. Operation fields (`@Default(...)`) and required
 /// fields keep their plain type — presence tracking is meaningless for them.
@@ -1906,7 +1908,10 @@ String _optionalImportDirective(String? importPath) {
 ///
 /// `DateTime` is deliberately treated as a primitive: CBL converts it itself
 /// (`toIso8601String()`), and `DateTime` has no `toJson()`.
-String _patchValueExpression(UniversalType t) {
+String _patchValueExpression(
+  UniversalType t,
+  Set<String> partialUpdateClasses,
+) {
   final value = 'this.${t.name}!.value';
   // `UniversalType.type` is the RAW OpenAPI type ("string", "integer", …), not the
   // Dart one — map it first, or every primitive is mistaken for a model and gets a
@@ -1915,7 +1920,7 @@ String _patchValueExpression(UniversalType t) {
   final dartType = t.type.toDartType(format: t.format);
   if (isPrimitiveTypeName(dartType)) return value;
 
-  final serializer = _patchSerializer(dartType);
+  final serializer = _patchSerializer(dartType, partialUpdateClasses);
 
   // Collections wrap the element type; convert element-wise. Only the innermost
   // (last) wrapper matters here — nested collections of models do not occur in the
@@ -1951,13 +1956,11 @@ String _patchValueExpression(UniversalType t) {
 ///
 /// Everything else — a generated enum, a plain model — has a real `toJson()`.
 ///
-/// The rule keys off [_partialUpdateRequestName], the same predicate that decides
-/// which classes GET a `toPatch()`, so the two can never disagree: a type is
-/// serialized as a patch iff the generator gave it one. Nested value objects are
-/// correctly excluded — `ManagedUpdateMessageRequestState` ends in `_state`, not
-/// `_request`, and keeps its real `toJson()`.
-String _patchSerializer(String dartType) =>
-    _partialUpdateRequestName.hasMatch(dartType.toSnake)
+/// The rule reads [partialUpdateClasses], the same set that decides which classes
+/// GET a `toPatch()`, so the two can never disagree: a type is serialized as a patch
+/// iff the generator gave it one.
+String _patchSerializer(String dartType, Set<String> partialUpdateClasses) =>
+    partialUpdateClasses.contains(dartType.toPascal)
     ? 'toNestedPatch'
     : 'toJson';
 
@@ -1977,6 +1980,7 @@ String _patchSerializer(String dartType) =>
 String _generateToPatchExtension(
   String className,
   Set<UniversalType> parameters, {
+  required Set<String> partialUpdateClasses,
   Set<String> discriminatorKeys = const {},
 }) {
   // A union leaf's discriminator (`type`) is a plain defaulted field, not a
@@ -2002,7 +2006,7 @@ String _generateToPatchExtension(
         .where(_isWrappableOptionalField)
         .map(
           (p) =>
-              "    if (this.${p.name} != null) { patch['${_wireKey(p)}'] = ${_patchValueExpression(p)}; }",
+              "    if (this.${p.name} != null) { patch['${_wireKey(p)}'] = ${_patchValueExpression(p, partialUpdateClasses)}; }",
         ),
   ].join('\n');
   final hasId = parameters

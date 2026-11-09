@@ -1,5 +1,6 @@
 import 'package:openapi_retrofit_generator/openapi_retrofit_generator.dart';
 import 'package:openapi_retrofit_generator/src/generator/templates/dart_freezed_dto_template.dart';
+import 'package:openapi_retrofit_generator/src/generator/utils/partial_update_classes.dart';
 import 'package:test/test.dart';
 
 /// A document-level request's `id` is a correlation key naming the document to
@@ -16,6 +17,7 @@ void main() {
   "components": {
     "schemas": {
       "UpdateOptionRequest": {
+        "x-partial-update": true,
         "type": "object",
         "properties": {
           "id": {"type": "string"},
@@ -23,6 +25,7 @@ void main() {
         }
       },
       "UpdatePollRequest": {
+        "x-partial-update": true,
         "type": "object",
         "properties": {
           "id": {"type": "string"},
@@ -33,6 +36,7 @@ void main() {
         }
       },
       "UpdateNoIdRequest": {
+        "x-partial-update": true,
         "type": "object",
         "properties": {"text": {"type": "string"}}
       }
@@ -49,6 +53,7 @@ void main() {
       classes.firstWhere((c) => c.name == name) as UniversalComponentClass,
       includeIfNull: false,
       customMetadataImportPath: 'package:novus_models/novus_models.dart',
+      partialUpdateClasses: resolvePartialUpdateClasses(classes),
     );
   }
 
