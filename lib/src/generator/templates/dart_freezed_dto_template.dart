@@ -12,6 +12,7 @@ String dartFreezedDtoTemplate(
   UniversalComponentClass dataClass, {
   required bool includeIfNull,
   required String? customMetadataImportPath,
+  required Set<String> partialUpdateClasses,
   bool generateValidator = false,
   String? fallbackUnion,
   CustomMetadataConfig customMetadata = const CustomMetadataConfig(),
@@ -86,11 +87,10 @@ $variantClasses$base64ConverterClass''';
   // concrete implementation class (_ClassName) using "implements" rather than "extends",
   // so any method added to the abstract class body would need to be re-implemented
   // in the generated class, which we cannot modify.
-  // Partial-update request types (`update_*_request`, excluding full-replace
-  // `*_full` bodies) get presence-tracking Optional<T> on their value fields —
-  // the client mass-assignment boundary. See
-  // docs/plans/client-write-path-enforcement.md G1.1.
-  final wrapOptional = !isUnion && _isPartialUpdateRequest(dataClass);
+  // Partial-update requests (schemas marked `"x-partial-update": true`) get
+  // presence-tracking Optional<T> on their value fields — the client
+  // mass-assignment boundary. See [resolvePartialUpdateClasses].
+  final wrapOptional = !isUnion && partialUpdateClasses.contains(className);
   final optionalImport = wrapOptional
       ? _optionalImportDirective(customMetadataImportPath)
       : '';
@@ -103,7 +103,11 @@ $variantClasses$base64ConverterClass''';
         )
       : '';
   final patchExtension = wrapOptional
-      ? _generateToPatchExtension(className, dataClass.parameters)
+      ? _generateToPatchExtension(
+          className,
+          dataClass.parameters,
+          partialUpdateClasses: partialUpdateClasses,
+        )
       : '';
 
   return '''
@@ -116,7 +120,7 @@ ${descriptionComment(dataClass.description)}@Freezed(${[if (discriminator != nul
 ${_classModifier(isUnion: isUnion)}class $className with _\$$className {
 ${_factories(dataClass, className, includeIfNull, fallbackUnion, customMetadata, isUnion: isUnion, wrapOptional: wrapOptional)}
 ${_unionDefaultConstants(dataClass, className)}
-${_jsonFactories(className, dataClass.undiscriminatedUnionVariants, isUnion: isUnion)}
+${_jsonFactories(className, dataClass.undiscriminatedUnionVariants, isUnion: isUnion, presenceFields: wrapOptional ? dataClass.parameters : null)}
 ${generateValidator ? dataClass.parameters.map(_validationString).nonNulls.join() : ''}${_fieldMetadataConsts(dataClass)}}
 ${generateValidator ? _validateMethod(className, dataClass.parameters) : ''}$mergeExtension$patchExtension$base64ConverterClass''';
 }
@@ -306,6 +310,7 @@ String dartFreezedUnionFamilyTemplate(
   UnionFamily family, {
   required bool includeIfNull,
   required String? customMetadataImportPath,
+  required Set<String> partialUpdateClasses,
   required Map<String, String> classFileOverrides,
   required bool unknownEnumValue,
   Map<String, String> enumWireTypes = const {},
@@ -340,9 +345,12 @@ String dartFreezedUnionFamilyTemplate(
         )
       : '';
 
+  bool isPartialUpdate(UniversalComponentClass c) =>
+      partialUpdateClasses.contains(c.name.toPascal);
+
   // Any request leaf now carries `Optional<T>` fields, so the family file needs the
   // same import the single-class path adds.
-  final familyOptionalImport = family.leaves.any(_isPartialUpdateRequest)
+  final familyOptionalImport = family.leaves.any(isPartialUpdate)
       ? _optionalImportDirective(customMetadataImportPath)
       : '';
 
@@ -354,7 +362,11 @@ String dartFreezedUnionFamilyTemplate(
 
   final sealedClasses = family.unions
       .map(
-        (union) => _sealedUnionClass(union, commonFieldsByUnion[union.name]!),
+        (union) => _sealedUnionClass(
+          union,
+          commonFieldsByUnion[union.name]!,
+          isPatchUnion: isPartialUpdate(union),
+        ),
       )
       .join('\n');
   final unknownClasses = family.unions
@@ -362,6 +374,7 @@ String dartFreezedUnionFamilyTemplate(
         (union) => _unknownVariantClass(
           union,
           commonFieldsByUnion[union.name]!,
+          isPatchUnion: isPartialUpdate(union),
           unknownEnumValue: unknownEnumValue,
           enumWireTypes: enumWireTypes,
         ),
@@ -372,6 +385,7 @@ String dartFreezedUnionFamilyTemplate(
         (leaf) => _leafClassChunk(
           leaf,
           implementsClause: _implementsClause(leaf, family),
+          isPartialUpdate: isPartialUpdate(leaf),
           includeIfNull: includeIfNull,
           customMetadata: customMetadata,
           generateMergeMethod: generateMergeMethod,
@@ -382,11 +396,23 @@ String dartFreezedUnionFamilyTemplate(
   // A leaf folded into a family file still needs its `toPatch()`: the single-class
   // template emits this extension, and before this the family path did not — so a
   // request type silently lost `toPatch()` merely by joining a discriminated union.
+  //
+  // A leaf's patch also carries its discriminator: a list of union elements is
+  // replaced whole, so an element written without it can't be decoded again.
+  final discriminatorKeys = {
+    for (final union in family.unions)
+      if (union.discriminator case final discriminator?)
+        discriminator.propertyName,
+  };
   final leafPatchExtensions = family.leaves
-      .where(_isPartialUpdateRequest)
+      .where(isPartialUpdate)
       .map(
-        (leaf) =>
-            _generateToPatchExtension(leaf.name.toPascal, leaf.parameters),
+        (leaf) => _generateToPatchExtension(
+          leaf.name.toPascal,
+          leaf.parameters,
+          partialUpdateClasses: partialUpdateClasses,
+          discriminatorKeys: discriminatorKeys,
+        ),
       )
       .join();
 
@@ -398,14 +424,14 @@ String dartFreezedUnionFamilyTemplate(
   // interface member — declaring it on the supertype makes every freezed impl class
   // fail with `non_abstract_class_inherits_abstract_member`.
   final unionPatchExtensions = family.unions
-      .where(_isPartialUpdateRequest)
+      .where(isPartialUpdate)
       .map((union) => _unionToPatchExtension(union))
       .join();
 
   // Same reasoning as the factories/getters: `copyWith`/`map` over a patch union
   // assume plain data-model field types, and you would copyWith the LEAF anyway.
   final compatExtensions = family.unions
-      .where((union) => !_isPartialUpdateRequest(union))
+      .where((union) => !isPartialUpdate(union))
       .map(
         (union) =>
             _unionCompatExtensions(union, commonFieldsByUnion[union.name]!),
@@ -495,6 +521,7 @@ String _implementsClause(UniversalComponentClass leaf, UnionFamily family) {
 String _leafClassChunk(
   UniversalComponentClass dataClass, {
   required String implementsClause,
+  required bool isPartialUpdate,
   required bool includeIfNull,
   required CustomMetadataConfig customMetadata,
   required bool generateMergeMethod,
@@ -507,8 +534,8 @@ String _leafClassChunk(
   return '''
 ${descriptionComment(dataClass.description)}@Freezed()
 abstract class $className with _\$$className$implementsClause {
-${_factories(dataClass, className, includeIfNull, null, customMetadata, isUnion: false, wrapOptional: _isPartialUpdateRequest(dataClass))}
-${_jsonFactories(className, null, isUnion: false)}
+${_factories(dataClass, className, includeIfNull, null, customMetadata, isUnion: false, wrapOptional: isPartialUpdate)}
+${_jsonFactories(className, null, isUnion: false, presenceFields: isPartialUpdate ? dataClass.parameters : null)}
 ${generateValidator ? dataClass.parameters.map(_validationString).nonNulls.join() : ''}${_fieldMetadataConsts(dataClass)}}
 ${generateValidator ? _validateMethod(className, dataClass.parameters) : ''}$mergeExtension''';
 }
@@ -517,15 +544,16 @@ ${generateValidator ? _validateMethod(className, dataClass.parameters) : ''}$mer
 /// `fromJson` dispatch, common-field getters and abstract `toJson`.
 String _sealedUnionClass(
   UniversalComponentClass union,
-  List<UniversalType> commonFields,
-) {
+  List<UniversalType> commonFields, {
+  required bool isPatchUnion,
+}) {
   final className = union.name.toPascal;
   final discriminator = union.discriminator!;
   final discriminatorPropertyName = discriminator.propertyName;
 
-  // See the note below _sealedUnionClass's return: a patch-request union is a
-  // DISPATCH type, so it emits no factories, constants, or shared getters.
-  final isPatchUnion = _isPartialUpdateRequest(union);
+  // See the note below _sealedUnionClass's return: a patch-request union
+  // ([isPatchUnion]) is a DISPATCH type, so it emits no factories, constants, or
+  // shared getters.
 
   // A union OVER update-request leaves is itself an update request: every leaf
   // already emits `toPatch()`, so declaring it here is what lets a caller hold
@@ -680,6 +708,7 @@ ${arms('toNestedPatch')}
 String _unknownVariantClass(
   UniversalComponentClass union,
   List<UniversalType> commonFields, {
+  required bool isPatchUnion,
   required bool unknownEnumValue,
   required Map<String, String> enumWireTypes,
 }) {
@@ -688,7 +717,7 @@ String _unknownVariantClass(
 
   // Mirrors [toJson]: an unrecognized variant round-trips its raw payload rather
   // than silently patching nothing.
-  final patchImpl = _isPartialUpdateRequest(union)
+  final patchImpl = isPatchUnion
       ? '\n  /// No `@override`: the sealed supertype deliberately does NOT declare\n'
             '  /// `toPatch()` (an extension cannot satisfy an abstract member), so this\n'
             '  /// is a plain instance member the union extension dispatches to.\n'
@@ -701,7 +730,7 @@ String _unknownVariantClass(
   // The parent declares no shared getters for a patch union (see _sealedUnionClass),
   // so Unknown must not emit `@override` versions of them either.
   final getters =
-      (_isPartialUpdateRequest(union) ? const <UniversalType>[] : commonFields)
+      (isPatchUnion ? const <UniversalType>[] : commonFields)
           .map(
             (param) =>
                 '  @override\n'
@@ -1236,6 +1265,7 @@ String _jsonFactories(
   String className,
   Map<String, Set<UniversalType>>? undiscriminatedUnionVariants, {
   required bool isUnion,
+  Set<UniversalType>? presenceFields,
 }) {
   if (undiscriminatedUnionVariants case final unionVariants?
       when unionVariants.isNotEmpty) {
@@ -1249,10 +1279,92 @@ String _jsonFactories(
       ? 'Map<String, dynamic> toJson() => throw UnimplementedError();'
       : 'Map<String, dynamic> toJson() => _\$${className}ToJson(this as _$className);';
 
+  final fromJson = presenceFields == null
+      ? '  factory $className.fromJson(Map<String, Object?> json) => _\$${className}FromJson(json);'
+      : _presenceFromJsonFactory(className, presenceFields);
   return '  \n'
       '  $toJsonBody\n'
-      '  factory $className.fromJson(Map<String, Object?> json) => _\$${className}FromJson(json);';
+      '$fromJson';
 }
+
+/// `fromJson` for a presence-tracked request: the inverse of `toNestedPatch()`.
+///
+/// A key present in [json] becomes `Optional(value)`, an explicit null included
+/// (`Optional(null)`, a clear); an absent key stays `null`, so it is left
+/// untouched. Keys the request doesn't declare are ignored, so the request
+/// TYPE is still the whole boundary — the Dart analogue of the server's
+/// `UpdateX.model_validate(data)` with `extra="ignore"`. This is what lets a
+/// caller turn a stored document's JSON into the update of exactly the fields
+/// the request may write: `UpdateXRequest.fromJson(model.toJson())`.
+///
+/// json_serializable can't decode `Optional<T>` (the fields are
+/// `includeFromJson: false`), so it still decodes the plain operation fields
+/// and `copyWith` adds the presence-tracked ones. Each is one call to the
+/// runtime's `Optional.fromJsonKey(json, key, decode)`, which owns the
+/// presence and null handling; only the per-type `decode` of a non-null value
+/// is generated.
+String _presenceFromJsonFactory(
+  String className,
+  Set<UniversalType> parameters,
+) {
+  final wrapped = parameters.where(_isWrappableOptionalField).toList();
+  if (wrapped.isEmpty) {
+    return '  factory $className.fromJson(Map<String, Object?> json) => _\$${className}FromJson(json);';
+  }
+  final arguments = wrapped
+      .map((p) {
+        final key = _wireKey(p);
+        return "        ${p.name}: Optional.fromJsonKey(json, '$key', "
+            "(v) => ${_fromJsonValueExpression(p, 'v')}),";
+      })
+      .join('\n');
+  return '  factory $className.fromJson(Map<String, Object?> json) =>\n'
+      '      _\$${className}FromJson(json).copyWith(\n'
+      '$arguments\n'
+      '      );';
+}
+
+/// Decodes the non-null JSON [value] of field [t] (`Optional.fromJsonKey`
+/// handles null, so a clear survives). The inverse of [_patchValueExpression],
+/// applied through every collection wrapper.
+String _fromJsonValueExpression(UniversalType t, String value) {
+  final baseType = t.type.toDartType(format: t.format);
+
+  String decode(String v, int depth) {
+    if (depth == t.wrappingCollections.length) {
+      return _fromJsonElementExpression(baseType, v);
+    }
+    final collection = t.wrappingCollections[depth];
+    final innerNullable =
+        depth == t.wrappingCollections.length - 1 && collection.itemIsNullable;
+    final element = 'e$depth';
+    final inner = decode(element, depth + 1);
+    final item = innerNullable ? '$element == null ? null : $inner' : inner;
+    if (collection.isMap) {
+      final keyType = t.mapKeyType;
+      final key = keyType == null
+          ? 'k$depth as String'
+          : '$keyType.fromJson(k$depth as dynamic)';
+      return '($v as Map).map((k$depth, $element) => MapEntry($key, $item))';
+    }
+    return '($v as List).map(($element) => $item).toList()';
+  }
+
+  return decode(value, 0);
+}
+
+/// Decodes one non-null element of Dart type [dartType]. A generated enum takes
+/// its wire `String` and a model or nested request its `Map`, so both are
+/// handed over as `dynamic` to the type's own `fromJson`.
+String _fromJsonElementExpression(String dartType, String value) =>
+    switch (dartType) {
+      'int' => '($value as num).toInt()',
+      'double' => '($value as num).toDouble()',
+      'DateTime' => 'DateTime.parse($value as String)',
+      'dynamic' || 'Object' => value,
+      _ when isPrimitiveTypeName(dartType) => '$value as $dartType',
+      _ => '$dartType.fromJson($value as dynamic)',
+    };
 
 String _fromJsonUndiscriminatedUnion(String className) =>
     '''
@@ -1457,8 +1569,10 @@ String _jsonKey(
   // `toPatch()` is the authoritative serializer for these fields (the client
   // write-path patch); the freezed-generated `toJson()` carries only the
   // operation (@Default) fields and is used solely for retrofit @Body
-  // compilation (that HTTP path is not wired). On decode, wrapped fields default
-  // to null (absent); request models are never deserialized in practice.
+  // compilation (that HTTP path is not wired). json_serializable skips these
+  // fields on decode too; the generated `fromJson` adds them back with presence
+  // tracking (a present key becomes `Optional`, an explicit null clears), making
+  // it the inverse of `toNestedPatch()` — see [_presenceFromJsonFactory].
   if (wrapOptional) {
     if (t.jsonKey != null && t.name != t.jsonKey) {
       jsonKeyParams['name'] = "'${protectJsonKey(t.jsonKey)}'";
@@ -1741,22 +1855,6 @@ String _customAnnotations(
   return buffer.toString();
 }
 
-/// Schema-name rule for the partial-update request types whose value fields
-/// carry presence tracking (`Optional<T>`) — the client mass-assignment boundary.
-/// Matches `update_*_request` AND its managed twin `managed_update_*_request`
-/// (G1.6 — APPLICATION_MANAGED, non-immutable fields), but NOT full-replace bodies
-/// (e.g. `update_message_request_full` ends in `_full`, not `_request`) or nested
-/// value objects (`update_message_partial_request_content` ends in `_content`).
-/// The `managed_` qualifier is a single optional prefix, so "is an update-shaped
-/// request" stays the one predicate.
-/// See docs/plans/client-write-path-enforcement.md G1.1 / G1.6.
-final RegExp _partialUpdateRequestName = RegExp(
-  r'^(managed_)?update_.*_request$',
-);
-
-bool _isPartialUpdateRequest(UniversalComponentClass dataClass) =>
-    _partialUpdateRequestName.hasMatch(dataClass.name.toSnake);
-
 /// A wrappable value field of a partial-update request: optional (not required)
 /// with no schema default. Operation fields (`@Default(...)`) and required
 /// fields keep their plain type — presence tracking is meaningless for them.
@@ -1810,7 +1908,10 @@ String _optionalImportDirective(String? importPath) {
 ///
 /// `DateTime` is deliberately treated as a primitive: CBL converts it itself
 /// (`toIso8601String()`), and `DateTime` has no `toJson()`.
-String _patchValueExpression(UniversalType t) {
+String _patchValueExpression(
+  UniversalType t,
+  Set<String> partialUpdateClasses,
+) {
   final value = 'this.${t.name}!.value';
   // `UniversalType.type` is the RAW OpenAPI type ("string", "integer", …), not the
   // Dart one — map it first, or every primitive is mistaken for a model and gets a
@@ -1819,7 +1920,7 @@ String _patchValueExpression(UniversalType t) {
   final dartType = t.type.toDartType(format: t.format);
   if (isPrimitiveTypeName(dartType)) return value;
 
-  final serializer = _patchSerializer(dartType);
+  final serializer = _patchSerializer(dartType, partialUpdateClasses);
 
   // Collections wrap the element type; convert element-wise. Only the innermost
   // (last) wrapper matters here — nested collections of models do not occur in the
@@ -1855,13 +1956,11 @@ String _patchValueExpression(UniversalType t) {
 ///
 /// Everything else — a generated enum, a plain model — has a real `toJson()`.
 ///
-/// The rule keys off [_partialUpdateRequestName], the same predicate that decides
-/// which classes GET a `toPatch()`, so the two can never disagree: a type is
-/// serialized as a patch iff the generator gave it one. Nested value objects are
-/// correctly excluded — `ManagedUpdateMessageRequestState` ends in `_state`, not
-/// `_request`, and keeps its real `toJson()`.
-String _patchSerializer(String dartType) =>
-    _partialUpdateRequestName.hasMatch(dartType.toSnake)
+/// The rule reads [partialUpdateClasses], the same set that decides which classes
+/// GET a `toPatch()`, so the two can never disagree: a type is serialized as a patch
+/// iff the generator gave it one.
+String _patchSerializer(String dartType, Set<String> partialUpdateClasses) =>
+    partialUpdateClasses.contains(dartType.toPascal)
     ? 'toNestedPatch'
     : 'toJson';
 
@@ -1880,21 +1979,43 @@ String _patchSerializer(String dartType) =>
 /// See novus docs/plans/client-write-path-enforcement.md G19.5.
 String _generateToPatchExtension(
   String className,
-  Set<UniversalType> parameters,
-) {
+  Set<UniversalType> parameters, {
+  required Set<String> partialUpdateClasses,
+  Set<String> discriminatorKeys = const {},
+}) {
+  // A union leaf's discriminator (`type`) is a plain defaulted field, not a
+  // presence-tracked one, so the nested patch writes it unconditionally:
+  // without it a union element in a replaced list can't be decoded again. The
+  // document-level `toPatch()` drops it, like `id`: the stored document already
+  // says what it is, and a mismatched request must not change that.
+  final discriminatorFields = parameters
+      .where(
+        (p) =>
+            !_isWrappableOptionalField(p) &&
+            discriminatorKeys.contains(_wireKey(p)),
+      )
+      .toList();
+  final discriminatorLines = discriminatorFields.map(
+    (p) => "    patch['${_wireKey(p)}'] = this.${p.name};",
+  );
   // `this.` qualifies every field access: a bare field name (e.g. `deprecated`)
   // can collide with a dart:core top-level constant and resolve to it instead.
-  final lines = parameters
-      .where(_isWrappableOptionalField)
-      .map(
-        (p) =>
-            "    if (this.${p.name} != null) { patch['${_wireKey(p)}'] = ${_patchValueExpression(p)}; }",
-      )
-      .join('\n');
+  final lines = [
+    ...discriminatorLines,
+    ...parameters
+        .where(_isWrappableOptionalField)
+        .map(
+          (p) =>
+              "    if (this.${p.name} != null) { patch['${_wireKey(p)}'] = ${_patchValueExpression(p, partialUpdateClasses)}; }",
+        ),
+  ].join('\n');
   final hasId = parameters
       .where(_isWrappableOptionalField)
       .any((p) => _wireKey(p) == 'id');
-  final dropId = hasId ? "..remove('id')" : '';
+  final dropId = [
+    if (hasId) "..remove('id')",
+    for (final p in discriminatorFields) "..remove('${_wireKey(p)}')",
+  ].join();
   return '''
 extension ${className}PatchX on $className {
   /// The sparse update patch: only the fields explicitly set (present

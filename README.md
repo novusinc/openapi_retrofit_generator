@@ -319,6 +319,29 @@ openapi_generator:
 
 **📖 [Full Documentation: Sealed Ref Unions](docs/SEALED_REF_UNIONS.md)**
 
+### Partial-Update Requests (freezed)
+
+Mark a request schema `"x-partial-update": true` when a field left out of the
+body means "leave it alone" and one sent as `null` means "clear it":
+
+```json
+"UpdatePetRequest": {
+  "type": "object",
+  "x-partial-update": true,
+  "properties": {"name": {"type": "string"}, "tag": {"type": "string"}}
+}
+```
+
+Each optional field without a default becomes `Optional<T>?`: `null` leaves the
+field out, `Optional.clear()` clears it, and `Optional(v)` sets it. The class gets
+a sparse `toPatch()` and a `fromJson` that keeps that distinction. A union is a
+partial update when all of its variants are marked; one whose variants are only
+partly marked fails generation.
+
+Only the mark decides this, never the schema's name. The generated code imports
+`Optional` from `converter_hydrated_model_prefix`, which must provide it,
+including its `fromJsonKey` helper.
+
 ### Command Line Arguments
 
 Override config file options via command line:

@@ -32,6 +32,7 @@ final class UniversalComponentClass extends UniversalDataClass {
     this.discriminator,
     this.discriminatorValue,
     this.undiscriminatedUnionVariants,
+    this.partialUpdate = false,
     super.description,
   });
 
@@ -67,6 +68,14 @@ final class UniversalComponentClass extends UniversalDataClass {
   ///  must be DateTime instead of its own class
   final bool typeDef;
 
+  /// Whether the schema is marked as a partial-update request
+  /// (`"x-partial-update": true`).
+  ///
+  /// A partial update's value fields are presence-tracked: a field left out is
+  /// left alone, and one sent as null is cleared. See
+  /// `resolvePartialUpdateClasses`, which also derives the unions over them.
+  final bool partialUpdate;
+
   /// Creates a copy of this [UniversalComponentClass] but with the given fields replaced with the new values.
   UniversalComponentClass copyWith({
     String? name,
@@ -77,6 +86,7 @@ final class UniversalComponentClass extends UniversalDataClass {
     Discriminator? discriminator,
     DiscriminatorValue? discriminatorValue,
     Map<String, Set<UniversalType>>? undiscriminatedUnionVariants,
+    bool? partialUpdate,
     String? description,
   }) {
     return UniversalComponentClass(
@@ -89,6 +99,7 @@ final class UniversalComponentClass extends UniversalDataClass {
       discriminatorValue: discriminatorValue ?? this.discriminatorValue,
       undiscriminatedUnionVariants:
           undiscriminatedUnionVariants ?? this.undiscriminatedUnionVariants,
+      partialUpdate: partialUpdate ?? this.partialUpdate,
       description: description ?? super.description,
     );
   }
@@ -102,6 +113,7 @@ final class UniversalComponentClass extends UniversalDataClass {
           const DeepCollectionEquality().equals(parameters, other.parameters) &&
           allOf == other.allOf &&
           typeDef == other.typeDef &&
+          partialUpdate == other.partialUpdate &&
           const DeepCollectionEquality().equals(
             undiscriminatedUnionVariants,
             other.undiscriminatedUnionVariants,
@@ -113,6 +125,7 @@ final class UniversalComponentClass extends UniversalDataClass {
       parameters.hashCode ^
       allOf.hashCode ^
       typeDef.hashCode ^
+      partialUpdate.hashCode ^
       undiscriminatedUnionVariants.hashCode;
 
   @override
@@ -121,5 +134,6 @@ final class UniversalComponentClass extends UniversalDataClass {
       'parameters: $parameters, '
       'allOf: $allOf, '
       'undiscriminatedUnionVariants: $undiscriminatedUnionVariants, '
-      'typeDef: $typeDef)';
+      'typeDef: $typeDef, '
+      'partialUpdate: $partialUpdate)';
 }

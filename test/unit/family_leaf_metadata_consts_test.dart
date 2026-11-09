@@ -1,6 +1,7 @@
 import 'package:openapi_retrofit_generator/openapi_retrofit_generator.dart';
 import 'package:openapi_retrofit_generator/src/config/custom_metadata_config.dart';
 import 'package:openapi_retrofit_generator/src/generator/templates/dart_freezed_dto_template.dart';
+import 'package:openapi_retrofit_generator/src/generator/utils/partial_update_classes.dart';
 import 'package:test/test.dart';
 
 /// The field-metadata consts must reach sealed-ref-union FAMILY files too.
@@ -109,6 +110,7 @@ void main() {
       resolution.families.single,
       includeIfNull: false,
       customMetadataImportPath: 'package:novus_models/novus_models.dart',
+      partialUpdateClasses: resolvePartialUpdateClasses(classes),
       classFileOverrides: resolution.classFileOverrides,
       unknownEnumValue: true,
       customMetadata: customMetadata,

@@ -1,6 +1,7 @@
 import 'package:openapi_retrofit_generator/openapi_retrofit_generator.dart';
 import 'package:openapi_retrofit_generator/src/config/custom_metadata_config.dart';
 import 'package:openapi_retrofit_generator/src/generator/templates/dart_freezed_dto_template.dart';
+import 'package:openapi_retrofit_generator/src/generator/utils/partial_update_classes.dart';
 import 'package:test/test.dart';
 
 /// Regression test: the custom-metadata import's `show` list was built from the
@@ -92,6 +93,7 @@ void main() {
           classes.firstWhere((c) => c.name == name) as UniversalComponentClass,
           includeIfNull: false,
           customMetadataImportPath: 'package:novus_models/novus_models.dart',
+          partialUpdateClasses: resolvePartialUpdateClasses(classes),
           customMetadata: customMetadata,
         ),
     };
