@@ -5,9 +5,11 @@ import 'package:test/test.dart';
 /// A presence-tracked request's `fromJson` is the inverse of `toNestedPatch()`.
 ///
 /// Before this, json_serializable skipped every `Optional<T>` field
-/// (`includeFromJson: false`), so `fromJson` returned an empty request. Now a key
-/// present in the map becomes `Optional(value)` (an explicit null included), an
-/// absent key stays `null`, and keys the request doesn't declare are ignored —
+/// (`includeFromJson: false`), so `fromJson` returned an empty request. Now each
+/// one is decoded by the runtime's `Optional.fromJsonKey(json, key, decode)`: a
+/// key present in the map becomes `Optional(value)` (an explicit null
+/// included), an absent key stays `null`, and keys the request doesn't declare
+/// are ignored —
 /// the analogue of the server's `UpdateX.model_validate(data)`. That is what lets
 /// a caller write a stored document's client-owned fields with
 /// `UpdateXRequest.fromJson(model.toJson())`.
@@ -79,7 +81,7 @@ void main() {
       .split('\n')
       .map((l) => l.trim())
       .firstWhere(
-        (l) => l.startsWith('$field: json.containsKey('),
+        (l) => l.startsWith('$field: Optional.fromJsonKey('),
         orElse: () => '<no fromJson argument for $field>',
       );
 
@@ -99,12 +101,11 @@ void main() {
       );
     });
 
-    test('an absent key stays null and a present one, null included, '
-        'becomes Optional', () {
+    test('each field is one Optional.fromJsonKey call that decodes only a '
+        'non-null value', () {
       expect(
         argument(generated, 'title'),
-        "title: json.containsKey('title') ? Optional(json['title'] == null "
-        "? null : json['title'] as String) : null,",
+        "title: Optional.fromJsonKey(json, 'title', (v) => v as String),",
       );
     });
 
@@ -113,19 +114,19 @@ void main() {
       expect(argument(generated, 'ratio'), contains('as num).toDouble()'));
       expect(
         argument(generated, 'seenAt'),
-        contains("DateTime.parse(json['seen_at'] as String)"),
+        contains('(v) => DateTime.parse(v as String)'),
       );
     });
 
     test('lists and maps decode element by element', () {
       expect(
         argument(generated, 'labels'),
-        contains("(json['labels'] as List).map((e0) => e0 as String).toList()"),
+        contains('(v) => (v as List).map((e0) => e0 as String).toList()'),
       );
       expect(
         argument(generated, 'extra'),
         contains(
-          "(json['extra'] as Map).map((k0, e0) => MapEntry(k0 as String, e0))",
+          '(v) => (v as Map).map((k0, e0) => MapEntry(k0 as String, e0))',
         ),
       );
     });
@@ -134,11 +135,11 @@ void main() {
         'fromJson', () {
       expect(
         argument(generated, 'tone'),
-        contains("Tone.fromJson(json['tone'] as dynamic)"),
+        contains('(v) => Tone.fromJson(v as dynamic)'),
       );
       expect(
         argument(generated, 'badge'),
-        contains("UpdateBadgeRequest.fromJson(json['badge'] as dynamic)"),
+        contains('(v) => UpdateBadgeRequest.fromJson(v as dynamic)'),
       );
       expect(
         argument(generated, 'badges'),

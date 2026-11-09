@@ -1281,7 +1281,10 @@ String _jsonFactories(
 ///
 /// json_serializable can't decode `Optional<T>` (the fields are
 /// `includeFromJson: false`), so it still decodes the plain operation fields
-/// and `copyWith` adds the presence-tracked ones.
+/// and `copyWith` adds the presence-tracked ones. Each is one call to the
+/// runtime's `Optional.fromJsonKey(json, key, decode)`, which owns the
+/// presence and null handling; only the per-type `decode` of a non-null value
+/// is generated.
 String _presenceFromJsonFactory(
   String className,
   Set<UniversalType> parameters,
@@ -1293,9 +1296,8 @@ String _presenceFromJsonFactory(
   final arguments = wrapped
       .map((p) {
         final key = _wireKey(p);
-        return "        ${p.name}: json.containsKey('$key') "
-            "? Optional(${_fromJsonValueExpression(p, "json['$key']")}) "
-            ': null,';
+        return "        ${p.name}: Optional.fromJsonKey(json, '$key', "
+            "(v) => ${_fromJsonValueExpression(p, 'v')}),";
       })
       .join('\n');
   return '  factory $className.fromJson(Map<String, Object?> json) =>\n'
@@ -1304,9 +1306,9 @@ String _presenceFromJsonFactory(
       '      );';
 }
 
-/// Decodes the JSON [value] of field [t] — null stays null, so a clear survives.
-/// The inverse of [_patchValueExpression], applied through every collection
-/// wrapper.
+/// Decodes the non-null JSON [value] of field [t] (`Optional.fromJsonKey`
+/// handles null, so a clear survives). The inverse of [_patchValueExpression],
+/// applied through every collection wrapper.
 String _fromJsonValueExpression(UniversalType t, String value) {
   final baseType = t.type.toDartType(format: t.format);
 
@@ -1330,7 +1332,7 @@ String _fromJsonValueExpression(UniversalType t, String value) {
     return '($v as List).map(($element) => $item).toList()';
   }
 
-  return '$value == null ? null : ${decode(value, 0)}';
+  return decode(value, 0);
 }
 
 /// Decodes one non-null element of Dart type [dartType]. A generated enum takes
@@ -1549,8 +1551,10 @@ String _jsonKey(
   // `toPatch()` is the authoritative serializer for these fields (the client
   // write-path patch); the freezed-generated `toJson()` carries only the
   // operation (@Default) fields and is used solely for retrofit @Body
-  // compilation (that HTTP path is not wired). On decode, wrapped fields default
-  // to null (absent); request models are never deserialized in practice.
+  // compilation (that HTTP path is not wired). json_serializable skips these
+  // fields on decode too; the generated `fromJson` adds them back with presence
+  // tracking (a present key becomes `Optional`, an explicit null clears), making
+  // it the inverse of `toNestedPatch()` — see [_presenceFromJsonFactory].
   if (wrapOptional) {
     if (t.jsonKey != null && t.name != t.jsonKey) {
       jsonKeyParams['name'] = "'${protectJsonKey(t.jsonKey)}'";
