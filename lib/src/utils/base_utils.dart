@@ -56,7 +56,13 @@ String dartImports({
 
 String indentation(int length) => ' ' * length;
 
-/// Provides description
+/// Renders [description] as a `///` doc comment, one comment line per line.
+///
+/// A multi-line description ends each paragraph with a period
+/// (https://dart.dev/effective-dart/documentation#do-format-comments-like-sentences):
+/// the line before a blank line, and the last line. A sentence wrapped across
+/// lines stays one sentence, and fenced code blocks are left as written. A
+/// single-line description is kept exactly as written.
 String descriptionComment(
   String? description, {
   bool tabForFirstLine = true,
@@ -67,15 +73,22 @@ String descriptionComment(
     return '';
   }
 
-  final lineStart = RegExp('^(.*)', multiLine: true);
+  final lines = description.split('\n');
+  final comment = <String>[];
+  var inFence = false;
+  for (var i = 0; i < lines.length; i++) {
+    final line = lines[i];
+    final isFence = line.trimLeft().startsWith('```');
+    final endsParagraph = i == lines.length - 1 || lines[i + 1].trim().isEmpty;
+    final text = lines.length == 1 || inFence || isFence || !endsParagraph
+        ? line
+        : addDot(line)!;
+    if (isFence) inFence = !inFence;
+    final indent = i == 0 && !tabForFirstLine ? '' : tab;
+    comment.add('$indent///${line.trim().isEmpty ? '' : ' '}$text');
+  }
 
-  final result = description.replaceAllMapped(
-    lineStart,
-    (m) =>
-        '${!tabForFirstLine && m.start == 0 ? '' : tab}///${m[1]!.trim().isEmpty ? '' : ' '}${m.start == 0 && m.end == description.length ? m[1] : addDot(m[1])}',
-  );
-
-  return '$result\n$end';
+  return '${comment.join('\n')}\n$end';
 }
 
 /// Add dot to string if not exist

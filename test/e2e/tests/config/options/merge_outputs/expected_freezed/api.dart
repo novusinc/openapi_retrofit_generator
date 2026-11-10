@@ -2118,33 +2118,33 @@ enum OrganizationEntityEntityTypeEntityType {
 
 /// Comprehensive API Test Schema `v1.0.0`.
 ///
-/// This schema covers ALL edge cases and features of openapi_retrofit_generator:.
-/// - Multiple tags for client separation.
-/// - Anonymous/inline classes.
-/// - Circular model dependencies.
-/// - Parameter references ($ref).
-/// - Duplicated/conflicting names.
-/// - All HTTP methods (GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS).
-/// - All parameter types (query, path, body, header, cookie).
-/// - Arrays, objects, primitives, enums.
-/// - oneOf, anyOf, allOf compositions.
-/// - Discriminators (mapped and unmapped).
-/// - Nullable and required fields.
-/// - Default values.
-/// - Deprecated endpoints and models.
-/// - Multipart file uploads.
-/// - Multiple response codes.
-/// - Nested objects (deep nesting).
-/// - Date/DateTime types.
-/// - Validation (min, max, pattern, minLength, maxLength).
-/// - Additional properties.
-/// - Empty objects.
-/// - Reference types ($ref).
-/// - Wrapped collections.
-/// - x-nullable extension.
-/// - Circular dependencies.
-/// - Name conflicts and edge cases.
-/// - Different content types.
+/// This schema covers ALL edge cases and features of openapi_retrofit_generator:
+/// - Multiple tags for client separation
+/// - Anonymous/inline classes
+/// - Circular model dependencies
+/// - Parameter references ($ref)
+/// - Duplicated/conflicting names
+/// - All HTTP methods (GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS)
+/// - All parameter types (query, path, body, header, cookie)
+/// - Arrays, objects, primitives, enums
+/// - oneOf, anyOf, allOf compositions
+/// - Discriminators (mapped and unmapped)
+/// - Nullable and required fields
+/// - Default values
+/// - Deprecated endpoints and models
+/// - Multipart file uploads
+/// - Multiple response codes
+/// - Nested objects (deep nesting)
+/// - Date/DateTime types
+/// - Validation (min, max, pattern, minLength, maxLength)
+/// - Additional properties
+/// - Empty objects
+/// - Reference types ($ref)
+/// - Wrapped collections
+/// - x-nullable extension
+/// - Circular dependencies
+/// - Name conflicts and edge cases
+/// - Different content types
 /// - Headers in responses.
 ///
 class RestClient {
