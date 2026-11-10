@@ -1,6 +1,7 @@
 import 'package:openapi_retrofit_generator/src/parser/model/normalized_identifier.dart';
 import 'package:openapi_retrofit_generator/src/parser/model/universal_data_class.dart';
 import 'package:openapi_retrofit_generator/src/parser/utils/dart_keywords.dart';
+import 'package:openapi_retrofit_generator/src/utils/base_utils.dart';
 
 /// Extension for utils
 extension StringTypeX on String {
@@ -382,7 +383,9 @@ String _normalizeInvalidName(String name) {
       (null, null) => null,
       (null, _) => error,
       (_, null) => description,
-      (_, _) => '$description\n$error',
+      // Two sentences on separate lines: the description ends as one, so the
+      // doc comment doesn't run it into the note.
+      (_, _) => '${addDot(description)}\n$error',
     },
   );
 }

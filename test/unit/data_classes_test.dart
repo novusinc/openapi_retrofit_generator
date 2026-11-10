@@ -2229,7 +2229,7 @@ extension ClassNameMergeX on ClassName {
           ),
           const UniversalType(
             type: 'string',
-            description: 'List of data\nThis data is a list',
+            description: 'List of data.\nThis data is a list',
             wrappingCollections: [UniversalCollections.list],
             name: 'list',
             isRequired: true,
@@ -2321,7 +2321,7 @@ class ClassName {
           ),
           const UniversalType(
             type: 'string',
-            description: 'List of data\nThis data is a list',
+            description: 'List of data.\nThis data is a list',
             wrappingCollections: [UniversalCollections.list],
             name: 'list',
             isRequired: true,
