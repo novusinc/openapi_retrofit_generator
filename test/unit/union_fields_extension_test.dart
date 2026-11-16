@@ -149,6 +149,7 @@ void main() {
       ),
     );
     expect(file, isNot(contains(' get name => switch')));
+    expect(file, contains("import 'pet_kind.dart';"));
   });
 
   test('an enum missing a discriminator value fails generation', () {

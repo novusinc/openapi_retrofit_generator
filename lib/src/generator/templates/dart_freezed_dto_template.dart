@@ -356,7 +356,18 @@ String dartFreezedUnionFamilyTemplate(
       ? _optionalImportDirective(customMetadataImportPath)
       : '';
 
-  final modelImports = _familyModelImports(family, classFileOverrides);
+  // The enum a discriminator getter returns lives in its own file.
+  final discriminatorEnumImports = [
+    for (final union in family.unions)
+      if (!isPartialUpdate(union))
+        if (unionDiscriminatorEnums[union.name.toPascal] case final enumType?)
+          enumType.className,
+  ];
+  final modelImports = _familyModelImports(
+    family,
+    classFileOverrides,
+    extraImports: discriminatorEnumImports,
+  );
 
   final commonFieldsByUnion = <String, List<UniversalType>>{
     for (final union in family.unions) union.name: _commonUnionFields(union),
@@ -586,11 +597,13 @@ String _nonNullable(String type) =>
 /// of other families' members point at their family file.
 String _familyModelImports(
   UnionFamily family,
-  Map<String, String> classFileOverrides,
-) {
+  Map<String, String> classFileOverrides, {
+  Iterable<String> extraImports = const [],
+}) {
   final importNames = <String>{
     for (final union in family.unions) ...union.imports,
     for (final leaf in family.leaves) ...leaf.imports,
+    ...extraImports,
   };
   // Anything that resolves into this very file (members of this family, and
   // the primary itself) must not be imported.
