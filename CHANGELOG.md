@@ -1,3 +1,7 @@
+## Unreleased
+- `union_field_getters`: on a sealed-ref union, a nullable getter for each field only some variants declare (`extension <Union>FieldsX`); a field whose variants disagree on its type is named in a comment instead
+- `union_discriminator_enums`: a union's discriminator as a configured enum (`EventType get type`)
+
 ## 2.0.4
 - Add support for Rust `serde(tag = 'discriminator_key')` discriminator pattern of enums
 - Add support for `x-enum-varnames` extension (OpenAPI Generator style custom enum names)

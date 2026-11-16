@@ -32,6 +32,8 @@ class GeneratorConfig {
     this.customMetadata = const CustomMetadataConfig(),
     this.generateMergeMethod = true,
     this.generatePathConstants = false,
+    this.unionFieldGetters = false,
+    this.unionDiscriminatorEnums = const {},
   });
 
   /// API identifier used for naming folders and export files.
@@ -311,4 +313,10 @@ class GeneratorConfig {
   ///
   /// Default: false
   final bool generatePathConstants;
+
+  /// See `OpenApiConfig.unionFieldGetters`.
+  final bool unionFieldGetters;
+
+  /// See `OpenApiConfig.unionDiscriminatorEnums`.
+  final Map<String, String> unionDiscriminatorEnums;
 }

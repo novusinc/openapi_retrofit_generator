@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:openapi_retrofit_generator/src/generator/exception/generator_exception.dart';
 import 'package:openapi_retrofit_generator/src/config/custom_metadata_config.dart';
 import 'package:openapi_retrofit_generator/src/generator/config/generator_config.dart';
 import 'package:openapi_retrofit_generator/src/generator/generator/union_family_resolver.dart';
@@ -38,7 +39,39 @@ final class FillController {
        _enumWireTypes = {
          for (final dc in dataClasses)
            if (dc is UniversalEnumClass) dc.name.toPascal: dc.type.toDartType(),
-       };
+       },
+       _unionDiscriminatorEnums = _resolveDiscriminatorEnums(
+         config.unionDiscriminatorEnums,
+         dataClasses,
+       );
+
+  /// Resolves `union_discriminator_enums` (union name → enum name) against the
+  /// parsed enums. Fails on an enum the spec doesn't define.
+  static Map<String, UnionDiscriminatorEnum> _resolveDiscriminatorEnums(
+    Map<String, String> configured,
+    Iterable<UniversalDataClass> dataClasses,
+  ) {
+    final enums = {
+      for (final dc in dataClasses)
+        if (dc is UniversalEnumClass) dc.name.toPascal: dc,
+    };
+    return {
+      for (final MapEntry(key: union, value: enumName) in configured.entries)
+        union.toPascal: switch (enums[enumName.toPascal]) {
+          final enumClass? => UnionDiscriminatorEnum(
+            className: enumClass.name.toPascal,
+            valueNameByJson: {
+              for (final item in enumClass.items)
+                item.jsonKey: (item.name.isEmpty ? 'empty' : item.name).toCamel,
+            },
+          ),
+          null => throw GeneratorException(
+            "union_discriminator_enums: '$union' names enum '$enumName', "
+            'which the spec does not define.',
+          ),
+        },
+    };
+  }
 
   /// Api info
   final OpenApiInfo info;
@@ -65,6 +98,9 @@ final class FillController {
   /// (e.g. 'PetStatus' → 'String'), so union family Unknown classes can
   /// decode `$ref`-to-enum fields via `Enum.fromJson(raw as String)`.
   final Map<String, String> _enumWireTypes;
+
+  /// `union_discriminator_enums`, resolved: union class name → its enum.
+  final Map<String, UnionDiscriminatorEnum> _unionDiscriminatorEnums;
 
   /// File-base-name overrides for family members, or null when the feature is
   /// off so legacy code paths stay byte-identical.
@@ -154,6 +190,8 @@ final class FillController {
       partialUpdateClasses: _partialUpdateClasses,
       classFileOverrides: _unionFamilies.classFileOverrides,
       enumWireTypes: _enumWireTypes,
+      unionFieldGetters: config.unionFieldGetters,
+      unionDiscriminatorEnums: _unionDiscriminatorEnums,
     ),
   );
 

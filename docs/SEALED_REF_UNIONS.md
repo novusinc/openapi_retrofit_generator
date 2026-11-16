@@ -100,6 +100,52 @@ Imports elsewhere are rewritten automatically: any generated file (models,
 retrofit clients, typedefs) that would have imported `human_channel_member.dart`
 imports the family file instead.
 
+## Reading a field some variants declare (`union_field_getters`)
+
+The sealed class declares the fields **every** variant shares. A field only some
+variants have (an event union's `channel_id`) has no home on it, so consumers
+hand-write a `switch` over the variants, and that switch silently misses the
+next variant added. With `union_field_getters: true` the generator writes it:
+
+```yaml
+openapi_generator:
+  sealed_ref_unions: true
+  union_field_getters: true
+  union_discriminator_enums:   # optional: union → enum
+    Event: EventType
+```
+
+```dart
+extension EventFieldsX on Event {
+  /// The `channel_id` of a variant that declares it; null for one that doesn't.
+  String? get channelId => switch (this) {
+    MessageNewEvent(:final channelId) => channelId,
+    ReactionNewEvent(:final channelId) => channelId,
+    _ => null,
+  };
+
+  /// The `type` of this variant, as a [EventType].
+  EventType get type => switch (this) {
+    MessageNewEvent() => EventType.messageNew,
+    ReactionNewEvent() => EventType.reactionNew,
+    EventUnknown(:final json) => EventType.fromJson(json['type'] as String),
+  };
+}
+```
+
+- One nullable getter per field that some, but not all, variants declare. Its
+  type is the declaring variants' type made nullable; `<Union>Unknown` reads null.
+- A field whose variants disagree on its type (`String` in one, `int` in
+  another) gets no getter; a comment in the extension names it and each
+  variant's type, so the conflict shows up in review.
+- `union_discriminator_enums` maps a union to the enum its discriminator values
+  come from. Each variant returns the enum value whose JSON value is its
+  discriminator; the unknown variant decodes its raw discriminator with
+  `fromJson` (so it needs `unknown_enum_value`). Generation fails if the enum
+  lacks a variant's value.
+- It is an extension, so a variant's own field wins when the static type is the
+  variant. Unions over partial-update requests get none (they are dispatch types).
+
 ## Eligibility
 
 A union is eligible when it is discriminated and **every** mapping ref resolves
