@@ -317,6 +317,8 @@ String dartFreezedUnionFamilyTemplate(
   bool generateValidator = false,
   CustomMetadataConfig customMetadata = const CustomMetadataConfig(),
   bool generateMergeMethod = true,
+  bool unionFieldGetters = false,
+  Map<String, UnionDiscriminatorEnum> unionDiscriminatorEnums = const {},
 }) {
   final allMemberParameters = <UniversalType>{
     for (final union in family.unions) ...union.parameters,
@@ -438,6 +440,20 @@ String dartFreezedUnionFamilyTemplate(
       )
       .join('\n');
 
+  // Read-only conveniences over a union, so no consumer hand-writes a switch
+  // over its variants. Not for patch unions, which are dispatch types.
+  final fieldExtensions = family.unions
+      .where((union) => !isPartialUpdate(union))
+      .map(
+        (union) => _unionFieldsExtension(
+          union,
+          commonFieldsByUnion[union.name]!,
+          fieldGetters: unionFieldGetters,
+          discriminatorEnum: unionDiscriminatorEnums[union.name.toPascal],
+        ),
+      )
+      .join();
+
   return '''
 import 'package:freezed_annotation/freezed_annotation.dart';
 $dartCoreImports$customMetadataImport$familyOptionalImport$modelImports
@@ -447,8 +463,123 @@ part '${family.fileBaseName}.g.dart';
 $sealedClasses
 $unknownClasses
 $leafClasses
-$compatExtensions$leafPatchExtensions$unionPatchExtensions$base64ConverterClass''';
+$compatExtensions$fieldExtensions$leafPatchExtensions$unionPatchExtensions$base64ConverterClass''';
 }
+
+/// The enum a union's discriminator decodes to (`union_discriminator_enums`):
+/// its class name, and each value's Dart name by its JSON value.
+class UnionDiscriminatorEnum {
+  /// Creates the description of one discriminator enum.
+  const UnionDiscriminatorEnum({
+    required this.className,
+    required this.valueNameByJson,
+  });
+
+  /// The generated enum's class name, e.g. `EventType`.
+  final String className;
+
+  /// The Dart name of each enum value by its JSON value, e.g.
+  /// `'message.new' → 'messageNew'`.
+  final Map<String, String> valueNameByJson;
+}
+
+/// The `<Union>FieldsX` extension: a nullable getter for each field only some
+/// variants declare ([fieldGetters]), and the discriminator as an enum
+/// ([discriminatorEnum]). Empty when neither applies.
+///
+/// A field whose declaring variants disagree on its type gets no getter; a
+/// comment in the extension names it, so the conflict shows in review.
+String _unionFieldsExtension(
+  UniversalComponentClass union,
+  List<UniversalType> commonFields, {
+  required bool fieldGetters,
+  required UnionDiscriminatorEnum? discriminatorEnum,
+}) {
+  final className = union.name.toPascal;
+  final discriminator = union.discriminator!;
+  final leaves = discriminator.discriminatorValueToRefMapping.entries.toList();
+
+  final members = <String>[];
+  if (discriminatorEnum != null) {
+    final enumName = discriminatorEnum.className;
+    final arms = <String>[];
+    for (final MapEntry(key: value, value: ref) in leaves) {
+      final valueName = discriminatorEnum.valueNameByJson[value];
+      if (valueName == null) {
+        throw GeneratorException(
+          "Union '${union.name}': enum '$enumName' has no value '$value' for "
+          "its discriminator '${discriminator.propertyName}' "
+          '(union_discriminator_enums).',
+        );
+      }
+      arms.add('    ${ref.toPascal}() => $enumName.$valueName,');
+    }
+    final rawDiscriminator = protectJsonKey(discriminator.propertyName);
+    arms.add(
+      "    ${className}Unknown(:final json) => $enumName.fromJson(json['$rawDiscriminator'] as String),",
+    );
+    members.add('''
+  /// The `${discriminator.propertyName}` of this variant, as a [$enumName].
+  $enumName get ${discriminator.propertyName.toCamel} => switch (this) {
+${arms.join('\n')}
+  };''');
+  }
+
+  final skipped = <String>[];
+  if (fieldGetters) {
+    final commonNames = {for (final field in commonFields) field.name};
+    // Every non-shared field, in the order variants first declare it.
+    final declarations = <String, List<(String, UniversalType)>>{};
+    for (final MapEntry(value: ref) in leaves) {
+      final parameters = discriminator.refProperties[ref]!;
+      for (final param in parameters.sorted((a, b) => a.compareTo(b))) {
+        final name = param.name;
+        if (name == null || commonNames.contains(name)) continue;
+        if ((param.jsonKey ?? name) == discriminator.propertyName) continue;
+        (declarations[name] ??= []).add((ref.toPascal, param));
+      }
+    }
+    for (final MapEntry(key: name, value: declared) in declarations.entries) {
+      final types = {
+        for (final (_, param) in declared)
+          _nonNullable(_freezedSuitableType(param)),
+      };
+      if (types.length > 1) {
+        skipped.add(
+          '  // No `$name` getter: its variants disagree on its type '
+          '(${declared.map((d) => '${d.$1}: ${_freezedSuitableType(d.$2)}').join(', ')}).',
+        );
+        continue;
+      }
+      final type = types.single;
+      final nullableType = type == 'dynamic' ? type : '$type?';
+      final arms = declared
+          .map((d) => '    ${d.$1}(:final $name) => $name,')
+          .join('\n');
+      members.add('''
+  /// The `${declared.first.$2.jsonKey ?? name}` of a variant that declares it; null for one that doesn't.
+  $nullableType get $name => switch (this) {
+$arms
+    _ => null,
+  };''');
+    }
+  }
+
+  if (members.isEmpty && skipped.isEmpty) return '';
+  final skippedBlock = skipped.isEmpty ? '' : '${skipped.join('\n')}\n\n';
+  return '''
+
+/// What a [$className] says, whatever its variant: fields only some variants
+/// declare, read as null from the others.
+extension ${className}FieldsX on $className {
+$skippedBlock${members.join('\n\n')}
+}
+''';
+}
+
+/// [type] without a trailing `?`.
+String _nonNullable(String type) =>
+    type.endsWith('?') ? type.substring(0, type.length - 1) : type;
 
 /// The `import` directives a family file needs: every member's imports minus
 /// the family's own classes, remapped through [classFileOverrides] so imports
@@ -729,14 +860,13 @@ String _unknownVariantClass(
 
   // The parent declares no shared getters for a patch union (see _sealedUnionClass),
   // so Unknown must not emit `@override` versions of them either.
-  final getters =
-      (isPatchUnion ? const <UniversalType>[] : commonFields)
-          .map(
-            (param) =>
-                '  @override\n'
-                '  ${_freezedSuitableType(param)} get ${param.name} => ${_unknownGetterBody(param, unknownClassName, unknownEnumValue: unknownEnumValue, enumWireTypes: enumWireTypes)};\n',
-          )
-          .join('\n');
+  final getters = (isPatchUnion ? const <UniversalType>[] : commonFields)
+      .map(
+        (param) =>
+            '  @override\n'
+            '  ${_freezedSuitableType(param)} get ${param.name} => ${_unknownGetterBody(param, unknownClassName, unknownEnumValue: unknownEnumValue, enumWireTypes: enumWireTypes)};\n',
+      )
+      .join('\n');
   final gettersBlock = getters.isEmpty ? '' : '\n$getters';
 
   return '''

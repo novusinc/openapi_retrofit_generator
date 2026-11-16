@@ -48,6 +48,8 @@ class OpenApiConfig {
     this.customMetadata = const CustomMetadataConfig(),
     this.generateMergeMethod = true,
     this.generatePathConstants = false,
+    this.unionFieldGetters = false,
+    this.unionDiscriminatorEnums = const {},
   });
 
   /// Internal constructor of [OpenApiConfig]
@@ -88,6 +90,8 @@ class OpenApiConfig {
     required this.customMetadata,
     required this.generateMergeMethod,
     this.generatePathConstants = false,
+    this.unionFieldGetters = false,
+    this.unionDiscriminatorEnums = const {},
   });
 
   /// Creates a [OpenApiConfig] from [YamlMap].
@@ -265,6 +269,19 @@ class OpenApiConfig {
         yamlMap['generate_path_constants'] as bool? ??
         rootConfig?.generatePathConstants;
 
+    final unionFieldGetters =
+        yamlMap['union_field_getters'] as bool? ??
+        rootConfig?.unionFieldGetters;
+
+    final unionDiscriminatorEnumsYaml =
+        yamlMap['union_discriminator_enums'] as YamlMap?;
+    final unionDiscriminatorEnums = unionDiscriminatorEnumsYaml == null
+        ? rootConfig?.unionDiscriminatorEnums
+        : {
+            for (final entry in unionDiscriminatorEnumsYaml.entries)
+              entry.key.toString(): entry.value.toString(),
+          };
+
     final converterHydratedModelPrefix =
         yamlMap['converter_hydrated_model_prefix'] as String? ??
         rootConfig?.converterHydratedModelPrefix;
@@ -369,6 +386,9 @@ class OpenApiConfig {
       customMetadata: customMetadata,
       generateMergeMethod: generateMergeMethod ?? dc.generateMergeMethod,
       generatePathConstants: generatePathConstants ?? dc.generatePathConstants,
+      unionFieldGetters: unionFieldGetters ?? dc.unionFieldGetters,
+      unionDiscriminatorEnums:
+          unionDiscriminatorEnums ?? dc.unionDiscriminatorEnums,
     );
   }
 
@@ -831,6 +851,39 @@ class OpenApiConfig {
   /// Default: false
   final bool generatePathConstants;
 
+  /// On every sealed-ref union (`sealed_ref_unions`), also emit a nullable
+  /// getter for each field that some variants declare and others don't.
+  ///
+  /// The sealed class already declares the fields every variant shares. A field
+  /// only some variants have (`channel_id` on an event union) otherwise needs a
+  /// hand-written `switch` over the variants, which silently misses a variant
+  /// added later. The getters live in an `extension <Union>FieldsX`:
+  ///
+  /// ```dart
+  /// extension EventFieldsX on Event {
+  ///   String? get channelId => switch (this) {
+  ///     MessageNewEvent(:final channelId) => channelId,
+  ///     _ => null,
+  ///   };
+  /// }
+  /// ```
+  ///
+  /// A field whose variants disagree on its type gets no getter, and the
+  /// generator prints which. Unions over update requests get none.
+  ///
+  /// Default: false
+  final bool unionFieldGetters;
+
+  /// Union schema name → enum schema name: emits a getter on the union that
+  /// returns its discriminator as that enum, e.g. `{Event: EventType}` gives
+  /// `EventType get type`. Each variant maps to the enum value whose JSON value
+  /// is its discriminator value; the unknown variant decodes its raw
+  /// discriminator with `fromJson`. Generation fails when the enum lacks a
+  /// discriminator value. Emitted in the same `<Union>FieldsX` extension.
+  ///
+  /// Default: {}
+  final Map<String, String> unionDiscriminatorEnums;
+
   /// Convert [OpenApiConfig] to [GeneratorConfig]
   GeneratorConfig toGeneratorConfig() {
     return GeneratorConfig(
@@ -861,6 +914,8 @@ class OpenApiConfig {
       customMetadata: customMetadata,
       generateMergeMethod: generateMergeMethod,
       generatePathConstants: generatePathConstants,
+      unionFieldGetters: unionFieldGetters,
+      unionDiscriminatorEnums: unionDiscriminatorEnums,
     );
   }
 

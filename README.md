@@ -315,6 +315,11 @@ runtime throw on unrecognized discriminator values.
 openapi_generator:
   json_serializer: freezed
   sealed_ref_unions: true
+  # Optional: nullable getters for fields only some variants declare, and the
+  # discriminator as an enum.
+  union_field_getters: true
+  union_discriminator_enums:
+    Event: EventType
 ```
 
 **📖 [Full Documentation: Sealed Ref Unions](docs/SEALED_REF_UNIONS.md)**
