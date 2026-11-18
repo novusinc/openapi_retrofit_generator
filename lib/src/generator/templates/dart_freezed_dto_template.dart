@@ -129,22 +129,72 @@ String _classModifier({required bool isUnion}) {
   return isUnion ? 'sealed ' : 'abstract ';
 }
 
+/// The name of the `static const String` holding [field]'s JSON wire key:
+/// the Dart field name and `Key`, so `createdAt` is `createdAtKey`.
+String _keyConstName(UniversalType field) => '${field.name}Key';
+
+/// One `static const String <field>Key = '<wire key>';` per field of a model, the
+/// one place the generator spells a stored field's name.
+///
+/// Every query, filter and sort in a consumer names a stored field, and a string
+/// literal there that is renamed or misspelt compiles and then matches nothing.
+/// The wire key comes from [_wireKey] — `jsonKey` when the field was renamed on
+/// the wire, else the field name — so it is the key the stored document and the
+/// patch actually use, escaped for the single-quoted literal emitted here (a raw
+/// `$` would otherwise interpolate). Sorted by wire key, so output never depends
+/// on parameter iteration order.
+String _fieldKeyConsts(Iterable<UniversalType> fields) {
+  final sorted = fields.toList()
+    ..sort((a, b) => _wireKey(a).compareTo(_wireKey(b)));
+  return sorted
+      .map(
+        (field) =>
+            '\n  /// The JSON key of `${field.name}`.\n'
+            "  static const String ${_keyConstName(field)} = '${_wireKey(field)}';\n",
+      )
+      .join();
+}
+
+/// Fails when a key constant would take the name of another member of the class:
+/// a model declaring both `x` and `xKey` would otherwise emit a static `xKey`
+/// beside the instance field `xKey`, which Dart rejects with an error that names
+/// neither field. Naming both here is the fix's first step.
+void _assertNoKeyNameCollision(
+  String owner,
+  Iterable<UniversalType> fields, {
+  Iterable<String> otherMembers = const [],
+}) {
+  final taken = <String, String>{
+    for (final field in fields) '${field.name}': 'the field `${field.name}`',
+    for (final member in otherMembers) member: 'the member `$member`',
+  };
+  for (final field in fields) {
+    final constName = _keyConstName(field);
+    final clash = taken[constName];
+    if (clash != null) {
+      throw GeneratorException(
+        "'$owner' declares both `${field.name}` and $clash: the key constant "
+        'for `${field.name}` is named `$constName`. Rename one of them.',
+      );
+    }
+  }
+}
+
 /// One `static const Set<String> [name]` of JSON wire keys, documented by [doc].
 ///
-/// Keys come from [_wireKey] — `jsonKey` when the field was renamed on the wire,
-/// else the field name — so they are what the stored document and the patch
-/// actually use, escaped for the single-quoted literal emitted here (a raw `$`
-/// would otherwise interpolate). Sorted, so output never depends on parameter
-/// iteration order.
+/// Built from the key constants of [_fieldKeyConsts] (`{createdAtKey, idKey}`),
+/// so a key is spelled once per class and a set cannot drift from the constants.
+/// Sorted by wire key, so output never depends on parameter iteration order.
 String _wireKeySetConst(
   Iterable<UniversalType> fields, {
   required String name,
   required String doc,
 }) {
-  final keys = fields.map(_wireKey).toList()..sort();
-  final quoted = keys.map((key) => "'$key'").join(', ');
+  final sorted = fields.toList()
+    ..sort((a, b) => _wireKey(a).compareTo(_wireKey(b)));
+  final members = sorted.map(_keyConstName).join(', ');
   return '\n  /// $doc\n'
-      '  static const Set<String> $name = {$quoted};\n';
+      '  static const Set<String> $name = {$members};\n';
 }
 
 /// A `static const Set<String> immutableFields` naming the JSON keys of this
@@ -265,8 +315,8 @@ String _valueSourceFieldConsts(Map<String, List<UniversalType>> byCategory) {
   return '$consts$writable';
 }
 
-/// The field-metadata consts a model class carries at the end of its body: the
-/// write-once flag set, then the value_source partition.
+/// The field-metadata consts a model class carries at the end of its body: a key
+/// constant per field, the write-once flag set, then the value_source partition.
 ///
 /// ONE rule gates both: emit nothing unless EVERY parameter declares a
 /// `value_source`. The partition obviously needs that. `immutableFields` needs
@@ -289,7 +339,9 @@ String _valueSourceFieldConsts(Map<String, List<UniversalType>> byCategory) {
 String _fieldMetadataConsts(UniversalComponentClass dataClass) {
   final byCategory = _valueSourcePartition(dataClass);
   if (byCategory == null) return '';
-  return '${_immutableFieldsConst(dataClass)}'
+  _assertNoKeyNameCollision(dataClass.name, dataClass.parameters);
+  return '${_fieldKeyConsts(dataClass.parameters)}'
+      '${_immutableFieldsConst(dataClass)}'
       '${_valueSourceFieldConsts(byCategory)}';
 }
 
@@ -378,6 +430,7 @@ String dartFreezedUnionFamilyTemplate(
         (union) => _sealedUnionClass(
           union,
           commonFieldsByUnion[union.name]!,
+          leaves: _unionLeaves(union, family),
           isPatchUnion: isPartialUpdate(union),
         ),
       )
@@ -689,6 +742,7 @@ ${generateValidator ? _validateMethod(className, dataClass.parameters) : ''}$mer
 String _sealedUnionClass(
   UniversalComponentClass union,
   List<UniversalType> commonFields, {
+  required List<UniversalComponentClass> leaves,
   required bool isPatchUnion,
 }) {
   final className = union.name.toPascal;
@@ -707,6 +761,7 @@ String _sealedUnionClass(
 
   final factories = <String>[];
   final constants = <String>[];
+  final constantNames = <String>[];
   final fromJsonArms = <String>[];
   for (final entry in discriminator.discriminatorValueToRefMapping.entries) {
     final discriminatorValue = entry.key;
@@ -733,6 +788,7 @@ String _sealedUnionClass(
       (param) => param.isRequired && param.defaultValue == null,
     );
     if (!hasRequiredParameter) {
+      constantNames.add('type${discriminatorValue.toPascal}');
       constants.add(
         '  static const type${discriminatorValue.toPascal} = $className.$factoryName();',
       );
@@ -777,6 +833,14 @@ $commonGetters
 ''';
 
   final gettersBlock = isPatchUnion ? '' : commonGettersBlock;
+  final metadataBlock = isPatchUnion
+      ? ''
+      : _unionFieldMetadataConsts(
+          className,
+          _sharedKeyFields(union),
+          leaves,
+          otherMembers: constantNames,
+        );
 
   return '''
 ${descriptionComment(union.description)}sealed class $className {
@@ -787,10 +851,99 @@ $factoriesBlock$constantsBlock
       switch (json['${protectJsonKey(discriminatorPropertyName)}']) {
 ${fromJsonArms.join('\n')}
       };
-$gettersBlock
+$gettersBlock$metadataBlock
   Map<String, dynamic> toJson();
 }
 ''';
+}
+
+/// The fields every variant of [union] declares under the same name and wire key,
+/// the discriminator included.
+///
+/// Wider than [_commonUnionFields] on purpose: a shared getter needs one type and
+/// default across variants and omits the discriminator (it is read as an enum),
+/// but a KEY is only a name, and a query by `type` needs `Union.typeKey`.
+List<UniversalType> _sharedKeyFields(UniversalComponentClass union) {
+  final discriminator = union.discriminator!;
+  final refs = discriminator.discriminatorValueToRefMapping.values.toList();
+  final firstLeafParameters = discriminator.refProperties[refs.first]!;
+  return [
+    for (final param in firstLeafParameters.sorted((a, b) => a.compareTo(b)))
+      if (param.name != null &&
+          refs.every(
+            (ref) => discriminator.refProperties[ref]!.any(
+              (p) =>
+                  p.name == param.name &&
+                  (p.jsonKey ?? p.name) == (param.jsonKey ?? param.name),
+            ),
+          ))
+        param,
+  ];
+}
+
+/// The leaf classes of [union] among [family]'s leaves, in the family's order.
+List<UniversalComponentClass> _unionLeaves(
+  UniversalComponentClass union,
+  UnionFamily family,
+) {
+  final names = {
+    for (final ref
+        in union.discriminator!.discriminatorValueToRefMapping.values)
+      ref.toPascal,
+  };
+  return [
+    for (final leaf in family.leaves)
+      if (names.contains(leaf.name.toPascal)) leaf,
+  ];
+}
+
+/// The field-metadata consts of a union's sealed supertype: a key constant for
+/// each field every variant declares ([sharedFields]), and each set as the union
+/// of its variants' sets (`{...ImageFile.immutableFields, ...}`), so a consumer
+/// that holds the union never hand-unions them.
+///
+/// The same completeness rule as [_fieldMetadataConsts], applied to the whole
+/// family: a variant without a complete `value_source` partition makes the union's
+/// sets untrustworthy (they would silently omit that variant's fields), so then
+/// none are emitted.
+String _unionFieldMetadataConsts(
+  String className,
+  List<UniversalType> sharedFields,
+  List<UniversalComponentClass> leaves, {
+  required Iterable<String> otherMembers,
+}) {
+  if (leaves.isEmpty) return '';
+  if (leaves.any((leaf) => _valueSourcePartition(leaf) == null)) return '';
+  _assertNoKeyNameCollision(
+    className,
+    sharedFields,
+    otherMembers: otherMembers,
+  );
+
+  String unionOf(String name, String doc) {
+    final spreads = [
+      for (final leaf in leaves) '...${leaf.name.toPascal}.$name',
+    ];
+    return '\n  /// $doc\n'
+        '  static const Set<String> $name = {${spreads.join(', ')}};\n';
+  }
+
+  final sets = [
+    unionOf(
+      'immutableFields',
+      "JSON keys of the write-once (`@dbImmutable`) fields of every variant.",
+    ),
+    for (final entry in _valueSourceConstNames.entries)
+      unionOf(
+        entry.value,
+        "JSON keys of the `${entry.key}` fields of every variant.",
+      ),
+    unionOf(
+      'writableFields',
+      'JSON keys a trusted or admin writer may set, of every variant.',
+    ),
+  ];
+  return '${_fieldKeyConsts(sharedFields)}${sets.join()}';
 }
 
 /// Redirecting-factory parameters: same names, types and `required`ness as the
