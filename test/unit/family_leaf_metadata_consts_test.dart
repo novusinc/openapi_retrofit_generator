@@ -187,38 +187,37 @@ void main() {
     expect(member, contains("static const String typeKey = 'type';"));
     expect(
       member,
-      isNot(contains('userIdKey')),
+      isNot(contains('static const String userIdKey')),
       reason: 'only HumanMember declares user_id: a union has no such field',
     );
-    expect(member, isNot(contains('aiIdKey')));
+    expect(member, isNot(contains('static const String aiIdKey')));
   });
 
-  test(
-    "the sealed union parent's sets are the union of its variants' sets",
-    () {
-      final member = chunkFor('Member');
-      for (final set in [
-        'immutableFields',
-        'clientProvidedFields',
-        'systemGeneratedFields',
-        'authFields',
-        'applicationManagedFields',
+  test("the sealed union parent's sets are the union of its variants' sets", () {
+    final member = chunkFor('Member');
+
+    // A field every variant declares is named by the parent's own key constant;
+    // one only some variants declare, by the variant that does. Each key once:
+    // Dart rejects equal elements in a constant set, even through spreads.
+    for (final (name, members) in [
+      ('immutableFields', '{idKey}'),
+      ('clientProvidedFields', '{AiMember.aiIdKey, typeKey}'),
+      ('systemGeneratedFields', '{idKey}'),
+      ('authFields', '{HumanMember.userIdKey}'),
+      ('applicationManagedFields', '{HumanMember.bannedAtKey}'),
+      (
         'writableFields',
-      ]) {
-        final declaration = RegExp(
-          'static const Set<String> $set = \\{([^}]*)\\};',
-        ).firstMatch(member);
-        expect(declaration, isNotNull, reason: '$set missing on the union');
-        expect(
-          declaration!.group(1),
-          allOf(contains('...HumanMember.$set'), contains('...AiMember.$set')),
-          reason:
-              'a consumer that holds the union must not hand-union its '
-              "variants' sets",
-        );
-      }
-    },
-  );
+        '{AiMember.aiIdKey, HumanMember.bannedAtKey, typeKey}',
+      ),
+    ]) {
+      expect(
+        member,
+        contains('static const Set<String> $name = $members;'),
+        reason: 'a consumer that holds the union must not hand-union its sets',
+      );
+    }
+    expect(member, isNot(contains('...')), reason: 'no spreads');
+  });
 
   test('the unknown-variant class carries no consts', () {
     expect(familyFile, contains('MemberUnknown'));

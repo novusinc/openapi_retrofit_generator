@@ -899,8 +899,13 @@ List<UniversalComponentClass> _unionLeaves(
 
 /// The field-metadata consts of a union's sealed supertype: a key constant for
 /// each field every variant declares ([sharedFields]), and each set as the union
-/// of its variants' sets (`{...ImageFile.immutableFields, ...}`), so a consumer
-/// that holds the union never hand-unions them.
+/// of its variants' sets, so a consumer that holds the union never hand-unions them.
+///
+/// Each set lists a wire key ONCE: Dart rejects equal elements in a constant set
+/// literal even through spreads, so `{...A.immutableFields, ...B.immutableFields}`
+/// does not compile when two variants share `id`. A member is named by the
+/// supertype's own key constant when every variant declares the field, and by the
+/// first variant that declares it otherwise (`DbImageFile.widthKey`).
 ///
 /// The same completeness rule as [_fieldMetadataConsts], applied to the whole
 /// family: a variant without a complete `value_source` partition makes the union's
@@ -913,34 +918,63 @@ String _unionFieldMetadataConsts(
   required Iterable<String> otherMembers,
 }) {
   if (leaves.isEmpty) return '';
-  if (leaves.any((leaf) => _valueSourcePartition(leaf) == null)) return '';
+  final partitions = {
+    for (final leaf in leaves) leaf.name: _valueSourcePartition(leaf),
+  };
+  if (partitions.values.any((partition) => partition == null)) return '';
   _assertNoKeyNameCollision(
     className,
     sharedFields,
     otherMembers: otherMembers,
   );
 
-  String unionOf(String name, String doc) {
-    final spreads = [
-      for (final leaf in leaves) '...${leaf.name.toPascal}.$name',
-    ];
+  final sharedWireKeys = {for (final field in sharedFields) _wireKey(field)};
+
+  String unionOf(
+    String name,
+    String doc,
+    Iterable<UniversalType> Function(UniversalComponentClass leaf) pick,
+  ) {
+    // wire key -> the constant that names it, first variant first.
+    final members = <String, String>{};
+    for (final leaf in leaves) {
+      for (final field in pick(leaf)) {
+        final wireKey = _wireKey(field);
+        members.putIfAbsent(
+          wireKey,
+          () => sharedWireKeys.contains(wireKey)
+              ? _keyConstName(field)
+              : '${leaf.name.toPascal}.${_keyConstName(field)}',
+        );
+      }
+    }
+    final sorted = members.keys.toList()..sort();
     return '\n  /// $doc\n'
-        '  static const Set<String> $name = {${spreads.join(', ')}};\n';
+        '  static const Set<String> $name = '
+        '{${sorted.map((key) => members[key]).join(', ')}};\n';
   }
 
   final sets = [
     unionOf(
       'immutableFields',
-      "JSON keys of the write-once (`@dbImmutable`) fields of every variant.",
+      'JSON keys of the write-once (`@dbImmutable`) fields of every variant.',
+      (leaf) => leaf.parameters.where(
+        (parameter) => parameter.customMetadata['immutable'] == true,
+      ),
     ),
     for (final entry in _valueSourceConstNames.entries)
       unionOf(
         entry.value,
-        "JSON keys of the `${entry.key}` fields of every variant.",
+        'JSON keys of the `${entry.key}` fields of every variant.',
+        (leaf) => partitions[leaf.name]![entry.key]!,
       ),
     unionOf(
       'writableFields',
       'JSON keys a trusted or admin writer may set, of every variant.',
+      (leaf) => [
+        for (final source in _writableValueSources)
+          ...partitions[leaf.name]![source]!,
+      ],
     ),
   ];
   return '${_fieldKeyConsts(sharedFields)}${sets.join()}';

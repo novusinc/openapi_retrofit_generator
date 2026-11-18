@@ -246,21 +246,29 @@ void main() {
         contains("static const String typeKey = 'type';"),
         reason: 'a query by type needs Shape.typeKey; a getter would not',
       );
-      expect(p, isNot(contains('radiusKey')));
-      expect(p, isNot(contains('sideKey')));
+      expect(p, isNot(contains('static const String radiusKey')));
+      expect(p, isNot(contains('static const String sideKey')));
     });
 
-    test("has each set as the union of its variants' sets", () {
+    test("has each set as the union of its variants' sets, each key once", () {
       final p = parent(renderFamily(family()));
 
       expect(
         p,
-        contains(
-          'static const Set<String> immutableFields = '
-          '{...Circle.immutableFields, ...Square.immutableFields};',
-        ),
-        reason: 'what a consumer used to union by hand for the union type',
+        contains('static const Set<String> immutableFields = {idKey};'),
+        reason: 'both variants declare id: one key, named by the parent',
       );
+      expect(
+        p,
+        contains(
+          'static const Set<String> clientProvidedFields = '
+          '{idKey, Circle.radiusKey, Square.sideKey, typeKey};',
+        ),
+        reason:
+            'a field only one variant declares is named by that variant; '
+            "Dart rejects `{...Circle.set, ...Square.set}` when they share a key",
+      );
+      expect(p, isNot(contains('...')));
     });
 
     test('has none of it when a variant has no complete partition', () {
