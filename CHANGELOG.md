@@ -1,4 +1,5 @@
 ## Unreleased
+- field key constants: one `static const String <field>Key = '<wire key>';` per field (`createdAtKey = 'created_at'`), in the same classes and under the same completeness rule as `immutableFields`, so a consumer's queries and filters name a stored field by a checked constant instead of a string literal. The `immutableFields` / `value_source` sets are now built from those constants (`{createdAtKey, idKey}`). A sealed-ref union carries a key constant for each field every variant declares (the discriminator included) and each set as the union of its variants' sets, each key once (`{idKey, A.radiusKey, B.sideKey}`: Dart rejects equal elements in a constant set, even through spreads). A model declaring both `x` and `xKey` fails generation, naming both
 - `union_field_getters`: on a sealed-ref union, a nullable getter for each field only some variants declare (`extension <Union>FieldsX`); a field whose variants disagree on its type is named in a comment instead
 - `union_discriminator_enums`: a union's discriminator as a configured enum (`EventType get type`)
 

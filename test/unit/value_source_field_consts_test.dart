@@ -202,21 +202,21 @@ void main() {
       final g = generated['FullyAnnotated']!;
       expect(
         g,
-        contains("static const Set<String> clientProvidedFields = {'title'};"),
+        contains("static const Set<String> clientProvidedFields = {titleKey};"),
       );
       expect(
         g,
         contains(
           "static const Set<String> systemGeneratedFields = "
-          "{'created_at', 'id'};",
+          "{createdAtKey, idKey};",
         ),
       );
-      expect(g, contains("static const Set<String> authFields = {'user_id'};"));
+      expect(g, contains("static const Set<String> authFields = {userIdKey};"));
       expect(
         g,
         contains(
           "static const Set<String> applicationManagedFields = "
-          "{'deleted_at'};",
+          "{deletedAtKey};",
         ),
       );
     });
@@ -226,7 +226,7 @@ void main() {
         generated['FullyAnnotated'],
         contains(
           "static const Set<String> writableFields = "
-          "{'deleted_at', 'title'};",
+          "{deletedAtKey, titleKey};",
         ),
         reason:
             'the fields a trusted/admin writer may set — excludes '
@@ -255,7 +255,7 @@ void main() {
         generated['SortOrder'],
         contains(
           "static const Set<String> clientProvidedFields = "
-          "{'alpha', 'mid', 'zeta'};",
+          "{alphaKey, midKey, zetaKey};",
         ),
       );
     });
@@ -274,10 +274,10 @@ void main() {
 
     test('VALUE_SOURCE_UNSPECIFIED is tolerated but uncategorized', () {
       final g = generated['Unspecified']!;
-      expect(g, contains("static const Set<String> authFields = {'user_id'};"));
+      expect(g, contains("static const Set<String> authFields = {userIdKey};"));
       expect(
         g,
-        isNot(contains("'mystery'")),
+        isNot(matches(RegExp(r'Set<String> \w+ = \{[^}]*mysteryKey'))),
         reason: 'the sentinel means "no information" — it belongs to no set',
       );
       expect(
@@ -323,8 +323,13 @@ void main() {
             'dropped the other. An immutableFields that silently under-reports '
             'is worse than none — a caller gets a write guard missing real '
             'fields. This is the real OwnUser bug: its hydrated twin declared '
-            "{'created_at'} while the storage model declares "
-            "{'created_at', 'id', 'sign_up_date'}.",
+            "{createdAtKey} while the storage model declares "
+            "{createdAtKey, idKey, signUpDateKey}.",
+      );
+      expect(
+        g,
+        isNot(contains('static const String')),
+        reason: 'the key constants are gated by the same rule as the sets',
       );
     });
 
@@ -366,14 +371,14 @@ void main() {
       expect(
         g,
         contains(
-          "static const Set<String> immutableFields = {'created_at', 'id'};",
+          "static const Set<String> immutableFields = {createdAtKey, idKey};",
         ),
       );
       expect(
         g,
         contains(
           "static const Set<String> systemGeneratedFields = "
-          "{'created_at', 'id'};",
+          "{createdAtKey, idKey};",
         ),
         reason:
             'immutable cross-cuts all four categories; it is not a fifth one',

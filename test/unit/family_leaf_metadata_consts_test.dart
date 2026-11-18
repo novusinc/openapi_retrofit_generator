@@ -12,10 +12,11 @@ import 'package:test/test.dart';
 /// …) are family leaves, so a miss here would silently strip the consts from
 /// exactly the models the persistence layer cares about.
 ///
-/// The union PARENT must get nothing: every `oneOf` + `discriminator` schema in
-/// the contract has no `properties` of its own, so there is no partition to
-/// state, and synthesizing a union or intersection across leaves would invent a
-/// fact the contract never made.
+/// The union PARENT states no partition of its own (a `oneOf` + `discriminator`
+/// schema has no `properties`), so it never invents one: it carries a key
+/// constant for each field every variant declares, and each set as the literal
+/// union of its variants' sets (`{...A.set, ...B.set}`), and only when every
+/// variant has a complete partition.
 void main() {
   const spec = r'''
 {
@@ -134,26 +135,26 @@ void main() {
     final human = chunkFor('HumanMember');
     expect(
       human,
-      contains("static const Set<String> clientProvidedFields = {'type'};"),
+      contains("static const Set<String> clientProvidedFields = {typeKey};"),
     );
     expect(
       human,
-      contains("static const Set<String> systemGeneratedFields = {'id'};"),
+      contains("static const Set<String> systemGeneratedFields = {idKey};"),
     );
     expect(
       human,
-      contains("static const Set<String> authFields = {'user_id'};"),
+      contains("static const Set<String> authFields = {userIdKey};"),
     );
     expect(
       human,
       contains(
-        "static const Set<String> applicationManagedFields = {'banned_at'};",
+        "static const Set<String> applicationManagedFields = {bannedAtKey};",
       ),
     );
     expect(
       human,
       contains(
-        "static const Set<String> writableFields = {'banned_at', 'type'};",
+        "static const Set<String> writableFields = {bannedAtKey, typeKey};",
       ),
     );
 
@@ -161,7 +162,7 @@ void main() {
     expect(
       ai,
       contains(
-        "static const Set<String> clientProvidedFields = {'ai_id', 'type'};",
+        "static const Set<String> clientProvidedFields = {aiIdKey, typeKey};",
       ),
       reason: 'membership is per-leaf, not shared across the family',
     );
@@ -175,19 +176,47 @@ void main() {
     for (final leaf in ['HumanMember', 'AiMember']) {
       expect(
         chunkFor(leaf),
-        contains("static const Set<String> immutableFields = {'id'};"),
+        contains("static const Set<String> immutableFields = {idKey};"),
       );
     }
   });
 
-  test('the sealed union parent carries no consts', () {
+  test('the sealed union parent has a key constant for each shared field', () {
+    final member = chunkFor('Member');
+    expect(member, contains("static const String idKey = 'id';"));
+    expect(member, contains("static const String typeKey = 'type';"));
     expect(
-      chunkFor('Member'),
-      isNot(contains('static const Set<String>')),
-      reason:
-          'the parent declares no properties of its own — there is nothing to '
-          'partition, and synthesizing one across leaves would invent a fact',
+      member,
+      isNot(contains('static const String userIdKey')),
+      reason: 'only HumanMember declares user_id: a union has no such field',
     );
+    expect(member, isNot(contains('static const String aiIdKey')));
+  });
+
+  test("the sealed union parent's sets are the union of its variants' sets", () {
+    final member = chunkFor('Member');
+
+    // A field every variant declares is named by the parent's own key constant;
+    // one only some variants declare, by the variant that does. Each key once:
+    // Dart rejects equal elements in a constant set, even through spreads.
+    for (final (name, members) in [
+      ('immutableFields', '{idKey}'),
+      ('clientProvidedFields', '{AiMember.aiIdKey, typeKey}'),
+      ('systemGeneratedFields', '{idKey}'),
+      ('authFields', '{HumanMember.userIdKey}'),
+      ('applicationManagedFields', '{HumanMember.bannedAtKey}'),
+      (
+        'writableFields',
+        '{AiMember.aiIdKey, HumanMember.bannedAtKey, typeKey}',
+      ),
+    ]) {
+      expect(
+        member,
+        contains('static const Set<String> $name = $members;'),
+        reason: 'a consumer that holds the union must not hand-union its sets',
+      );
+    }
+    expect(member, isNot(contains('...')), reason: 'no spreads');
   });
 
   test('the unknown-variant class carries no consts', () {
