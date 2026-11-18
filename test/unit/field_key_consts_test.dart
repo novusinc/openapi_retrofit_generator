@@ -276,6 +276,26 @@ void main() {
       );
     });
 
+    test(
+      'fails when a key constant would take the name of a variant constant',
+      () {
+        // A variant whose discriminator value is `key` is the constant `typeKey`,
+        // which is also the key constant of the `type` field.
+        final clash = family().replaceAll('"circle":', '"key":');
+
+        expect(
+          () => renderFamily(clash),
+          throwsA(
+            isA<GeneratorException>().having(
+              (e) => e.toString(),
+              'message',
+              allOf(contains('Shape'), contains('typeKey'), contains('Rename')),
+            ),
+          ),
+        );
+      },
+    );
+
     test('gives every variant its own key constants', () {
       final g = renderFamily(family());
 
