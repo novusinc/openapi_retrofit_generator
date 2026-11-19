@@ -342,7 +342,53 @@ String _fieldMetadataConsts(UniversalComponentClass dataClass) {
   _assertNoKeyNameCollision(dataClass.name, dataClass.parameters);
   return '${_fieldKeyConsts(dataClass.parameters)}'
       '${_immutableFieldsConst(dataClass)}'
-      '${_valueSourceFieldConsts(byCategory)}';
+      '${_valueSourceFieldConsts(byCategory)}'
+      '${_compositeIdFieldsConst(dataClass)}';
+}
+
+/// A `static const List<String> compositeIdFields` naming, in hash order, the
+/// fields this model's composite id is derived from (`x-composite-id-fields`).
+///
+/// A consumer that checks a document's id against the fields it carries reads
+/// this instead of hand-typing the list, so a field added to or reordered in the
+/// schema cannot leave the check disagreeing with the server that minted the id.
+/// Each member is the field's key constant ([_fieldKeyConsts]), so the list is
+/// spelled by the constants and cannot drift from them.
+///
+/// **Declared order, never sorted**: the order is the hash input order. A segment
+/// of the id that is a constant rather than a field is not in the schema's list, so
+/// it is not here either. Emitted only when the schema declares the list, and
+/// only where the key constants are (see [_fieldMetadataConsts]).
+///
+/// Fails generation for a name that is not a field of the model, or a model that
+/// already has a member named `compositeIdFields`: either would emit a list that
+/// does not mean what it says.
+String _compositeIdFieldsConst(UniversalComponentClass dataClass) {
+  final names = dataClass.compositeIdFields;
+  if (names == null || names.isEmpty) return '';
+  const constName = 'compositeIdFields';
+  if (dataClass.parameters.any((field) => field.name == constName)) {
+    throw GeneratorException(
+      "'${dataClass.name}' declares a field named `$constName`, which is the "
+      'name of the composite-id constant. Rename the field.',
+    );
+  }
+  final fieldByWireKey = {
+    for (final field in dataClass.parameters) _wireKey(field): field,
+  };
+  final members = [
+    for (final name in names)
+      _keyConstName(
+        fieldByWireKey[name] ??
+            (throw GeneratorException(
+              "'${dataClass.name}' lists '$name' in x-composite-id-fields, but "
+              'has no field with that key.',
+            )),
+      ),
+  ];
+  return '\n  /// JSON keys of the fields the composite id is hashed from, in hash '
+      'order.\n'
+      '  static const List<String> $constName = [${members.join(', ')}];\n';
 }
 
 /// Provides template for generating one sealed-ref-union family file.
