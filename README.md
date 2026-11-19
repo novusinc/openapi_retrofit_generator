@@ -347,6 +347,33 @@ Only the mark decides this, never the schema's name. The generated code imports
 `Optional` from `converter_hydrated_model_prefix`, which must provide it,
 including its `fromJsonKey` helper.
 
+### Composite-Id Field Lists (freezed)
+
+A document whose id is a hash of some of its fields can say which ones with
+`"x-composite-id-fields"`, listing the property names in hash order:
+
+```json
+"Mute": {
+  "type": "object",
+  "x-composite-id-fields": ["user_id", "target_id"],
+  "properties": {"user_id": {"type": "string"}, "target_id": {"type": "string"}}
+}
+```
+
+The model gets a constant built from its field key constants, in the order
+declared (never sorted, because the order is the hash input order):
+
+```dart
+static const List<String> compositeIdFields = [userIdKey, targetIdKey];
+```
+
+A consumer that checks a document's id against its fields reads this instead of
+hand-typing the list. It is emitted where the field key constants are (see
+`CHANGELOG.md`), on each variant of a sealed-ref union and never on the union
+itself. A name that is not a property of the schema fails generation, and so does
+a value that is not a list of strings. A segment of the id that is a constant
+rather than a property (a literal in the hash) is simply left out of the list.
+
 ### Command Line Arguments
 
 Override config file options via command line:

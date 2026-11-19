@@ -33,6 +33,7 @@ final class UniversalComponentClass extends UniversalDataClass {
     this.discriminatorValue,
     this.undiscriminatedUnionVariants,
     this.partialUpdate = false,
+    this.compositeIdFields,
     super.description,
   });
 
@@ -76,6 +77,16 @@ final class UniversalComponentClass extends UniversalDataClass {
   /// `resolvePartialUpdateClasses`, which also derives the unions over them.
   final bool partialUpdate;
 
+  /// The properties a document's composite id is hashed from, in hash order
+  /// (`"x-composite-id-fields": ["user_id", "target_id"]`), or null when the
+  /// schema declares none. Names are the schema's own property names, so a
+  /// segment that is a constant rather than a property is never listed.
+  ///
+  /// The freezed template emits them as a `compositeIdFields` constant built
+  /// from the field key constants, so a consumer that derives an id never
+  /// hand-types the list.
+  final List<String>? compositeIdFields;
+
   /// Creates a copy of this [UniversalComponentClass] but with the given fields replaced with the new values.
   UniversalComponentClass copyWith({
     String? name,
@@ -87,6 +98,7 @@ final class UniversalComponentClass extends UniversalDataClass {
     DiscriminatorValue? discriminatorValue,
     Map<String, Set<UniversalType>>? undiscriminatedUnionVariants,
     bool? partialUpdate,
+    List<String>? compositeIdFields,
     String? description,
   }) {
     return UniversalComponentClass(
@@ -100,6 +112,7 @@ final class UniversalComponentClass extends UniversalDataClass {
       undiscriminatedUnionVariants:
           undiscriminatedUnionVariants ?? this.undiscriminatedUnionVariants,
       partialUpdate: partialUpdate ?? this.partialUpdate,
+      compositeIdFields: compositeIdFields ?? this.compositeIdFields,
       description: description ?? super.description,
     );
   }
@@ -115,6 +128,10 @@ final class UniversalComponentClass extends UniversalDataClass {
           typeDef == other.typeDef &&
           partialUpdate == other.partialUpdate &&
           const DeepCollectionEquality().equals(
+            compositeIdFields,
+            other.compositeIdFields,
+          ) &&
+          const DeepCollectionEquality().equals(
             undiscriminatedUnionVariants,
             other.undiscriminatedUnionVariants,
           );
@@ -126,6 +143,7 @@ final class UniversalComponentClass extends UniversalDataClass {
       allOf.hashCode ^
       typeDef.hashCode ^
       partialUpdate.hashCode ^
+      const DeepCollectionEquality().hash(compositeIdFields) ^
       undiscriminatedUnionVariants.hashCode;
 
   @override
@@ -135,5 +153,6 @@ final class UniversalComponentClass extends UniversalDataClass {
       'allOf: $allOf, '
       'undiscriminatedUnionVariants: $undiscriminatedUnionVariants, '
       'typeDef: $typeDef, '
-      'partialUpdate: $partialUpdate)';
+      'partialUpdate: $partialUpdate, '
+      'compositeIdFields: $compositeIdFields)';
 }

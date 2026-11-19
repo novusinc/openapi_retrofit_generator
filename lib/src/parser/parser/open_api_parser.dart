@@ -106,6 +106,24 @@ class OpenApiParser {
   /// are presence-tracked (`Optional<T>`) and it gets a sparse `toPatch()`.
   static const _xPartialUpdateConst = 'x-partial-update';
 
+  /// Lists the properties a component's composite id is hashed from, in hash
+  /// order. See [UniversalComponentClass.compositeIdFields].
+  static const _xCompositeIdFieldsConst = 'x-composite-id-fields';
+
+  /// Reads [_xCompositeIdFieldsConst] from [schemaName]'s schema: null when the
+  /// schema has none, and an error when it is not a list of property names (a
+  /// malformed list would silently emit a wrong id check downstream).
+  static List<String>? _parseCompositeIdFields(String schemaName, Object? raw) {
+    if (raw == null) return null;
+    if (raw is! List || raw.any((name) => name is! String)) {
+      throw OpenApiParserException(
+        "'$schemaName': $_xCompositeIdFieldsConst must be a list of property "
+        'names.',
+      );
+    }
+    return List<String>.unmodifiable(raw.cast<String>());
+  }
+
   /// Extract custom metadata from a property map based on configuration
   Map<String, dynamic> _extractCustomMetadata(Map<String, dynamic> map) {
     if (!config.customMetadata.isActive) {
@@ -1206,6 +1224,10 @@ class OpenApiParser {
           description: value[_descriptionConst]?.toString(),
           discriminator: discriminator,
           partialUpdate: value[_xPartialUpdateConst] == true,
+          compositeIdFields: _parseCompositeIdFields(
+            schemaName,
+            value[_xCompositeIdFieldsConst],
+          ),
         );
         dataClasses.add(componentClass);
         _typeRegistry.registerClass(schemaName);
