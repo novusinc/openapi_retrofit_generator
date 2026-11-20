@@ -50,6 +50,7 @@ class OpenApiConfig {
     this.generatePathConstants = false,
     this.unionFieldGetters = false,
     this.unionDiscriminatorEnums = const {},
+    this.compositeIdFunction,
   });
 
   /// Internal constructor of [OpenApiConfig]
@@ -92,6 +93,7 @@ class OpenApiConfig {
     this.generatePathConstants = false,
     this.unionFieldGetters = false,
     this.unionDiscriminatorEnums = const {},
+    this.compositeIdFunction,
   });
 
   /// Creates a [OpenApiConfig] from [YamlMap].
@@ -282,6 +284,19 @@ class OpenApiConfig {
               entry.key.toString(): entry.value.toString(),
           };
 
+    final compositeIdFunction =
+        yamlMap['composite_id_function'] as String? ??
+        rootConfig?.compositeIdFunction;
+    if (compositeIdFunction != null &&
+        !RegExp(
+          r'^[A-Za-z_]\w*\.[A-Za-z_]\w*$',
+        ).hasMatch(compositeIdFunction)) {
+      throw ConfigException(
+        "'composite_id_function' must name a static function as "
+        "'Class.function', got '$compositeIdFunction'.",
+      );
+    }
+
     final converterHydratedModelPrefix =
         yamlMap['converter_hydrated_model_prefix'] as String? ??
         rootConfig?.converterHydratedModelPrefix;
@@ -389,6 +404,7 @@ class OpenApiConfig {
       unionFieldGetters: unionFieldGetters ?? dc.unionFieldGetters,
       unionDiscriminatorEnums:
           unionDiscriminatorEnums ?? dc.unionDiscriminatorEnums,
+      compositeIdFunction: compositeIdFunction ?? dc.compositeIdFunction,
     );
   }
 
@@ -884,6 +900,28 @@ class OpenApiConfig {
   /// Default: {}
   final Map<String, String> unionDiscriminatorEnums;
 
+  /// A static function, `Class.function`, that derives a composite id: a schema
+  /// that declares `x-composite-id-fields` and `x-composite-id-domain` gets a typed
+  /// `static String makeId({required String a, required String b})` that calls it
+  /// with the domain and the id's parts in hash order:
+  ///
+  /// ```dart
+  /// static String makeId({required String channelId, required String userId}) =>
+  ///     CouchbaseIdUtils.composite('channel_members', [
+  ///       ('channelId', channelId),
+  ///       (null, 'human'),
+  ///       ('userId', userId),
+  ///     ]);
+  /// ```
+  ///
+  /// Each part is a record `(String? name, String value)`: a property's Dart name and
+  /// its value, or `(null, text)` for a `literal:` segment. The class is imported
+  /// from `converter_hydrated_model_prefix`. The generator knows nothing of how the
+  /// hash is made, so the algorithm stays in one place the consumer owns.
+  ///
+  /// Default: null (no `makeId`; `compositeIdFields` is emitted as before)
+  final String? compositeIdFunction;
+
   /// Convert [OpenApiConfig] to [GeneratorConfig]
   GeneratorConfig toGeneratorConfig() {
     return GeneratorConfig(
@@ -916,6 +954,7 @@ class OpenApiConfig {
       generatePathConstants: generatePathConstants,
       unionFieldGetters: unionFieldGetters,
       unionDiscriminatorEnums: unionDiscriminatorEnums,
+      compositeIdFunction: compositeIdFunction,
     );
   }
 

@@ -192,6 +192,7 @@ final class FillController {
       enumWireTypes: _enumWireTypes,
       unionFieldGetters: config.unionFieldGetters,
       unionDiscriminatorEnums: _unionDiscriminatorEnums,
+      compositeIdFunction: config.compositeIdFunction,
     ),
   );
 
@@ -330,6 +331,7 @@ final class FillController {
           customMetadataImportPath: config.converterHydratedModelPrefix,
           partialUpdateClasses: _partialUpdateClasses,
           classFileOverrides: _fileOverridesOrNull,
+          compositeIdFunction: config.compositeIdFunction,
         ),
         JsonSerializer.jsonSerializable => dartJsonSerializableDtoTemplate(
           dataClass,

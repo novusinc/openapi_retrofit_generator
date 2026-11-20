@@ -106,22 +106,43 @@ class OpenApiParser {
   /// are presence-tracked (`Optional<T>`) and it gets a sparse `toPatch()`.
   static const _xPartialUpdateConst = 'x-partial-update';
 
-  /// Lists the properties a component's composite id is hashed from, in hash
-  /// order. See [UniversalComponentClass.compositeIdFields].
+  /// Lists the segments a component's composite id is hashed from, in hash
+  /// order: property names, and `literal:<text>` for a segment hashed as text. See
+  /// [UniversalComponentClass.compositeIdSegments].
   static const _xCompositeIdFieldsConst = 'x-composite-id-fields';
 
+  /// The hash domain of a component's composite id. See
+  /// [UniversalComponentClass.compositeIdDomain].
+  static const _xCompositeIdDomainConst = 'x-composite-id-domain';
+
   /// Reads [_xCompositeIdFieldsConst] from [schemaName]'s schema: null when the
-  /// schema has none, and an error when it is not a list of property names (a
+  /// schema has none, and an error when it is not a list of segments (a
   /// malformed list would silently emit a wrong id check downstream).
-  static List<String>? _parseCompositeIdFields(String schemaName, Object? raw) {
+  static List<String>? _parseCompositeIdSegments(
+    String schemaName,
+    Object? raw,
+  ) {
     if (raw == null) return null;
     if (raw is! List || raw.any((name) => name is! String)) {
       throw OpenApiParserException(
         "'$schemaName': $_xCompositeIdFieldsConst must be a list of property "
-        'names.',
+        'names and `literal:<text>` segments.',
       );
     }
     return List<String>.unmodifiable(raw.cast<String>());
+  }
+
+  /// Reads [_xCompositeIdDomainConst] from [schemaName]'s schema: null when the
+  /// schema has none, and an error when it is not a non-empty string (an empty
+  /// domain would hash every id into one namespace).
+  static String? _parseCompositeIdDomain(String schemaName, Object? raw) {
+    if (raw == null) return null;
+    if (raw is! String || raw.isEmpty) {
+      throw OpenApiParserException(
+        "'$schemaName': $_xCompositeIdDomainConst must be a non-empty string.",
+      );
+    }
+    return raw;
   }
 
   /// Extract custom metadata from a property map based on configuration
@@ -1224,9 +1245,13 @@ class OpenApiParser {
           description: value[_descriptionConst]?.toString(),
           discriminator: discriminator,
           partialUpdate: value[_xPartialUpdateConst] == true,
-          compositeIdFields: _parseCompositeIdFields(
+          compositeIdSegments: _parseCompositeIdSegments(
             schemaName,
             value[_xCompositeIdFieldsConst],
+          ),
+          compositeIdDomain: _parseCompositeIdDomain(
+            schemaName,
+            value[_xCompositeIdDomainConst],
           ),
         );
         dataClasses.add(componentClass);
