@@ -372,7 +372,46 @@ hand-typing the list. It is emitted where the field key constants are (see
 `CHANGELOG.md`), on each variant of a sealed-ref union and never on the union
 itself. A name that is not a property of the schema fails generation, and so does
 a value that is not a list of strings. A segment of the id that is a constant
-rather than a property (a literal in the hash) is simply left out of the list.
+rather than a property (a literal in the hash) is written `literal:<text>` and is
+left out of this list.
+
+#### A typed `makeId`
+
+Add the hash domain, and a segment that is a constant between two properties:
+
+```json
+"HumanMember": {
+  "type": "object",
+  "x-composite-id-fields": ["channel_id", "literal:human", "user_id"],
+  "x-composite-id-domain": "channel_members",
+  "required": ["channel_id", "user_id"],
+  "properties": {"channel_id": {"type": "string"}, "user_id": {"type": "string"}}
+}
+```
+
+and set `composite_id_function` to a static function of yours, `Class.function`
+(the class is imported from `converter_hydrated_model_prefix`). Each such model gets:
+
+```dart
+static String makeId({required String channelId, required String userId}) =>
+    CouchbaseIdUtils.composite('channel_members', [
+      ('channelId', channelId),
+      (null, 'human'),
+      ('userId', userId),
+    ]);
+```
+
+The parameters are named, in hash order, and take the property's own name, so a
+swapped argument, a segment the schema adds or drops, and a renamed property are
+compile errors at every call site. A part is a record `(String? name, String value)`:
+the property's Dart name and its value (the name is for your function's error
+message), or `(null, text)` for a `literal:` segment. The generator knows nothing of
+how the hash is made, so the algorithm and any validation stay in your function.
+
+Generation fails for a schema with segments but no domain, a property the model does
+not have, one that is not a non-null `String` (an optional property is nullable), one
+listed twice, no property at all, or a model that already has a member named `makeId`.
+Without the option, only `compositeIdFields` is emitted.
 
 ### Command Line Arguments
 

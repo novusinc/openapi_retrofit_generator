@@ -34,6 +34,7 @@ class GeneratorConfig {
     this.generatePathConstants = false,
     this.unionFieldGetters = false,
     this.unionDiscriminatorEnums = const {},
+    this.compositeIdFunction,
   });
 
   /// API identifier used for naming folders and export files.
@@ -319,4 +320,7 @@ class GeneratorConfig {
 
   /// See `OpenApiConfig.unionDiscriminatorEnums`.
   final Map<String, String> unionDiscriminatorEnums;
+
+  /// See `OpenApiConfig.compositeIdFunction`.
+  final String? compositeIdFunction;
 }

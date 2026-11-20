@@ -33,7 +33,8 @@ final class UniversalComponentClass extends UniversalDataClass {
     this.discriminatorValue,
     this.undiscriminatedUnionVariants,
     this.partialUpdate = false,
-    this.compositeIdFields,
+    this.compositeIdSegments,
+    this.compositeIdDomain,
     super.description,
   });
 
@@ -77,15 +78,35 @@ final class UniversalComponentClass extends UniversalDataClass {
   /// `resolvePartialUpdateClasses`, which also derives the unions over them.
   final bool partialUpdate;
 
-  /// The properties a document's composite id is hashed from, in hash order
-  /// (`"x-composite-id-fields": ["user_id", "target_id"]`), or null when the
-  /// schema declares none. Names are the schema's own property names, so a
-  /// segment that is a constant rather than a property is never listed.
+  /// The segments a document's composite id is hashed from, in hash order, as the
+  /// schema declares them (`"x-composite-id-fields": ["channel_id", "literal:human",
+  /// "user_id"]`), or null when it declares none. A segment is a property name, or
+  /// [compositeIdLiteralPrefix] and a text that is hashed as it stands (the
+  /// channel-member variants hash `human` / `ai` between their two fields).
   ///
-  /// The freezed template emits them as a `compositeIdFields` constant built
-  /// from the field key constants, so a consumer that derives an id never
-  /// hand-types the list.
-  final List<String>? compositeIdFields;
+  /// The freezed template emits the property segments as a `compositeIdFields`
+  /// constant built from the field key constants, and, with a [compositeIdDomain] and
+  /// a configured `composite_id_function`, a typed `makeId`, so a consumer that
+  /// derives an id never hand-types the list, its order or a literal.
+  final List<String>? compositeIdSegments;
+
+  /// The hash domain of the composite id (`"x-composite-id-domain": "channel_members"`),
+  /// or null when the schema declares none. A `makeId` needs it.
+  final String? compositeIdDomain;
+
+  /// Marks a [compositeIdSegments] entry that is text to hash, not a property.
+  static const compositeIdLiteralPrefix = 'literal:';
+
+  /// The property names among [compositeIdSegments], in hash order: the literal
+  /// segments are not properties, so they are not here. Null when there are no
+  /// segments.
+  List<String>? get compositeIdFields {
+    final segments = compositeIdSegments;
+    if (segments == null) return null;
+    return List<String>.unmodifiable(
+      segments.where((s) => !s.startsWith(compositeIdLiteralPrefix)),
+    );
+  }
 
   /// Creates a copy of this [UniversalComponentClass] but with the given fields replaced with the new values.
   UniversalComponentClass copyWith({
@@ -98,7 +119,8 @@ final class UniversalComponentClass extends UniversalDataClass {
     DiscriminatorValue? discriminatorValue,
     Map<String, Set<UniversalType>>? undiscriminatedUnionVariants,
     bool? partialUpdate,
-    List<String>? compositeIdFields,
+    List<String>? compositeIdSegments,
+    String? compositeIdDomain,
     String? description,
   }) {
     return UniversalComponentClass(
@@ -112,7 +134,8 @@ final class UniversalComponentClass extends UniversalDataClass {
       undiscriminatedUnionVariants:
           undiscriminatedUnionVariants ?? this.undiscriminatedUnionVariants,
       partialUpdate: partialUpdate ?? this.partialUpdate,
-      compositeIdFields: compositeIdFields ?? this.compositeIdFields,
+      compositeIdSegments: compositeIdSegments ?? this.compositeIdSegments,
+      compositeIdDomain: compositeIdDomain ?? this.compositeIdDomain,
       description: description ?? super.description,
     );
   }
@@ -128,9 +151,10 @@ final class UniversalComponentClass extends UniversalDataClass {
           typeDef == other.typeDef &&
           partialUpdate == other.partialUpdate &&
           const DeepCollectionEquality().equals(
-            compositeIdFields,
-            other.compositeIdFields,
+            compositeIdSegments,
+            other.compositeIdSegments,
           ) &&
+          compositeIdDomain == other.compositeIdDomain &&
           const DeepCollectionEquality().equals(
             undiscriminatedUnionVariants,
             other.undiscriminatedUnionVariants,
@@ -143,7 +167,8 @@ final class UniversalComponentClass extends UniversalDataClass {
       allOf.hashCode ^
       typeDef.hashCode ^
       partialUpdate.hashCode ^
-      const DeepCollectionEquality().hash(compositeIdFields) ^
+      const DeepCollectionEquality().hash(compositeIdSegments) ^
+      compositeIdDomain.hashCode ^
       undiscriminatedUnionVariants.hashCode;
 
   @override
@@ -154,5 +179,6 @@ final class UniversalComponentClass extends UniversalDataClass {
       'undiscriminatedUnionVariants: $undiscriminatedUnionVariants, '
       'typeDef: $typeDef, '
       'partialUpdate: $partialUpdate, '
-      'compositeIdFields: $compositeIdFields)';
+      'compositeIdSegments: $compositeIdSegments, '
+      'compositeIdDomain: $compositeIdDomain)';
 }

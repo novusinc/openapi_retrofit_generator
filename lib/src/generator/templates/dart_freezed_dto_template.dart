@@ -18,6 +18,7 @@ String dartFreezedDtoTemplate(
   CustomMetadataConfig customMetadata = const CustomMetadataConfig(),
   bool generateMergeMethod = true,
   Map<String, String>? classFileOverrides,
+  String? compositeIdFunction,
 }) {
   final className = dataClass.name.toPascal;
   final discriminator = dataClass.discriminator;
@@ -72,13 +73,16 @@ $variantClasses$base64ConverterClass''';
         ...variantParams,
   };
 
+  final makeIdSymbol = _makeIdImportSymbol(dataClass, compositeIdFunction);
   final customMetadataImport =
-      customMetadata.isActive &&
-          annotatedParameters.any((p) => p.customMetadata.isNotEmpty)
+      (customMetadata.isActive &&
+              annotatedParameters.any((p) => p.customMetadata.isNotEmpty)) ||
+          makeIdSymbol != null
       ? _customMetadataImportDirective(
           customMetadata,
           customMetadataImportPath,
           annotatedParameters,
+          extraSymbols: {if (makeIdSymbol != null) makeIdSymbol},
         )
       : '';
 
@@ -121,7 +125,7 @@ ${_classModifier(isUnion: isUnion)}class $className with _\$$className {
 ${_factories(dataClass, className, includeIfNull, fallbackUnion, customMetadata, isUnion: isUnion, wrapOptional: wrapOptional)}
 ${_unionDefaultConstants(dataClass, className)}
 ${_jsonFactories(className, dataClass.undiscriminatedUnionVariants, isUnion: isUnion, presenceFields: wrapOptional ? dataClass.parameters : null)}
-${generateValidator ? dataClass.parameters.map(_validationString).nonNulls.join() : ''}${_fieldMetadataConsts(dataClass)}}
+${generateValidator ? dataClass.parameters.map(_validationString).nonNulls.join() : ''}${_fieldMetadataConsts(dataClass, compositeIdFunction)}}
 ${generateValidator ? _validateMethod(className, dataClass.parameters) : ''}$mergeExtension$patchExtension$base64ConverterClass''';
 }
 
@@ -336,14 +340,18 @@ String _valueSourceFieldConsts(Map<String, List<UniversalType>> byCategory) {
 /// body and the family-file leaf — which must stay identical. They are identical
 /// today only by hand, which is how `immutableFields` reached both while nothing
 /// else did.
-String _fieldMetadataConsts(UniversalComponentClass dataClass) {
+String _fieldMetadataConsts(
+  UniversalComponentClass dataClass,
+  String? compositeIdFunction,
+) {
   final byCategory = _valueSourcePartition(dataClass);
   if (byCategory == null) return '';
   _assertNoKeyNameCollision(dataClass.name, dataClass.parameters);
   return '${_fieldKeyConsts(dataClass.parameters)}'
       '${_immutableFieldsConst(dataClass)}'
       '${_valueSourceFieldConsts(byCategory)}'
-      '${_compositeIdFieldsConst(dataClass)}';
+      '${_compositeIdFieldsConst(dataClass)}'
+      '${_compositeIdMakeId(dataClass, compositeIdFunction)}';
 }
 
 /// A `static const List<String> compositeIdFields` naming, in hash order, the
@@ -391,6 +399,117 @@ String _compositeIdFieldsConst(UniversalComponentClass dataClass) {
       '  static const List<String> $constName = [${members.join(', ')}];\n';
 }
 
+/// Whether [dataClass] gets a `makeId`: the `composite_id_function` is configured,
+/// the schema declares composite-id segments, and the model carries its field
+/// metadata (the same completeness gate as every other constant, see
+/// [_fieldMetadataConsts]).
+bool _emitsMakeId(
+  UniversalComponentClass dataClass,
+  String? compositeIdFunction,
+) =>
+    compositeIdFunction != null &&
+    (dataClass.compositeIdSegments?.isNotEmpty ?? false) &&
+    _valueSourcePartition(dataClass) != null;
+
+/// The class of the `composite_id_function` (`CouchbaseIdUtils` of
+/// `CouchbaseIdUtils.composite`) when [dataClass] emits a `makeId`, which the file
+/// must import; null when it does not.
+String? _makeIdImportSymbol(
+  UniversalComponentClass dataClass,
+  String? compositeIdFunction,
+) => _emitsMakeId(dataClass, compositeIdFunction)
+    ? compositeIdFunction!.split('.').first
+    : null;
+
+/// A single-quoted Dart string literal for [value]: `\`, `$` and `'` escaped.
+String _singleQuoted(String value) =>
+    "'${protectJsonKey(value)!.replaceAll("'", r"\'").replaceAll('\n', r'\n')}'";
+
+/// A `static String makeId({required String a, required String b})` that derives the
+/// model's composite id by handing the `composite_id_function` the hash domain and
+/// the id's parts, in hash order.
+///
+/// A part is a record: `('userId', userId)` for a property (the name is for the
+/// function's error message) or `(null, 'human')` for a `literal:` segment, which is
+/// hashed as text and is not a parameter. The parameters are named, in hash order, and
+/// take the property's own name, so a swapped argument, a segment the schema adds or
+/// drops, and a renamed property are all compile errors at the call site. The
+/// generator knows nothing of how the hash is made: that stays in the function.
+///
+/// Emitted only where [_emitsMakeId]. Fails generation for a schema that lacks the
+/// domain, names a property the model does not have or one that is not a non-null
+/// `String`, lists a property twice, has no property at all, or already has a member
+/// named `makeId`: each would emit a function that does not mean what it says.
+String _compositeIdMakeId(
+  UniversalComponentClass dataClass,
+  String? compositeIdFunction,
+) {
+  if (!_emitsMakeId(dataClass, compositeIdFunction)) return '';
+  const memberName = 'makeId';
+  final owner = dataClass.name;
+  final domain = dataClass.compositeIdDomain;
+  if (domain == null) {
+    throw GeneratorException(
+      "'$owner' lists x-composite-id-fields but no x-composite-id-domain, which "
+      '`$memberName` needs because composite_id_function is set.',
+    );
+  }
+  if (dataClass.parameters.any((field) => field.name == memberName)) {
+    throw GeneratorException(
+      "'$owner' declares a field named `$memberName`, which is the name of the "
+      'composite-id function. Rename the field.',
+    );
+  }
+  final fieldByWireKey = {
+    for (final field in dataClass.parameters) _wireKey(field): field,
+  };
+  final parameters = <String>[];
+  final parts = <String>[];
+  final seen = <String>{};
+  for (final segment in dataClass.compositeIdSegments!) {
+    if (segment.startsWith(UniversalComponentClass.compositeIdLiteralPrefix)) {
+      final text = segment.substring(
+        UniversalComponentClass.compositeIdLiteralPrefix.length,
+      );
+      parts.add('(null, ${_singleQuoted(text)})');
+      continue;
+    }
+    final field =
+        fieldByWireKey[segment] ??
+        (throw GeneratorException(
+          "'$owner' lists '$segment' in x-composite-id-fields, but has no field "
+          'with that key.',
+        ));
+    // The type the model declares for the field, nullability included: `String?`
+    // for an optional property, `DateTime` for a `date-time` one.
+    final dartType = field.toSuitableType();
+    if (dartType != 'String') {
+      throw GeneratorException(
+        "'$owner' lists '$segment' in x-composite-id-fields, but `${field.name}` "
+        'is `$dartType`: every part of a composite id must be a non-null String.',
+      );
+    }
+    if (!seen.add(field.name!)) {
+      throw GeneratorException(
+        "'$owner' lists '$segment' twice in x-composite-id-fields.",
+      );
+    }
+    parameters.add('required String ${field.name}');
+    parts.add('(${_singleQuoted(field.name!)}, ${field.name})');
+  }
+  if (parameters.isEmpty) {
+    throw GeneratorException(
+      "'$owner' has no property among its x-composite-id-fields, so there is "
+      'nothing for `$memberName` to take.',
+    );
+  }
+  return '\n  /// The composite id of the document these fields identify: the hash of '
+      '`$domain` and these parts, in order. Missing parts are a compile error; an '
+      'empty one is refused by the function that hashes them.\n'
+      '  static String $memberName({${parameters.join(', ')}}) =>\n'
+      '      $compositeIdFunction(${_singleQuoted(domain)}, [${parts.join(', ')}]);\n';
+}
+
 /// Provides template for generating one sealed-ref-union family file.
 ///
 /// Emits, into a single library (Dart requires all direct subtypes of a
@@ -417,6 +536,7 @@ String dartFreezedUnionFamilyTemplate(
   bool generateMergeMethod = true,
   bool unionFieldGetters = false,
   Map<String, UnionDiscriminatorEnum> unionDiscriminatorEnums = const {},
+  String? compositeIdFunction,
 }) {
   final allMemberParameters = <UniversalType>{
     for (final union in family.unions) ...union.parameters,
@@ -437,11 +557,19 @@ String dartFreezedUnionFamilyTemplate(
   final needsCustomMetadataImport =
       customMetadata.isActive &&
       allMemberParameters.any((p) => p.customMetadata.isNotEmpty);
-  final customMetadataImport = needsCustomMetadataImport
+  // The function's class, once, if any leaf of the family emits a `makeId`.
+  final makeIdSymbols = {
+    for (final leaf in family.leaves)
+      if (_makeIdImportSymbol(leaf, compositeIdFunction) case final symbol?)
+        symbol,
+  };
+  final customMetadataImport =
+      needsCustomMetadataImport || makeIdSymbols.isNotEmpty
       ? _customMetadataImportDirective(
           customMetadata,
           customMetadataImportPath,
           allMemberParameters,
+          extraSymbols: makeIdSymbols,
         )
       : '';
 
@@ -502,6 +630,7 @@ String dartFreezedUnionFamilyTemplate(
           customMetadata: customMetadata,
           generateMergeMethod: generateMergeMethod,
           generateValidator: generateValidator,
+          compositeIdFunction: compositeIdFunction,
         ),
       )
       .join('\n');
@@ -769,6 +898,7 @@ String _leafClassChunk(
   required CustomMetadataConfig customMetadata,
   required bool generateMergeMethod,
   required bool generateValidator,
+  required String? compositeIdFunction,
 }) {
   final className = dataClass.name.toPascal;
   final mergeExtension = generateMergeMethod
@@ -779,7 +909,7 @@ ${descriptionComment(dataClass.description)}@Freezed()
 abstract class $className with _\$$className$implementsClause {
 ${_factories(dataClass, className, includeIfNull, null, customMetadata, isUnion: false, wrapOptional: isPartialUpdate)}
 ${_jsonFactories(className, null, isUnion: false, presenceFields: isPartialUpdate ? dataClass.parameters : null)}
-${generateValidator ? dataClass.parameters.map(_validationString).nonNulls.join() : ''}${_fieldMetadataConsts(dataClass)}}
+${generateValidator ? dataClass.parameters.map(_validationString).nonNulls.join() : ''}${_fieldMetadataConsts(dataClass, compositeIdFunction)}}
 ${generateValidator ? _validateMethod(className, dataClass.parameters) : ''}$mergeExtension''';
 }
 
@@ -1388,22 +1518,26 @@ $maybeMapArms
 /// and need not exist) is an `undefined_shown_name` warning in every generated
 /// file, and an unused-but-real one is `unused_shown_name`.
 ///
+/// [extraSymbols] are further names the file uses from the same library (the class
+/// of the `composite_id_function`); they are listed even when no annotation is.
+///
 /// Returns '' when [parameters] carry no custom metadata, so an empty
 /// `show ;` clause can never be emitted.
 String _customMetadataImportDirective(
   CustomMetadataConfig customMetadata,
   String? customMetadataImportPath,
-  Iterable<UniversalType> parameters,
-) {
+  Iterable<UniversalType> parameters, {
+  Set<String> extraSymbols = const {},
+}) {
   if (customMetadataImportPath == null ||
       customMetadataImportPath.trim().isEmpty) {
     throw StateError(
       "Config parameter 'converter_hydrated_model_prefix' is required when "
-      "'custom_metadata' is enabled.",
+      "'custom_metadata' is enabled or 'composite_id_function' is set.",
     );
   }
   final importPath = customMetadataImportPath.trim();
-  final symbols = <String>{};
+  final symbols = <String>{...extraSymbols};
   for (final parameter in parameters) {
     for (final fieldConfig in customMetadata.fields) {
       final rendered = _customAnnotationFor(parameter, fieldConfig);
